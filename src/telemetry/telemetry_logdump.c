@@ -73,24 +73,53 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
     size_t base64_tdata_len = 0;
     json_t *obj = json_object();
     json_t *netop_meta_obj = json_object();
+    json_t *netop_labels = json_array();
     json_t *tmesg_meta_obj = json_object();
+    json_t *payload_obj = NULL;
+    json_t *ietf_msg_obj = NULL;
 
-    json_object_set_new_nocheck(netop_meta_obj, "event_type", json_string(event_type));
+    {
+      json_t *netop_label = json_object();
+      json_object_set_new_nocheck(netop_label, "name", json_string("event_type"));
+      json_object_set_new_nocheck(netop_label, "string-value", json_string(event_type));
+      json_array_append(netop_labels, netop_label);
+    }
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      json_object_set_new_nocheck(netop_meta_obj, "seq", json_integer((json_int_t)log_seq));
+      {
+	json_t *netop_label = json_object();
+	json_object_set_new_nocheck(netop_label, "name", json_string("seq"));
+        json_object_set_new_nocheck(netop_label, "anydata-values", json_integer((json_int_t)log_seq));
+        json_array_append(netop_labels, netop_label);
+      }
       json_object_set_new_nocheck(tmesg_meta_obj, "collection-timestamp", json_string(tms->log_tstamp_str));
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
-      json_object_set_new_nocheck(netop_meta_obj, "seq", json_integer((json_int_t) telemetry_log_seq_get(&tms->log_seq)));
+      {
+        json_t *netop_label = json_object();
+        json_object_set_new_nocheck(netop_label, "name", json_string("seq"));
+        json_object_set_new_nocheck(netop_label, "anydata-values", json_integer((json_int_t) telemetry_log_seq_get(&tms->log_seq)));
+        json_array_append(netop_labels, netop_label);
+      }
       json_object_set_new_nocheck(tmesg_meta_obj, "collection-timestamp", json_string(tms->dump.tstamp_str));
     }
 
-    json_object_set_new_nocheck(netop_meta_obj, "telemetry_node", json_string(peer->addr_str));
-    json_object_set_new_nocheck(netop_meta_obj, "telemetry_port", json_integer((json_int_t)peer->tcp_port));
+    {
+      json_t *netop_label = json_object();
+      json_object_set_new_nocheck(netop_label, "name", json_string("telemetry_node"));
+      json_object_set_new_nocheck(netop_label, "string-value", json_string(peer->addr_str));
+      json_array_append(netop_labels, netop_label);
+    }
+
+    {
+      json_t *netop_label = json_object();
+      json_object_set_new_nocheck(netop_label, "name", json_string("telemetry_port"));
+      json_object_set_new_nocheck(netop_label, "anydata-values", json_integer((json_int_t)peer->tcp_port));
+      json_array_append(netop_labels, netop_label);
+    }
 
     if (config.telemetry_tag_map && tag) {
-      telemetry_tag_print_json(netop_meta_obj, tag);
+      telemetry_tag_print_json(netop_labels, tag);
     }
 
     if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
@@ -98,7 +127,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
       json_t *log_data_obj = json_loads(log_data, 0, &json_err);
 
       if (log_data_obj) {
-        json_object_set_new_nocheck(obj, "payload", log_data_obj);
+        payload_obj = log_data_obj;
       }
       else {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): JSON error: %s (%d/%d/%d: %s)",
@@ -106,32 +135,60 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
             json_err.line, json_err.column, json_err.position, json_err.source);
       }
 
-      json_object_set_new_nocheck(netop_meta_obj, "serialization", json_string("json"));
+      {
+	json_t *netop_label = json_object();
+	json_object_set_new_nocheck(netop_label, "name", json_string("serialization"));
+        json_object_set_new_nocheck(netop_label, "string-value", json_string("json"));
+        json_array_append(netop_labels, netop_label);
+      }
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
       base64_tdata = base64_encode(log_data, log_data_len, &base64_tdata_len);
 
       if (base64_tdata) {
-        json_object_set_new_nocheck(obj, "payload", json_string((char *)base64_tdata));
+        payload_obj = json_string((char *)base64_tdata);
 	base64_freebuf(base64_tdata);
         base64_tdata_len = 0;
       }
       else {
-        json_object_set_new_nocheck(obj, "payload", json_null());
+        payload_obj = json_null();
       }
 
-      json_object_set_new_nocheck(netop_meta_obj, "serialization", json_string("gpb"));
+      {
+        json_t *netop_label = json_object();
+        json_object_set_new_nocheck(netop_label, "name", json_string("serialization"));
+        json_object_set_new_nocheck(netop_label, "string-value", json_string("gpb"));
+        json_array_append(netop_labels, netop_label);
+      }
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_JSON_STRING) {
-      json_object_set_new_nocheck(obj, "payload", json_string((char *) log_data));
-      json_object_set_new_nocheck(netop_meta_obj, "serialization", json_string("json_string"));
+      payload_obj = json_string((char *) log_data);
+      {
+        json_t *netop_label = json_object();
+        json_object_set_new_nocheck(netop_label, "name", json_string("serialization"));
+        json_object_set_new_nocheck(netop_label, "string-value", json_string("json-string"));
+        json_array_append(netop_labels, netop_label);
+      }
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_UNKNOWN) {
-      json_object_set_new_nocheck(netop_meta_obj, "serialization", json_string("unknown"));
+      {
+        json_t *netop_label = json_object();
+        json_object_set_new_nocheck(netop_label, "name", json_string("serialization"));
+        json_object_set_new_nocheck(netop_label, "string-value", json_string("unknown"));
+        json_array_append(netop_labels, netop_label);
+      }
     }
 
+    json_object_set_new_nocheck(obj, "payload", payload_obj);
+    json_object_set_new_nocheck(netop_meta_obj, "labels", netop_labels);
     json_object_set_new_nocheck(obj, "network-operator-metadata", netop_meta_obj);
     json_object_set_new_nocheck(obj, "telemetry-message-metadata", tmesg_meta_obj);
+
+    if (unyte_udp_notif_input) {
+      ietf_msg_obj = json_object();
+      json_object_set_new_nocheck(ietf_msg_obj, "ietf-telemetry-message:message", obj);
+      obj = ietf_msg_obj;
+    }
 
     if ((config.telemetry_msglog_file && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_file && etype == TELEMETRY_LOGDUMP_ET_DUMP))
@@ -659,8 +716,45 @@ int telemetry_dump_init_kafka_host(void *tdkh)
 #endif
 
 #ifdef WITH_JANSSON
-void telemetry_tag_print_json(json_t *obj, telemetry_tag_t *tag)
+void telemetry_tag_print_json(json_t *netop_labels, telemetry_tag_t *tag)
 {
-  bgp_tag_print_json(obj, tag);
+  json_t *tag_obj = json_object(), *ret = NULL;
+
+  bgp_tag_print_json(tag_obj, tag);
+
+  ret = json_object_get(tag_obj, "tag");
+  if (ret) {
+    if json_is_integer(ret) {
+      json_t *netop_label = json_object();
+      json_object_set_new_nocheck(netop_label, "name", json_string("tag"));
+      json_object_set_new_nocheck(netop_label, "anydata-values", json_integer(json_integer_value(ret)));
+      json_array_append(netop_labels, netop_label);
+    }
+
+    goto exit_lane;
+  }
+
+  ret = json_object_get(tag_obj, "label");
+  if (ret) {
+    if (config.pretag_label_encode_as_map) {
+      if (json_is_object(ret)) {
+        json_t *netop_label = json_object();
+        json_object_set_new_nocheck(netop_label, "name", json_string("label"));
+        json_object_set_new_nocheck(netop_label, "anydata-values", ret);
+        json_array_append(netop_labels, netop_label);
+      }
+    }
+    else if json_is_string(ret) {
+      json_t *netop_label = json_object();
+      json_object_set_new_nocheck(netop_label, "name", json_string("label"));
+      json_object_set_new_nocheck(netop_label, "string-value", json_string(json_string_value(ret)));
+      json_array_append(netop_labels, netop_label);
+    }
+
+    goto exit_lane;
+  }
+
+  exit_lane:
+  json_decref(tag_obj);
 }
 #endif

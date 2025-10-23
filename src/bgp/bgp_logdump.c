@@ -1017,7 +1017,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
       json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
       if (bms->tag_map && tag) {
-  bgp_tag_print_json(obj, tag);
+	bgp_tag_print_json(obj, tag);
       }
 
       if (bms->peer_port_str) json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
