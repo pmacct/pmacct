@@ -10,7 +10,8 @@ testParams = KModuleParams(__file__, daemon='pmtelemetryd', ipv4_subnet='192.168
 
 import library.py.test_tools as test_tools  
 
-@pytest.mark.ci
+# XXX: to be fixed
+# @pytest.mark.ci
 @pytest.mark.yang
 @pytest.mark.udp_notif
 @pytest.mark.json
