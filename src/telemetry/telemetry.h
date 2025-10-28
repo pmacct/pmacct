@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -44,6 +44,7 @@
 #define TELEMETRY_UDP_NOTIF_FD          INT_MAX
 #define TELEMETRY_GRPC_COLLECTOR_FD     INT_MAX
 #define TELEMETRY_BUFFER_SIZE		1000000
+#define TELEMETRY_YP_HOSTNAME_SIZE	64
 
 #define TELEMETRY_DECODER_UNKNOWN       0
 #define TELEMETRY_DECODER_JSON          1
@@ -116,6 +117,7 @@ struct telemetry_data {
 
 struct _telemetry_peer_cache {
   struct host_addr addr;
+  struct cdata_map_t *yp_subs;
   int index;
 };
 
@@ -140,6 +142,11 @@ struct _telemetry_dump_se_ll {
   struct _telemetry_dump_se_ll_elem *last;
 };
 
+struct _telemetry_yp_subs_key {
+  char hostname[TELEMETRY_YP_HOSTNAME_SIZE];
+  u_int32_t id;
+};
+
 typedef struct bgp_peer telemetry_peer;
 typedef struct bgp_peer_log telemetry_peer_log;
 typedef struct bgp_misc_structs telemetry_misc_structs;
@@ -147,6 +154,7 @@ typedef struct _telemetry_dump_se_ll telemetry_dump_se_ll;
 typedef struct _telemetry_dump_se_ll_elem telemetry_dump_se_ll_elem;
 typedef struct _telemetry_peer_cache telemetry_peer_cache;
 typedef struct _telemetry_peer_timeout telemetry_peer_timeout;
+typedef struct _telemetry_yp_subs_key telemetry_yp_subs_key;
 
 /* more includes */
 #include "telemetry_logdump.h"
@@ -170,4 +178,6 @@ extern telemetry_peer_timeout *telemetry_peers_timeout;
 extern int unyte_udp_notif_input, grpc_collector_input;
 extern telemetry_tag_t telemetry_logdump_tag;
 extern struct sockaddr_storage telemetry_logdump_tag_peer;
+
+extern struct cdada_map_t *yp_subs;
 #endif //TELEMETRY_H

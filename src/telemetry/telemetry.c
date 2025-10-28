@@ -46,6 +46,7 @@ telemetry_peer_timeout *telemetry_peers_timeout;
 int unyte_udp_notif_input = 0, grpc_collector_input = 0;
 telemetry_tag_t telemetry_logdump_tag;
 struct sockaddr_storage telemetry_logdump_tag_peer;
+struct cdada_map_t *yp_subs;
 
 /* Functions */
 void telemetry_wrapper()
@@ -173,6 +174,8 @@ int telemetry_daemon(void *t_data_void)
 	config.name, t_data->log_str);
     exit_gracefully(1);
 #endif
+
+    yp_subs = cdada_map_create(telemetry_yp_subs_key);
   }
 
   if (config.telemetry_grpc_collector_conf) {
