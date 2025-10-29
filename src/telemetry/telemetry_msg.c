@@ -35,20 +35,18 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
 {
   telemetry_misc_structs *tms;
 
+  /* Yang-Push vars */
+  telemetry_yp_msg yp_msg = {};
+
   if (!peer || !t_data) return;
 
   tms = bgp_select_misc_db(peer->type);
 
   if (!tms) return;
 
-  /*
-     Let's handle:
-     * ietf-subscribed-notifications:subscription-started
-     * ietf-subscribed-notifications:subscription-terminated
-  */
+  /* Yang-Push pre-processing */
   if (unyte_udp_notif_input && data_decoder == TELEMETRY_DATA_DECODER_JSON) {
-    yp_process_subscription_start(t_data, peer->buf.base, peer->msglen, data_decoder);
-    yp_process_subscription_end(t_data, peer->buf.base, peer->msglen, data_decoder);
+    yp_process_subscription(t_data, peer->buf.base, peer->msglen, data_decoder, &yp_msg);
   }
 
   if (tms->msglog_backend_methods) {
@@ -67,8 +65,23 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
     }
   }
 
-  if (tms->msglog_backend_methods || tms->dump_backend_methods)
+  /* Yang-Push post-processing */
+  if (unyte_udp_notif_input && data_decoder == TELEMETRY_DATA_DECODER_JSON) {
+    switch (yp_msg.type) {
+    case YP_SUB_START:
+      yp_process_subscription_start(t_data, &yp_msg);
+      break;
+    case YP_SUB_TERM:
+      yp_process_subscription_term(t_data, &yp_msg);
+      break;
+    default:
+      break;
+    }
+  }
+
+  if (tms->msglog_backend_methods || tms->dump_backend_methods) {
     telemetry_log_seq_increment(&tms->log_seq);
+  }
 }
 
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
@@ -329,82 +342,23 @@ int telemetry_decode_producer_peer(struct telemetry_data *t_data, void *h, u_cha
 }
 #endif
 
-int yp_process_subscription_start(struct telemetry_data *t_data, void *payload, u_int32_t payload_len, int data_decoder)
+int yp_process_subscription_start(struct telemetry_data *t_data, telemetry_yp_msg *yp_msg)
 {
-  int ret = SUCCESS, cdada_ret;
-  telemetry_yp_subs_key sub_key = {};
-  const char *hostname;
+  int ret;
+#if defined WITH_JANSSON
+  json_t *sub_copy, *sub_prev = NULL;
 
-  if (!payload || !payload_len || !data_decoder || !t_data) return ERR; 
+  if (!t_data || !yp_msg) return ERR; 
 
-#ifdef WITH_JANSSON
-  if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
-    // XXX: to be optimized; limit json_loads() of the same content
-    json_error_t json_err;
-    json_t *payload_obj = json_loads(payload, 0, &json_err);
-    json_t *envelope, *contents, *subscription_started;
-    json_t *hostname_obj, *sub_id_obj; 
-
-    if (!payload_obj) {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): JSON error: %s (%d/%d/%d: %s)",
-          config.name, t_data->log_str, json_err.text,
-          json_err.line, json_err.column, json_err.position, json_err.source);
+  sub_copy = json_deep_copy(yp_msg->sub_obj);
+  ret = cdada_map_insert_replace(yp_subs, &yp_msg->key, sub_copy, (void **) &sub_prev);
+  if (ret != CDADA_SUCCESS) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription %u failed Insert/Replace\n", config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
+  }
+  else { 
+    if (sub_prev) {
+      json_decref(sub_prev);
     }
-
-    envelope = json_object_get(payload_obj, "ietf-yp-notification:envelope");
-    if (!envelope) {
-      ret = ERR;
-      goto exit_lane;
-    }
-
-    hostname_obj = json_object_get(envelope, "hostname");
-    if (!hostname_obj || !json_is_string(hostname_obj)) {
-      ret = ERR;
-      goto exit_lane;
-    }
-    else {
-      hostname = json_string_value(hostname_obj);
-      snprintf(sub_key.hostname, sizeof(sub_key.hostname), "%s", hostname);
-    }
-
-    contents = json_object_get(envelope, "contents");
-    if (!contents) {
-      ret = ERR;
-      goto exit_lane;
-    }
-
-    subscription_started = json_object_get(contents, "ietf-subscribed-notifications:subscription-started");
-    if (!subscription_started) {
-      goto exit_lane;
-    }
-
-    sub_id_obj = json_object_get(subscription_started, "id");
-    if (!sub_id_obj || !json_is_integer(sub_id_obj)) {
-      ret = ERR;
-      goto exit_lane;
-    }
-    else {
-      sub_key.id = (u_int32_t) json_integer_value(sub_id_obj);
-    }
-
-    /* Having the key, let's insert-replace it among the YP subscriptions */
-    {
-      json_t *sub_copy, *sub_prev = NULL;
-
-      sub_copy = json_deep_copy(subscription_started);
-      cdada_ret = cdada_map_insert_replace(yp_subs, &sub_key, sub_copy, (void **) &sub_prev);
-      if (cdada_ret != CDADA_SUCCESS) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription %u failed Insert/Replace\n", config.name, t_data->log_str, sub_key.hostname, sub_key.id);
-      }
-      else { 
-        if (sub_prev) {
-          json_decref(sub_prev);
-        }
-      }
-    }
-
-    exit_lane:
-    json_decref(payload_obj);
   }
 #else
   ret = ERR;
@@ -413,20 +367,41 @@ int yp_process_subscription_start(struct telemetry_data *t_data, void *payload, 
   return ret;
 }
 
-int yp_process_subscription_end(struct telemetry_data *t_data, void *payload, u_int32_t payload_len, int data_decoder)
+int yp_process_subscription_term(struct telemetry_data *t_data, telemetry_yp_msg *yp_msg)
 {
-  int ret = SUCCESS, cdada_ret;
-  telemetry_yp_subs_key sub_key = {};
+  int ret;
+#if defined WITH_JANSSON
+  json_t *sub_saved = NULL;
+
+  if (!t_data || !yp_msg) return ERR;
+
+  ret = cdada_map_find(yp_subs, &yp_msg->key, (void **) &sub_saved);
+  if (ret != CDADA_SUCCESS) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription %u failed Find/Delete\n", config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
+  }
+  else {
+    json_decref(sub_saved);
+    ret = cdada_map_erase(yp_subs, &yp_msg->key);
+  }
+#else
+  ret = ERR;
+#endif
+      
+  return ret;
+}
+
+int yp_process_subscription(struct telemetry_data *t_data, void *payload, u_int32_t payload_len, int data_decoder, telemetry_yp_msg *yp_msg)
+{
+  int ret = SUCCESS;
   const char *hostname;
     
-  if (!payload || !payload_len || !data_decoder || !t_data) return ERR;
+  if (!payload || !payload_len || !data_decoder || !t_data || !yp_msg) return ERR;
   
 #ifdef WITH_JANSSON
   if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
-    // XXX: to be optimized; limit json_loads() of the same content
     json_error_t json_err;
     json_t *payload_obj = json_loads(payload, 0, &json_err);
-    json_t *envelope, *contents, *subscription_end;
+    json_t *envelope, *contents, *subscription;
     json_t *hostname_obj, *sub_id_obj; 
     
     if (!payload_obj) {
@@ -448,7 +423,7 @@ int yp_process_subscription_end(struct telemetry_data *t_data, void *payload, u_
     }
     else {
       hostname = json_string_value(hostname_obj);
-      snprintf(sub_key.hostname, sizeof(sub_key.hostname), "%s", hostname);
+      snprintf(yp_msg->key.hostname, sizeof(yp_msg->key.hostname), "%s", hostname);
     }
 
     contents = json_object_get(envelope, "contents");
@@ -457,36 +432,36 @@ int yp_process_subscription_end(struct telemetry_data *t_data, void *payload, u_
       goto exit_lane;
     }
 
-    subscription_end = json_object_get(contents, "ietf-subscribed-notifications:subscription-terminated");
-    if (!subscription_end) {
-      goto exit_lane;
+    subscription = json_object_get(contents, "ietf-yang-push:push-update");
+    if (subscription) {
+      yp_msg->type = YP_SUB_UPDATE;
+      goto next_step;
     }
 
-    sub_id_obj = json_object_get(subscription_end, "id");
+    subscription = json_object_get(contents, "ietf-subscribed-notifications:subscription-started");
+    if (subscription) {
+      yp_msg->type = YP_SUB_START;
+      goto next_step;
+    }
+
+    subscription = json_object_get(contents, "ietf-subscribed-notifications:subscription-terminated");
+    if (subscription) {
+      yp_msg-> type = YP_SUB_TERM;
+      goto next_step;
+    }
+
+    next_step:
+    sub_id_obj = json_object_get(subscription, "id");
     if (!sub_id_obj || !json_is_integer(sub_id_obj)) {
       ret = ERR;
       goto exit_lane;
     }
     else {
-      sub_key.id = (u_int32_t) json_integer_value(sub_id_obj);
-    }
-
-    /* Having the key, let's delete it from existing YP subscriptions */
-    {
-      json_t *sub_saved = NULL;
-
-      cdada_ret = cdada_map_find(yp_subs, &sub_key, (void **) &sub_saved);
-      if (cdada_ret != CDADA_SUCCESS) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription %u failed Find/Delete\n", config.name, t_data->log_str, sub_key.hostname, sub_key.id);
-      }
-      else {
-	json_decref(sub_saved);
-        cdada_ret = cdada_map_erase(yp_subs, &sub_key);
-      }
+      yp_msg->key.id = (u_int32_t) json_integer_value(sub_id_obj);
     }
 
     exit_lane:
-    json_decref(payload_obj);
+    yp_msg->sub_obj = payload_obj;
   }
 #else
   ret = ERR;

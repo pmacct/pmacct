@@ -175,7 +175,7 @@ int telemetry_daemon(void *t_data_void)
     exit_gracefully(1);
 #endif
 
-    yp_subs = cdada_map_create(telemetry_yp_subs_key);
+    yp_subs = cdada_map_create(telemetry_yp_sub_key);
   }
 
   if (config.telemetry_grpc_collector_conf) {

@@ -88,6 +88,11 @@
 #define TELEMETRY_UDP_NOTIF_ENC_XML             2
 #endif
 
+#define YP_SUB_UNKNOWN				0
+#define YP_SUB_START				1
+#define YP_SUB_TERM				2
+#define YP_SUB_UPDATE				3
+
 typedef bgp_tag_t telemetry_tag_t;
 typedef bgp_tag_cache_t telemetry_tag_cache_t;
 
@@ -117,7 +122,6 @@ struct telemetry_data {
 
 struct _telemetry_peer_cache {
   struct host_addr addr;
-  struct cdata_map_t *yp_subs;
   int index;
 };
 
@@ -142,9 +146,17 @@ struct _telemetry_dump_se_ll {
   struct _telemetry_dump_se_ll_elem *last;
 };
 
-struct _telemetry_yp_subs_key {
+struct _telemetry_yp_sub_key {
   char hostname[TELEMETRY_YP_HOSTNAME_SIZE];
   u_int32_t id;
+};
+
+typedef struct _telemetry_yp_sub_key telemetry_yp_sub_key;
+
+struct _telemetry_yp_msg {
+  u_int8_t type;
+  telemetry_yp_sub_key key;
+  void *sub_obj;
 };
 
 typedef struct bgp_peer telemetry_peer;
@@ -154,7 +166,7 @@ typedef struct _telemetry_dump_se_ll telemetry_dump_se_ll;
 typedef struct _telemetry_dump_se_ll_elem telemetry_dump_se_ll_elem;
 typedef struct _telemetry_peer_cache telemetry_peer_cache;
 typedef struct _telemetry_peer_timeout telemetry_peer_timeout;
-typedef struct _telemetry_yp_subs_key telemetry_yp_subs_key;
+typedef struct _telemetry_yp_msg telemetry_yp_msg;
 
 /* more includes */
 #include "telemetry_logdump.h"
