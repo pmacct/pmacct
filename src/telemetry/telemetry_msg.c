@@ -399,12 +399,12 @@ int yp_process_subscription_term(struct telemetry_data *t_data, telemetry_yp_msg
 int yp_pre_process_subscription(struct telemetry_data *t_data, void *payload, u_int32_t payload_len, int data_decoder, telemetry_yp_msg *yp_msg)
 {
   int ret = SUCCESS;
-  const char *hostname;
     
   if (!payload || !payload_len || !data_decoder || !t_data || !yp_msg) return ERR;
   
 #ifdef WITH_JANSSON
   if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
+    const char *hostname;
     json_error_t json_err;
     json_t *payload_obj = json_loads(payload, 0, &json_err);
     json_t *envelope = NULL, *contents = NULL, *subscription = NULL;
