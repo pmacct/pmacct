@@ -129,12 +129,23 @@ struct _telemetry_peer_timeout {
   time_t last_msg;
 };
 
-struct _telemetry_dump_se {
-  int decoder;
+struct _telemetry_yp_sub_key {
+  char hostname[TELEMETRY_YP_HOSTNAME_SIZE];
+  u_int32_t id;
+};
+
+struct _telemetry_yp_msg {
+  u_int8_t type;
+  struct _telemetry_yp_sub_key key;
+  void *sub_obj;
+};
+
+struct _telemetry_dump_se { 
+  int decoder; 
   u_int32_t len;
   u_int64_t seq;
   void *data;
-  struct _telemetry_yp_msg *yp_msg;
+  struct _telemetry_yp_msg yp_msg;
 };
 
 struct _telemetry_dump_se_ll_elem {
@@ -145,17 +156,6 @@ struct _telemetry_dump_se_ll_elem {
 struct _telemetry_dump_se_ll {
   struct _telemetry_dump_se_ll_elem *start;
   struct _telemetry_dump_se_ll_elem *last;
-};
-
-struct _telemetry_yp_sub_key {
-  char hostname[TELEMETRY_YP_HOSTNAME_SIZE];
-  u_int32_t id;
-};
-
-struct _telemetry_yp_msg {
-  u_int8_t type;
-  struct _telemetry_yp_sub_key key;
-  void *sub_obj;
 };
 
 typedef struct bgp_peer telemetry_peer;

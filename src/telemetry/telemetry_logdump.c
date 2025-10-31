@@ -274,9 +274,9 @@ void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_
   se_ll_elem->rec.len = peer->msglen;
   se_ll_elem->rec.decoder = data_decoder;
   se_ll_elem->rec.seq = telemetry_log_seq_get(&tms->log_seq);
-  se_ll_elem->rec.yp_msg = yp_msg;
   if (yp_msg) {
-    se_ll_elem->rec.yp_msg->sub_obj = NULL;
+    se_ll_elem->rec.yp_msg.key = yp_msg->key;
+    se_ll_elem->rec.yp_msg.type = yp_msg->type;
 
     if (yp_msg->type == YP_SUB_UPDATE || yp_msg->type == YP_SUB_TERM) {
       char *sub_saved = NULL;
@@ -287,7 +287,7 @@ void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_
 	    config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
       }
       else {
-	se_ll_elem->rec.yp_msg->sub_obj = strdup(sub_saved);
+	se_ll_elem->rec.yp_msg.sub_obj = strdup(sub_saved);
       }
     }
   }
@@ -371,9 +371,7 @@ void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *tdsell)
   assert(tdsell->last);
   for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem_next) {
     se_ll_elem_next = se_ll_elem->next;
-    if (se_ll_elem->rec.yp_msg) {
-      free(se_ll_elem->rec.yp_msg->sub_obj);
-    }
+    free(se_ll_elem->rec.yp_msg.sub_obj);
     free(se_ll_elem->rec.data);
     free(se_ll_elem);
   }
@@ -603,7 +601,7 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
 	for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
 	  telemetry_log_msg(peer, t_data, &telemetry_logdump_tag, se_ll_elem->rec.data, se_ll_elem->rec.len,
 			    se_ll_elem->rec.decoder, se_ll_elem->rec.seq, event_type, config.telemetry_dump_output,
-			    se_ll_elem->rec.yp_msg);
+			    &se_ll_elem->rec.yp_msg);
 	  dump_elems++;
 	}
       }
