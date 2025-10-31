@@ -40,7 +40,8 @@ extern void telemetry_basic_process_json(telemetry_peer *);
 extern int telemetry_basic_validate_json(telemetry_peer *);
 extern int telemetry_decode_producer_peer(struct telemetry_data *, void *, u_char *, size_t, struct sockaddr *, socklen_t *);
 
-extern int yp_process_subscription(struct telemetry_data *, void *, u_int32_t, int, telemetry_yp_msg *);
+extern int yp_pre_process_subscription(struct telemetry_data *, void *, u_int32_t, int, telemetry_yp_msg *);
+extern int yp_post_process_subscription(struct telemetry_data *, int, telemetry_yp_msg *);
 extern int yp_process_subscription_start(struct telemetry_data *t_data, telemetry_yp_msg *);
 extern int yp_process_subscription_term(struct telemetry_data *t_data, telemetry_yp_msg *);
 #endif//TELEMETRY_MSG_H

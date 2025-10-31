@@ -35,13 +35,13 @@ extern int telemetry_log_seq_has_ro_bit(u_int64_t *);
 
 extern int telemetry_peer_log_init(telemetry_peer *, telemetry_tag_t *, int, int);
 extern void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);
-extern int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, telemetry_tag_t *, void *, u_int32_t, int, u_int64_t, char *, int);
+extern int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, telemetry_tag_t *, void *, u_int32_t, int, u_int64_t, char *, int, telemetry_yp_msg *);
 
 extern int telemetry_peer_dump_init(telemetry_peer *, telemetry_tag_t *, int, int);
 extern int telemetry_peer_dump_close(telemetry_peer *, telemetry_tag_t *, int, int);
 extern void telemetry_dump_init_peer(telemetry_peer *);
 extern void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
-extern void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *, int);
+extern void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *, int, telemetry_yp_msg *);
 extern void telemetry_handle_dump_event(struct telemetry_data *, int);
 extern int telemetry_dump_event_runner(struct pm_dump_runner *);
 

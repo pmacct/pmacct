@@ -134,6 +134,7 @@ struct _telemetry_dump_se {
   u_int32_t len;
   u_int64_t seq;
   void *data;
+  struct _telemetry_yp_msg *yp_msg;
 };
 
 struct _telemetry_dump_se_ll_elem {
@@ -151,11 +152,9 @@ struct _telemetry_yp_sub_key {
   u_int32_t id;
 };
 
-typedef struct _telemetry_yp_sub_key telemetry_yp_sub_key;
-
 struct _telemetry_yp_msg {
   u_int8_t type;
-  telemetry_yp_sub_key key;
+  struct _telemetry_yp_sub_key key;
   void *sub_obj;
 };
 
@@ -167,6 +166,7 @@ typedef struct _telemetry_dump_se_ll_elem telemetry_dump_se_ll_elem;
 typedef struct _telemetry_peer_cache telemetry_peer_cache;
 typedef struct _telemetry_peer_timeout telemetry_peer_timeout;
 typedef struct _telemetry_yp_msg telemetry_yp_msg;
+typedef struct _telemetry_yp_sub_key telemetry_yp_sub_key;
 
 /* more includes */
 #include "telemetry_logdump.h"

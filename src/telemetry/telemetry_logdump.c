@@ -36,7 +36,8 @@
 
 /* Functions */
 int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telemetry_tag_t *tag, void *log_data,
-			u_int32_t log_data_len, int data_decoder, u_int64_t log_seq, char *event_type, int output)
+			u_int32_t log_data_len, int data_decoder, u_int64_t log_seq, char *event_type, int output,
+			telemetry_yp_msg *yp_msg)
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
@@ -129,6 +130,31 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): JSON error: %s (%d/%d/%d: %s)",
             config.name, t_data->log_str, json_err.text,
             json_err.line, json_err.column, json_err.position, json_err.source);
+	// XXX return?
+      }
+
+      if (yp_msg) {
+	if (yp_msg->type == YP_SUB_UPDATE || yp_msg->type == YP_SUB_TERM) {
+	  if (yp_msg->sub_obj) {
+	    json_t *sub_local_obj = json_loads(yp_msg->sub_obj, 0, &json_err);
+	    json_object_set_new_nocheck(tmesg_meta_obj, "ietf-yang-push-telemetry-message:yang-push-subscription", sub_local_obj);
+	  }
+	  else {
+	    char *sub_saved = NULL;
+
+	    ret = cdada_map_find(yp_subs, &yp_msg->key, (void **) &sub_saved);
+	    if (ret != CDADA_SUCCESS) {
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription Update (%u) failed Find (telemetry_log_msg)\n",
+		  config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
+	    }
+	    else {
+	      json_t *sub_saved_obj = json_loads(sub_saved, 0, &json_err);
+	      json_object_set_new_nocheck(tmesg_meta_obj, "ietf-yang-push-telemetry-message:yang-push-subscription", sub_saved_obj);
+	      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] YP Subscription Update (%u)\n",
+		  config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
+	    }
+	  }
+        }
       }
 
       {
@@ -216,11 +242,12 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
   return (ret | amqp_ret | kafka_ret);
 }
 
-void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_data, int data_decoder)
+void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_data, int data_decoder, telemetry_yp_msg *yp_msg)
 {
   telemetry_misc_structs *tms;
   telemetry_dump_se_ll *se_ll;
   telemetry_dump_se_ll_elem *se_ll_elem;
+  int ret;
 
   if (!peer) return;
 
@@ -247,6 +274,23 @@ void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_
   se_ll_elem->rec.len = peer->msglen;
   se_ll_elem->rec.decoder = data_decoder;
   se_ll_elem->rec.seq = telemetry_log_seq_get(&tms->log_seq);
+  se_ll_elem->rec.yp_msg = yp_msg;
+  if (yp_msg) {
+    se_ll_elem->rec.yp_msg->sub_obj = NULL;
+
+    if (yp_msg->type == YP_SUB_UPDATE || yp_msg->type == YP_SUB_TERM) {
+      char *sub_saved = NULL;
+
+      ret = cdada_map_find(yp_subs, &yp_msg->key, (void **) &sub_saved);
+      if (ret != CDADA_SUCCESS) {
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription Update (%u) failed Find (telemetry_dump_se_ll_append)\n",
+	    config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
+      }
+      else {
+	se_ll_elem->rec.yp_msg->sub_obj = strdup(sub_saved);
+      }
+    }
+  }
 
   se_ll = (telemetry_dump_se_ll *) peer->bmp_se;
 
@@ -327,6 +371,9 @@ void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *tdsell)
   assert(tdsell->last);
   for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem_next) {
     se_ll_elem_next = se_ll_elem->next;
+    if (se_ll_elem->rec.yp_msg) {
+      free(se_ll_elem->rec.yp_msg->sub_obj);
+    }
     free(se_ll_elem->rec.data);
     free(se_ll_elem);
   }
@@ -555,7 +602,8 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
 
 	for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
 	  telemetry_log_msg(peer, t_data, &telemetry_logdump_tag, se_ll_elem->rec.data, se_ll_elem->rec.len,
-			    se_ll_elem->rec.decoder, se_ll_elem->rec.seq, event_type, config.telemetry_dump_output);
+			    se_ll_elem->rec.decoder, se_ll_elem->rec.seq, event_type, config.telemetry_dump_output,
+			    se_ll_elem->rec.yp_msg);
 	  dump_elems++;
 	}
       }

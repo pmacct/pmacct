@@ -46,7 +46,7 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
 
   /* Yang-Push pre-processing */
   if (unyte_udp_notif_input && data_decoder == TELEMETRY_DATA_DECODER_JSON) {
-    yp_process_subscription(t_data, peer->buf.base, peer->msglen, data_decoder, &yp_msg);
+    yp_pre_process_subscription(t_data, peer->buf.base, peer->msglen, data_decoder, &yp_msg);
   }
 
   if (tms->msglog_backend_methods) {
@@ -55,13 +55,13 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
     if (!telemetry_validate_input_output_decoders(data_decoder, config.telemetry_msglog_output)) {
       telemetry_log_msg(peer, t_data, &telemetry_logdump_tag, peer->buf.base, peer->msglen,
 			data_decoder, telemetry_log_seq_get(&tms->log_seq), event_type,
-			config.telemetry_msglog_output);
+			config.telemetry_msglog_output, &yp_msg);
     }
   }
 
   if (tms->dump_backend_methods) { 
     if (!telemetry_validate_input_output_decoders(data_decoder, config.telemetry_dump_output)) {
-      telemetry_dump_se_ll_append(peer, t_data, data_decoder);
+      telemetry_dump_se_ll_append(peer, t_data, data_decoder, &yp_msg);
     }
   }
 
@@ -77,6 +77,8 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
     default:
       break;
     }
+
+    yp_post_process_subscription(t_data, data_decoder, &yp_msg);
   }
 
   if (tms->msglog_backend_methods || tms->dump_backend_methods) {
@@ -346,19 +348,21 @@ int yp_process_subscription_start(struct telemetry_data *t_data, telemetry_yp_ms
 {
   int ret;
 #if defined WITH_JANSSON
-  json_t *sub_copy, *sub_prev = NULL;
+  char *sub_prev = NULL;
 
-  if (!t_data || !yp_msg) return ERR; 
+  if (!t_data || !yp_msg || !yp_msg->sub_obj) return ERR; 
 
-  sub_copy = json_deep_copy(yp_msg->sub_obj);
-  ret = cdada_map_insert_replace(yp_subs, &yp_msg->key, sub_copy, (void **) &sub_prev);
+  ret = cdada_map_insert_replace(yp_subs, &yp_msg->key, yp_msg->sub_obj, (void **) &sub_prev);
   if (ret != CDADA_SUCCESS) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription %u failed Insert/Replace\n", config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription Started (%u) failed Insert/Replace (ret=%d)\n",
+	config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id, ret);
   }
   else { 
     if (sub_prev) {
-      json_decref(sub_prev);
+      free(sub_prev);
     }
+
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] YP Subscription Started (%u)\n", config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
   }
 #else
   ret = ERR;
@@ -371,17 +375,19 @@ int yp_process_subscription_term(struct telemetry_data *t_data, telemetry_yp_msg
 {
   int ret;
 #if defined WITH_JANSSON
-  json_t *sub_saved = NULL;
+  char *sub_saved = NULL;
 
   if (!t_data || !yp_msg) return ERR;
 
   ret = cdada_map_find(yp_subs, &yp_msg->key, (void **) &sub_saved);
   if (ret != CDADA_SUCCESS) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription %u failed Find/Delete\n", config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] YP Subscription Terminated (%u) failed Find/Delete (ret=%d)\n",
+	config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id, ret);
   }
   else {
-    json_decref(sub_saved);
-    ret = cdada_map_erase(yp_subs, &yp_msg->key);
+    free(sub_saved);
+    cdada_map_erase(yp_subs, &yp_msg->key);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] YP Subscription Terminated (%u)\n", config.name, t_data->log_str, yp_msg->key.hostname, yp_msg->key.id);
   }
 #else
   ret = ERR;
@@ -390,7 +396,7 @@ int yp_process_subscription_term(struct telemetry_data *t_data, telemetry_yp_msg
   return ret;
 }
 
-int yp_process_subscription(struct telemetry_data *t_data, void *payload, u_int32_t payload_len, int data_decoder, telemetry_yp_msg *yp_msg)
+int yp_pre_process_subscription(struct telemetry_data *t_data, void *payload, u_int32_t payload_len, int data_decoder, telemetry_yp_msg *yp_msg)
 {
   int ret = SUCCESS;
   const char *hostname;
@@ -401,9 +407,9 @@ int yp_process_subscription(struct telemetry_data *t_data, void *payload, u_int3
   if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
     json_error_t json_err;
     json_t *payload_obj = json_loads(payload, 0, &json_err);
-    json_t *envelope, *contents, *subscription;
-    json_t *hostname_obj, *sub_id_obj; 
-    
+    json_t *envelope = NULL, *contents = NULL, *subscription = NULL;
+    json_t *hostname_obj = NULL, *sub_id_obj = NULL; 
+
     if (!payload_obj) {
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): JSON error: %s (%d/%d/%d: %s)",
           config.name, t_data->log_str, json_err.text,
@@ -461,11 +467,37 @@ int yp_process_subscription(struct telemetry_data *t_data, void *payload, u_int3
     }
 
     exit_lane:
-    yp_msg->sub_obj = payload_obj;
+    if (yp_msg->type == YP_SUB_START) {
+      yp_msg->sub_obj = json_dumps(subscription, JSON_PRESERVE_ORDER);
+    }
+    else {
+      yp_msg->sub_obj = NULL;
+    }
+
+    json_decref(payload_obj);
   }
 #else
   ret = ERR;
 #endif
 
+  return ret;
+}
+
+int yp_post_process_subscription(struct telemetry_data *t_data, int data_decoder, telemetry_yp_msg *yp_msg)
+{   
+  int ret = SUCCESS;
+
+  if (data_decoder || !t_data || !yp_msg) return ERR;
+          
+#ifdef WITH_JANSSON
+  if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
+    if (yp_msg->sub_obj) {
+      free(yp_msg->sub_obj);
+    }
+  }
+#else
+  ret = ERR;
+#endif 
+      
   return ret;
 }
