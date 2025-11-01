@@ -8997,6 +8997,12 @@ int cfg_key_nfacctd_pre_processing_checks(char *filename, char *name, char *valu
 
 int cfg_custom_packet_parsing_lib(char *filename, char *name, char *value_ptr)
 {
-  Log(LOG_INFO, "INFO: [parsing lib] Got to dynamic lib loading with %s | %s | %s\n", filename, name, value_ptr);
-  DEFAULT_PACKET_PROCESSOR = load_dynamic_lib(value_ptr);
+  if (load_parsing_lib(value_ptr) != DL_Success) {
+    // XXX: should we exit gracefully on error instead of going back to default?
+    Log(LOG_ERR, "ERR: [%s] Failed to load dynamic parsing library! Using default packet processor instead.\n", filename);
+    return ERR;
+  }
+
+  Log(LOG_INFO, "INFO: [%s] Successfully loaded dynamic parsing library %s. Using it as packet processor.\n", filename, value_ptr);
+  return 1;
 }

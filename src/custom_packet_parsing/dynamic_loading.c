@@ -2,48 +2,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pmacct.h"
-#include "packet_processor.h"
+#include "dynamic_loading.h"
 
+/// important detail
+/// const struct dynlib *lib means lib is immutable, i.e., the lib pointer always points to the same address.
+/// however, this does NOT mean the value pointed by lib, which is *lib, is immutable.
+enum dynlib_result dynlib_load_and_resolve(const struct dynlib lib) {
+  void* handle = dlopen(lib.path, RTLD_NOW);
+  // load the dynamic library from name/path
+  if (!handle) {
+    Log(LOG_ERR, "ERROR ( %s ): [dynlib] Could not load provided library %s: %s\n", config.name, lib.path,
+        dlerror());
+    return DL_Error;
+  }
 
-packet_processor load_dynamic_lib(char* lib_path)
-{
+  struct dynlib_fn* fn;
+  for (int index = 0; !dynlib_fn_end(fn = &lib.table[index]); index++) {
+    // just ignore symbols we do not have a target for
+    if (!fn->store)
+      continue;
 
-    packet_processor processor = {
-        NULL,
-        NULL,
-        NULL,
-        NULL
-    };
-
-    void* handle = dlopen(lib_path, RTLD_NOW);
-    if (!handle) {
-        Log(LOG_ERR, "ERROR ( %s ): [parsing lib %s] Error when dlopen-ing provided library : %s\n", config.name, lib_path, dlerror());
-        exit_gracefully(1);
+    // load symbol by name
+    void* sym = dlsym(handle, fn->name);
+    if (!sym) {
+      printf("ERROR ( %s ): [dynlib] expected symbol \"%s\" not found in dynamic library %s.\n", config.name, fn->name,
+             lib.path);
+      return DL_Error;
     }
 
-    processor.bgp_parse_msg = dlsym(handle, "bgp_parse_msg");
-    if (!processor.bgp_parse_msg) {
-        Log(LOG_ERR, "ERROR ( %s ): [parsing lib %s] bgp_parse_msg not found in dynamic parsing library.\n", config.name, lib_path);
-        exit_gracefully(1);
-    }
-    
-    processor.bmp_process_packet = dlsym(handle, "bmp_process_packet");
-    if (!processor.bmp_process_packet) {
-        Log(LOG_ERR, "ERROR ( %s ): [parsing lib %s] bgp_process_packet not found in dynamic parsing library.\n", config.name, lib_path);
-        exit_gracefully(1);
-    }
+    // store symbol found into target address
+    *fn->store = sym;
+  }
 
-    processor.bmp_peer_init = dlsym(handle, "bmp_peer_init");
-    if (!processor.bmp_peer_init) {
-        Log(LOG_ERR, "ERROR ( %s ): [parsing lib %s] bgp_peer_init not found in dynamic parsing library.\n", config.name, lib_path);
-        exit_gracefully(1);
-    }
-
-    processor.bmp_peer_close = dlsym(handle, "bmp_peer_close");
-    if (!processor.bmp_peer_close) {
-        Log(LOG_ERR, "ERROR ( %s ): [parsing lib %s] bgp_peer_close not found in dynamic parsing library.\n", config.name, lib_path);
-        exit_gracefully(1);
-    }
-
-    return processor;
+  return DL_Success;
 }
