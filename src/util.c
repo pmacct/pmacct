@@ -1650,7 +1650,7 @@ void insert_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
     ptr_end = ptr_start + 6 /* $tzone */;
     strftime(buf, 8, "%z", nowtm);
 
-    if (!strcmp(buf, "+0000")) {
+    if (!strcmp(buf, "+0000") && !config.timestamps_rfc9554) {
       ptr_start[0] = 'Z';
       ptr_start++;
       strcpy(ptr_start, ptr_end);
@@ -1676,7 +1676,7 @@ void append_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
 
   strftime(buf, 8, "%z", nowtm);
 
-  if (!strcmp(buf, "+0000")) {
+  if (!strcmp(buf, "+0000") && !config.timestamps_rfc9554) {
     if (max) strcat(s, zulu);
   }
   else {

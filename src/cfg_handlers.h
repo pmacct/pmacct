@@ -105,6 +105,7 @@ extern int cfg_key_sql_locking_style(char *, char *, char *);
 extern int cfg_key_sql_use_copy(char *, char *, char *);
 extern int cfg_key_sql_delimiter(char *, char *, char *);
 extern int cfg_key_timestamps_rfc3339(char *, char *, char *);
+extern int cfg_key_timestamps_rfc9554(char *, char *, char *);
 extern int cfg_key_timestamps_utc(char *, char *, char *);
 extern int cfg_key_timestamps_secs(char *, char *, char *);
 extern int cfg_key_timestamps_since_epoch(char *, char *, char *);
