@@ -743,8 +743,9 @@ int telemetry_daemon(void *t_data_void)
 
     if (telemetry_misc_db->msglog_backend_methods || telemetry_misc_db->dump_backend_methods) {
       gettimeofday(&telemetry_misc_db->log_tstamp, NULL);
-      compose_timestamp(telemetry_misc_db->log_tstamp_str, SRVBUFLEN, &telemetry_misc_db->log_tstamp, TRUE,
-                        config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
+      compose_timestamp(telemetry_misc_db->log_tstamp_str, SRVBUFLEN, &telemetry_misc_db->log_tstamp,
+			!config.timestamps_secs, config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
 
       /* let's reset log sequence here as we do not sequence dump_init/dump_close events */
       if (telemetry_log_seq_has_ro_bit(&telemetry_misc_db->log_seq))
