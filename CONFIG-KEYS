@@ -1951,8 +1951,10 @@ DESC:           Defines the ZeroMQ queue address (host and port) to connect to f
 DEFAULT:        none
 
 KEY:		core_proc_name [GLOBAL]
-DESC:		Defines the name of the core process. This is the equivalent to instantiate named plugins but
-		for the core process.
+DESC:		Defines the name of the core process. This is the equivalent to instantiate named plugins
+		but for the core process. This value is also used to identify the running instance, for
+		example, the process list or as part of the "data-collection-manifest" element of output
+		streaming telemetry.
 DEFAULT:	'default'
 
 KEY:		proc_priority
