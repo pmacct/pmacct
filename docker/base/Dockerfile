@@ -55,9 +55,9 @@ ENV MAKEFLAGS="-j${NUM_WORKERS}"
 ARG DEPS_DONT_CHECK_CERTIFICATE
 RUN ./ci/deps.sh
 
-ARG CUSTOM_LIB_PATH=ci/libnothing.so
+ARG CUSTOM_LIB_PATH=ci/libnothing.so*
 
-COPY ${CUSTOM_LIB_PATH}* /usr/local/libparse.so
+COPY ${CUSTOM_LIB_PATH} /usr/local/libparse.so
 
 # Actual build
 COPY . .
