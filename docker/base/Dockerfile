@@ -54,6 +54,11 @@ ENV MAKEFLAGS="-j${NUM_WORKERS}"
 # Do not check certificates in wget for external deps
 ARG DEPS_DONT_CHECK_CERTIFICATE
 RUN ./ci/deps.sh
+
+ARG CUSTOM_LIB_PATH=ci/libnothing.so
+
+COPY ${CUSTOM_LIB_PATH}* /usr/local/libparse.so
+
 # Actual build
 COPY . .
 RUN export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
@@ -74,10 +79,6 @@ LABEL maintainer="pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 COPY --from=build-stage /usr/local/ /usr/local
 
-ARG CUSTOM_LIB=libnothing.so
-ARG CUSTOM_LIB_PATH=/dev/null/libnothing.so
-
-COPY ${CUSTOM_LIB_PATH}* /usr/local/${CUSTOM_LIB}
 # Runtime deps
 RUN apt-get update && \
   apt-get install -y \
