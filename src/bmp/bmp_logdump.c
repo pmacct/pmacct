@@ -90,12 +90,12 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list
       json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)log_seq));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_since_epoch, config.timestamps_rfc9554,
 			config.timestamps_utc);
       json_object_set_new_nocheck(obj, "timestamp", json_string(tstamp_str));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp_arrival, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_since_epoch, config.timestamps_rfc9554,
 			config.timestamps_utc);
       json_object_set_new_nocheck(obj, "timestamp_arrival", json_string(tstamp_str));
     }
@@ -105,7 +105,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_since_epoch, config.timestamps_rfc9554,
 			config.timestamps_utc);
       json_object_set_new_nocheck(obj, "timestamp_event", json_string(tstamp_str));
     }
@@ -192,13 +192,13 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list
       pm_avro_check(avro_value_set_long(&p_avro_field, log_seq));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
-                        config.timestamps_since_epoch, config.timestamps_rfc3339,
+                        config.timestamps_since_epoch, config.timestamps_rfc9554,
                         config.timestamps_utc);
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_string(&p_avro_field, tstamp_str));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp_arrival, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_since_epoch, config.timestamps_rfc9554,
 			config.timestamps_utc);
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp_arrival", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -218,7 +218,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
-                        config.timestamps_since_epoch, config.timestamps_rfc3339,
+                        config.timestamps_since_epoch, config.timestamps_rfc9554,
                         config.timestamps_utc);
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp_event", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));

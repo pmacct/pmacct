@@ -623,7 +623,7 @@ void encode_tstamp_arrival(char *buf, int buflen, struct timeval *tv, int usec)
   tstamp_arrival++;
 
   compose_timestamp(tstamp_arrival, (buflen - tstamp_len), tv, usec,
-                    config.timestamps_since_epoch, config.timestamps_rfc3339,
+                    config.timestamps_since_epoch, config.timestamps_rfc9554,
                     config.timestamps_utc);
 }
 

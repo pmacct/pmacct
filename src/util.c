@@ -1616,7 +1616,7 @@ void pm_strftime(char *s, int max, char *format, const time_t *time_ref, int utc
   }
 
   strftime(s, max, format, tm_loc);
-  insert_rfc3339_timezone(s, max, tm_loc);
+  insert_rfc9554_timezone(s, max, tm_loc);
 }
 
 /* format is expected in s; tmp being just a temporary buffer;
@@ -1637,58 +1637,45 @@ void pm_strftime_same(char *s, int max, char *tmp, const time_t *time_ref, int u
   }
 
   strftime(tmp, max, s, tm_loc);
-  insert_rfc3339_timezone(tmp, max, tm_loc);
+  insert_rfc9554_timezone(tmp, max, tm_loc);
   strlcpy(s, tmp, max);
 }
 
-void insert_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
+void insert_rfc9554_timezone(char *s, int slen, const struct tm *nowtm)
 {
   char buf[8], tzone_string[] = "$tzone";
-  char *ptr_start = strstr(s, tzone_string), *ptr_end;
+  char *ptr_start = strstr(s, tzone_string);
 
   if (ptr_start) {
-    ptr_end = ptr_start + 6 /* $tzone */;
     strftime(buf, 8, "%z", nowtm);
 
-    if (!strcmp(buf, "+0000") && !config.timestamps_rfc9554) {
-      ptr_start[0] = 'Z';
-      ptr_start++;
-      strcpy(ptr_start, ptr_end);
-    }
-    else {
-      /* ie. '+0200', '-0100', etc. */
-      if (strlen(buf) == 5) {
-	ptr_start[0] = buf[0];
-	ptr_start[1] = buf[1];
-	ptr_start[2] = buf[2];
-	ptr_start[3] = ':';
-	ptr_start[4] = buf[3];
-	ptr_start[5] = buf[4];
-      }
+    /* ie. '+0200', '-0100', etc. */
+    if (strlen(buf) == 5) {
+      ptr_start[0] = buf[0];
+      ptr_start[1] = buf[1];
+      ptr_start[2] = buf[2];
+      ptr_start[3] = ':';
+      ptr_start[4] = buf[3];
+      ptr_start[5] = buf[4];
     }
   }
 }
 
-void append_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
+void append_rfc9554_timezone(char *s, int slen, const struct tm *nowtm)
 {
   int len = strlen(s), max = (slen - len);
-  char buf[8], zulu[] = "Z";
+  char buf[8];
 
   strftime(buf, 8, "%z", nowtm);
 
-  if (!strcmp(buf, "+0000") && !config.timestamps_rfc9554) {
-    if (max) strcat(s, zulu);
-  }
-  else {
-    if (max >= 7) {
-      s[len] = buf[0]; len++;
-      s[len] = buf[1]; len++;
-      s[len] = buf[2]; len++;
-      s[len] = ':'; len++;
-      s[len] = buf[3]; len++;
-      s[len] = buf[4]; len++;
-      s[len] = '\0';
-    }
+  if (max >= 7) {
+    s[len] = buf[0]; len++;
+    s[len] = buf[1]; len++;
+    s[len] = buf[2]; len++;
+    s[len] = ':'; len++;
+    s[len] = buf[3]; len++;
+    s[len] = buf[4]; len++;
+    s[len] = '\0';
   }
 }
 
@@ -2516,7 +2503,7 @@ void write_file_binary(FILE *f, void *obj, size_t len)
   if (obj && len) fwrite(obj, len, 1, f);
 }
 
-void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch, int rfc3339, int utc)
+void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch, int rfc9554, int utc)
 {
   int slen;
   time_t time1;
@@ -2538,16 +2525,16 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
     }
     
     if (tv->tv_sec) {
-      if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
+      if (!rfc9554) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
       else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
     }
     else {
-      if (!rfc3339) slen = snprintf(buf, buflen, "0000-00-00 00:00:00");
+      if (!rfc9554) slen = snprintf(buf, buflen, "0000-00-00 00:00:00");
       else slen = snprintf(buf, buflen, "0000-00-00T00:00:00");
     }
 
     if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", (long)tv->tv_usec);
-    if (rfc3339) append_rfc3339_timezone(buf, buflen, time2);
+    if (rfc9554) append_rfc9554_timezone(buf, buflen, time2);
   }
 }
 

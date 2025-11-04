@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -87,8 +87,8 @@ extern int file_lock(int);
 extern int file_unlock(int);
 extern void pm_strftime(char *, int, char *, const time_t *, int);
 extern void pm_strftime_same(char *, int, char *, const time_t *, int);
-extern void insert_rfc3339_timezone(char *, int, const struct tm *);
-extern void append_rfc3339_timezone(char *, int, const struct tm *);
+extern void insert_rfc9554_timezone(char *, int, const struct tm *);
+extern void append_rfc9554_timezone(char *, int, const struct tm *);
 extern int read_SQLquery_from_file(char *, char *, int);
 extern void stick_bosbit(u_char *);
 extern int check_bosbit(u_char *);

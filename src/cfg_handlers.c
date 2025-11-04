@@ -2559,28 +2559,6 @@ int cfg_key_sql_delimiter(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_timestamps_rfc3339(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
-
-  if (!name) for (; list; list = list->next, changes++) list->cfg.timestamps_rfc3339 = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.timestamps_rfc3339 = value;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_timestamps_rfc9554(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -2590,19 +2568,11 @@ int cfg_key_timestamps_rfc9554(char *filename, char *name, char *value_ptr)
   if (value < 0) return ERR;
 
   if (!name) for (; list; list = list->next, changes++) {
-    /* rfc9554 updates rfc3339 */
-    if (value == TRUE) {
-      list->cfg.timestamps_rfc3339 = value;
-    }
     list->cfg.timestamps_rfc9554 = value;
   }
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        /* rfc9554 updates rfc3339 */
-        if (value == TRUE) {
-	  list->cfg.timestamps_rfc3339 = value;
-	}
         list->cfg.timestamps_rfc9554 = value;
         changes++;
         break;

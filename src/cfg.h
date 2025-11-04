@@ -160,7 +160,6 @@ struct configuration {
   char *sql_locking_style;
   int sql_use_copy;
   char *sql_delimiter;
-  int timestamps_rfc3339;
   int timestamps_rfc9554;
   int timestamps_utc;
   int timestamps_secs;
