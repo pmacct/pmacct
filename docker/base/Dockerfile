@@ -55,9 +55,6 @@ ENV MAKEFLAGS="-j${NUM_WORKERS}"
 ARG DEPS_DONT_CHECK_CERTIFICATE
 RUN ./ci/deps.sh
 
-ARG CUSTOM_LIB_PATH=ci/libnothing.so*
-
-COPY ${CUSTOM_LIB_PATH} /usr/local/libparse.so
 
 # Actual build
 COPY . .
@@ -96,4 +93,10 @@ RUN apt-get update && \
   apt-get -y clean && \
   rm -rf /var/lib/apt/lists/* && \
   ldconfig
+
+
+ARG CUSTOM_LIB_PATH=ci/libnothing.so*
+
+COPY ${CUSTOM_LIB_PATH} /usr/local/libparse.so
+
 ENTRYPOINT ["/bin/bash"]
