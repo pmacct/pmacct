@@ -45,7 +45,7 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
   if (!tms) return;
 
   /* Yang-Push pre-processing */
-  if (unyte_udp_notif_input && data_decoder == TELEMETRY_DATA_DECODER_JSON) {
+  if (yp_udp_notif_input && data_decoder == TELEMETRY_DATA_DECODER_JSON) {
     yp_pre_process_subscription(t_data, peer->buf.base, peer->msglen, data_decoder, &yp_msg);
   }
 
@@ -66,7 +66,7 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
   }
 
   /* Yang-Push post-processing */
-  if (unyte_udp_notif_input && data_decoder == TELEMETRY_DATA_DECODER_JSON) {
+  if (yp_udp_notif_input && data_decoder == TELEMETRY_DATA_DECODER_JSON) {
     switch (yp_msg.type) {
     case YP_SUB_START:
       yp_process_subscription_start(t_data, &yp_msg);
@@ -127,7 +127,7 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 
   (*flags) = FALSE;
 
-  if (!unyte_udp_notif_input && !grpc_collector_input) {
+  if (!yp_udp_notif_input && !grpc_collector_input) {
     ret = telemetry_recv_generic(peer, len);
   }
 

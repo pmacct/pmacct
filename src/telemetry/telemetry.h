@@ -187,7 +187,7 @@ extern telemetry_misc_structs *telemetry_misc_db;
 extern telemetry_peer *telemetry_peers;
 extern void *telemetry_peers_cache;
 extern telemetry_peer_timeout *telemetry_peers_timeout;
-extern int unyte_udp_notif_input, grpc_collector_input;
+extern int yp_udp_notif_input, grpc_collector_input;
 extern telemetry_tag_t telemetry_logdump_tag;
 extern struct sockaddr_storage telemetry_logdump_tag_peer;
 

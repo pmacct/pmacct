@@ -81,7 +81,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
     json_t *payload_obj = NULL;
     json_t *ietf_msg_obj = NULL;
 
-    if (unyte_udp_notif_input) {
+    if (yp_udp_notif_input) {
       if (etype == BGP_LOGDUMP_ET_LOG) {
         json_object_set_new_nocheck(tmesg_meta_obj, "notification-event", json_string(event_type));
       }
@@ -209,7 +209,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
     json_object_set_new_nocheck(obj, "network-operator-metadata", netop_meta_obj);
     json_object_set_new_nocheck(obj, "telemetry-message-metadata", tmesg_meta_obj);
 
-    if (unyte_udp_notif_input) {
+    if (yp_udp_notif_input) {
       ietf_msg_obj = json_object();
       json_object_set_new_nocheck(ietf_msg_obj, "ietf-telemetry-message:message", obj);
       obj = ietf_msg_obj;

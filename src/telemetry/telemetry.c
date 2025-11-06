@@ -43,7 +43,7 @@ telemetry_misc_structs *telemetry_misc_db;
 telemetry_peer *telemetry_peers;
 void *telemetry_peers_cache;
 telemetry_peer_timeout *telemetry_peers_timeout;
-int unyte_udp_notif_input = 0, grpc_collector_input = 0;
+int yp_udp_notif_input = 0, grpc_collector_input = 0;
 telemetry_tag_t telemetry_logdump_tag;
 struct sockaddr_storage telemetry_logdump_tag_peer;
 struct cdada_map_t *yp_subs;
@@ -168,7 +168,7 @@ int telemetry_daemon(void *t_data_void)
   if (config.telemetry_udp_notif_ip || config.telemetry_udp_notif_port) {
 #if defined WITH_UNYTE_UDP_NOTIF
     capture_methods++;
-    unyte_udp_notif_input = TRUE;
+    yp_udp_notif_input = TRUE;
 #else
     Log(LOG_ERR, "ERROR ( %s/%s ): Please recompile with --enable-unyte-udp-notif for UDP-Notif collection. Exiting...\n",
 	config.name, t_data->log_str);
@@ -197,7 +197,7 @@ int telemetry_daemon(void *t_data_void)
 
   memset(consumer_buf, 0, sizeof(consumer_buf));
 
-  if (!unyte_udp_notif_input && !grpc_collector_input) {
+  if (!yp_udp_notif_input && !grpc_collector_input) {
     if (config.telemetry_port_tcp && config.telemetry_port_udp) {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
       exit_gracefully(1);
@@ -256,7 +256,7 @@ int telemetry_daemon(void *t_data_void)
     }
 
     if (config.telemetry_decoder_id != TELEMETRY_DECODER_JSON) {
-      if (unyte_udp_notif_input) {
+      if (yp_udp_notif_input) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Unyte UDP Notif collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
         exit_gracefully(1);
       }
@@ -271,7 +271,7 @@ int telemetry_daemon(void *t_data_void)
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/%s ): maximum telemetry peers allowed: %d\n", config.name, t_data->log_str, config.telemetry_max_peers);
 
-  if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
+  if (config.telemetry_port_udp || yp_udp_notif_input || grpc_collector_input) {
     if (!config.telemetry_peer_timeout) config.telemetry_peer_timeout = TELEMETRY_PEER_TIMEOUT_DEFAULT;
     Log(LOG_INFO, "INFO ( %s/%s ): telemetry peers timeout: %u\n", config.name, t_data->log_str, config.telemetry_peer_timeout);
   }
@@ -283,7 +283,7 @@ int telemetry_daemon(void *t_data_void)
   }
   memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
 
-  if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
+  if (config.telemetry_port_udp || yp_udp_notif_input || grpc_collector_input) {
     telemetry_peers_timeout = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_timeout));
     if (!telemetry_peers_timeout) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_timeout structure. Terminating.\n", config.name, t_data->log_str);
@@ -346,7 +346,7 @@ int telemetry_daemon(void *t_data_void)
     }
   }
 
-  if (!unyte_udp_notif_input && !grpc_collector_input) {
+  if (!yp_udp_notif_input && !grpc_collector_input) {
     if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
     else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
 
@@ -444,7 +444,7 @@ int telemetry_daemon(void *t_data_void)
     }
   }
 
-  if (!unyte_udp_notif_input && !grpc_collector_input) {
+  if (!yp_udp_notif_input && !grpc_collector_input) {
     char srv_string[INET6_ADDRSTRLEN];
     char *srv_interface = NULL, default_interface[] = "all";
     struct host_addr srv_addr;
@@ -464,7 +464,7 @@ int telemetry_daemon(void *t_data_void)
         config.name, t_data->log_str, srv_interface, srv_string, srv_port, srv_proto);
   }
 #if defined WITH_UNYTE_UDP_NOTIF
-  else if (unyte_udp_notif_input) {
+  else if (yp_udp_notif_input) {
     unyte_udp_options_t options = {0};
     int sockfd;
 
@@ -482,7 +482,7 @@ int telemetry_daemon(void *t_data_void)
       exit_gracefully(1);
     }
 
-    sockfd = create_socket_unyte_udp_notif(t_data, config.telemetry_udp_notif_ip, udp_notif_port);
+    sockfd = create_socket_yp_udp_notif(t_data, config.telemetry_udp_notif_ip, udp_notif_port);
 #if defined WITH_EBPF && defined HAVE_SO_REUSEPORT
     if (config.telemetry_udp_notif_rp_ebpf_prog) {
       attach_ebpf_reuseport_balancer(sockfd, config.telemetry_udp_notif_rp_ebpf_prog, config.cluster_name, "telemetry", config.cluster_id, FALSE);
@@ -650,12 +650,12 @@ int telemetry_daemon(void *t_data_void)
     }
     else drt_ptr = NULL;
 
-    if (!unyte_udp_notif_input && !grpc_collector_input) {
+    if (!yp_udp_notif_input && !grpc_collector_input) {
       select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
       if (select_num < 0) goto select_again;
     }
 #if defined WITH_UNYTE_UDP_NOTIF
-    else if (unyte_udp_notif_input) {
+    else if (yp_udp_notif_input) {
       seg_ptr = unyte_udp_queue_read(uun_collector->queue);
       select_num = TRUE; /* anything but zero or negative */
     }
@@ -690,7 +690,7 @@ int telemetry_daemon(void *t_data_void)
     }
 
     /* XXX: UDP-Notif, gRPC cases: timeout handling (to be tested) */
-    if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
+    if (config.telemetry_port_udp || yp_udp_notif_input || grpc_collector_input) {
       if (t_data->now > (last_peers_timeout_check + TELEMETRY_PEER_TIMEOUT_INTERVAL)) {
         for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
           telemetry_peer_timeout *peer_timeout;
@@ -793,7 +793,7 @@ int telemetry_daemon(void *t_data_void)
     if (!select_num) goto select_again;
 
     /* New connection is coming in */
-    if (FD_ISSET(config.telemetry_sock, &read_descs) || unyte_udp_notif_input || grpc_collector_input) {
+    if (FD_ISSET(config.telemetry_sock, &read_descs) || yp_udp_notif_input || grpc_collector_input) {
       if (config.telemetry_port_tcp) {
         fd = accept(config.telemetry_sock, (struct sockaddr *) &client, &clen);
         if (fd == ERR) goto read_data;
@@ -806,7 +806,7 @@ int telemetry_daemon(void *t_data_void)
         else fd = config.telemetry_sock;
       }
 #if defined WITH_UNYTE_UDP_NOTIF
-      else if (unyte_udp_notif_input) {
+      else if (yp_udp_notif_input) {
         if (seg_ptr) {
           unyte_seg_met_t *seg = seg_ptr;
 
@@ -877,7 +877,7 @@ int telemetry_daemon(void *t_data_void)
       }
 
       /* XXX: UDP, UDP-Notif and gRPC cases may be optimized further */
-      if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
+      if (config.telemetry_port_udp || yp_udp_notif_input || grpc_collector_input) {
         telemetry_peer_cache *tpc_ret;
         u_int16_t client_port;
 
@@ -903,7 +903,7 @@ int telemetry_daemon(void *t_data_void)
           if (peer) {
             recalc_fds = TRUE; // XXX: do we need this for the UDP-Notif and gRPC cases?
 
-            if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
+            if (config.telemetry_port_udp || yp_udp_notif_input || grpc_collector_input) {
               tpc.index = peers_idx;
               telemetry_peers_timeout[peers_idx].last_msg = t_data->now;
 
@@ -978,7 +978,7 @@ int telemetry_daemon(void *t_data_void)
 
     switch (config.telemetry_decoder_id) {
     case TELEMETRY_DECODER_JSON:
-      if (!unyte_udp_notif_input && !grpc_collector_input) {
+      if (!yp_udp_notif_input && !grpc_collector_input) {
         ret = telemetry_recv_json(peer, 0, &recv_flags);
       }
       else {
@@ -989,7 +989,7 @@ int telemetry_daemon(void *t_data_void)
           peer->buf.base = (char *) consumer_buf;
           peer->msglen = peer->buf.tot_len = ret;
 
-          if (unyte_udp_notif_input) {
+          if (yp_udp_notif_input) {
             peer->stats.packet_bytes += ret;
           }
           if (grpc_collector_input) {
@@ -1034,7 +1034,7 @@ int telemetry_daemon(void *t_data_void)
         telemetry_process_data(peer, t_data, data_decoder);
       }
 
-      if (unyte_udp_notif_input || grpc_collector_input) {
+      if (yp_udp_notif_input || grpc_collector_input) {
         peer->buf.base = saved_peer_buf;
       }
     }

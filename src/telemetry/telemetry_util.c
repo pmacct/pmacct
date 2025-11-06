@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -56,7 +56,7 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
     peer->bmp_se = NULL;
   }
 
-  if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
+  if (config.telemetry_port_udp || yp_udp_notif_input || grpc_collector_input) {
     telemetry_peer_cache tpc;
 
     memcpy(&tpc.addr, &peer->addr, sizeof(struct host_addr));
@@ -210,7 +210,7 @@ void telemetry_log_global_stats(struct telemetry_data *t_data)
 }
 
 #ifdef WITH_UNYTE_UDP_NOTIF
-int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, char *port)
+int create_socket_yp_udp_notif(struct telemetry_data *t_data, char *address, char *port)
 {
   uint64_t receive_buf_size;
   struct addrinfo *addr_info;
@@ -227,11 +227,11 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
   rc = getaddrinfo(address, port, &hints, &addr_info);
 
   if (rc != 0) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_unyte_udp_notif(): getaddrinfo error: %s\n", config.name, t_data->log_str, gai_strerror(rc));
+    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_yp_udp_notif(): getaddrinfo error: %s\n", config.name, t_data->log_str, gai_strerror(rc));
     exit_gracefully(1);
   }
 
-  Log(LOG_INFO, "INFO ( %s/%s ): create_socket_unyte_udp_notif(): family=%s port=%d\n",
+  Log(LOG_INFO, "INFO ( %s/%s ): create_socket_yp_udp_notif(): family=%s port=%d\n",
       config.name, t_data->log_str, (addr_info->ai_family == AF_INET) ? "IPv4" : "IPv6",
       ntohs(((struct sockaddr_in *)addr_info->ai_addr)->sin_port));
 
@@ -240,7 +240,7 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
 
   /* handle error */
   if (sockfd < 0) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_unyte_udp_notif(): cannot create socket\n", config.name, t_data->log_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_yp_udp_notif(): cannot create socket\n", config.name, t_data->log_str);
     exit_gracefully(1);
   }
 
@@ -248,7 +248,7 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
 #if (defined HAVE_SO_REUSEPORT)
   int optval = 1;
   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int)) < 0) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_unyte_udp_notif(): cannot set SO_REUSEPORT option on socket\n", config.name, t_data->log_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_yp_udp_notif(): cannot set SO_REUSEPORT option on socket\n", config.name, t_data->log_str);
     exit_gracefully(1);
   }
 #endif
@@ -276,12 +276,12 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
   }
 
   if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size)) < 0) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_unyte_udp_notif(): cannot set buffer size\n", config.name, t_data->log_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_yp_udp_notif(): cannot set buffer size\n", config.name, t_data->log_str);
     exit_gracefully(1);
   }
 
   if (bind(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_unyte_udp_notif(): bind() failed\n", config.name, t_data->log_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_yp_udp_notif(): bind() failed\n", config.name, t_data->log_str);
     close(sockfd);
     exit_gracefully(1);
   }

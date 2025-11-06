@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -41,7 +41,7 @@ extern void telemetry_log_peer_stats(telemetry_peer *, struct telemetry_data *);
 extern void telemetry_log_global_stats(struct telemetry_data *);
 
 #ifdef WITH_UNYTE_UDP_NOTIF
-extern int create_socket_unyte_udp_notif(struct telemetry_data *, char *, char *);
+extern int create_socket_yp_udp_notif(struct telemetry_data *, char *, char *);
 #endif
 
 #endif //TELEMETRY_UTIL_H
