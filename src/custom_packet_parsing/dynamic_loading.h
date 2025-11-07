@@ -31,6 +31,7 @@ enum dynlib_result {
 };
 
 /// Load a dynamic library, retrieve symbols and store them where @dynlib_fn#store points to
+/// see @dynlib for more details on the definition of a library
 extern enum dynlib_result dynlib_load_and_resolve(const struct dynlib lib);
 
 #endif

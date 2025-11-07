@@ -4,9 +4,6 @@
 #include "pmacct.h"
 #include "dynamic_loading.h"
 
-/// important detail
-/// const struct dynlib *lib means lib is immutable, i.e., the lib pointer always points to the same address.
-/// however, this does NOT mean the value pointed by lib, which is *lib, is immutable.
 enum dynlib_result dynlib_load_and_resolve(const struct dynlib lib) {
   void* handle = dlopen(lib.path, RTLD_NOW);
   // load the dynamic library from name/path

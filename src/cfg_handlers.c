@@ -9000,7 +9000,7 @@ int cfg_custom_packet_parsing_lib(char *filename, char *name, char *value_ptr)
   if (load_parsing_lib(value_ptr) != DL_Success) {
     // XXX: should we exit gracefully on error instead of going back to default?
     Log(LOG_ERR, "ERR: [%s] Failed to load dynamic parsing library! Using default packet processor instead.\n", filename);
-    return ERR;
+    exit_gracefully(1);
   }
 
   Log(LOG_INFO, "INFO: [%s] Successfully loaded dynamic parsing library %s. Using it as packet processor.\n", filename, value_ptr);
