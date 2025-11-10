@@ -8,13 +8,13 @@ upgrading your installation.
 
 TO:	>= 1.7.10
 FROM:	<= 1.7.9
-TOPIC:  timestamps_rfc3339, timestamps_rfc9554 and pmacct IMT client
+TOPIC:  timestamps_rfc3339, timestamps_rfc9557 and pmacct IMT client
 DESC:   timestamps_rfc3339 has been deprecated and for an interim period
-	will alias on timestamps_rfc9554. Timestamps, except for IMT
+	will alias on timestamps_rfc9557. Timestamps, except for IMT
 	client, will continue to default to a backward compatible format.
 	But if currently using timestamps_rfc3339, upgrading will break
-	backward compatibility as rfc9554 will be adopted.
-	In short, rfc9554 updates rfc3339 by suppressing the use of 'Z'
+	backward compatibility as rfc9557 will be adopted.
+	In short, rfc9557 updates rfc3339 by suppressing the use of 'Z'
 	(zulu) for UTC timestamp. Instead +00:00 is used for UTC and
 	-00:00 is used for unknown timezone.
 

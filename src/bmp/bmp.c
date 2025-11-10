@@ -693,7 +693,7 @@ int skinny_bmp_daemon()
     if (bmp_misc_db->msglog_backend_methods || bmp_misc_db->dump_backend_methods) {
       gettimeofday(&bmp_misc_db->log_tstamp, NULL);
       compose_timestamp(bmp_misc_db->log_tstamp_str, SRVBUFLEN, &bmp_misc_db->log_tstamp, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc9554, config.timestamps_utc);
+			config.timestamps_since_epoch, config.timestamps_rfc9557, config.timestamps_utc);
 
       /* if dumping, let's reset log sequence at the next dump event */
       if (!bmp_misc_db->dump_backend_methods) {
@@ -707,7 +707,7 @@ int skinny_bmp_daemon()
           bmp_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
           bmp_misc_db->dump.tstamp.tv_usec = 0;
           compose_timestamp(bmp_misc_db->dump.tstamp_str, SRVBUFLEN, &bmp_misc_db->dump.tstamp, FALSE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554, config.timestamps_utc);
+			    config.timestamps_since_epoch, config.timestamps_rfc9557, config.timestamps_utc);
 
 	  if (bgp_peer_log_seq_has_ro_bit(&bmp_misc_db->log_seq))
 	    bgp_peer_log_seq_init(&bmp_misc_db->log_seq);

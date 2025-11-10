@@ -56,7 +56,7 @@ char *pmc_compose_json(u_int64_t, u_int64_t, u_int64_t, u_int8_t, struct pkt_pri
 			struct pkt_tunnel_primitives *, u_char *,
 			struct pkt_vlen_hdr_primitives *, pm_counter_t, pm_counter_t,
 			pm_counter_t, u_int8_t, u_int8_t, struct timeval *, int, int);
-void pmc_append_rfc9554_timezone(char *, int, const struct tm *);
+void pmc_append_rfc9557_timezone(char *, int, const struct tm *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int, int, int);
 void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_entry *, int);
 void pmc_custom_primitive_value_print(char *, int, u_char *, struct imt_custom_primitive_entry *, int);
@@ -3834,7 +3834,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t
 }
 #endif
 
-void pmc_append_rfc9554_timezone(char *s, int slen, const struct tm *nowtm)
+void pmc_append_rfc9557_timezone(char *s, int slen, const struct tm *nowtm)
 {
   int len = strlen(s), max = (slen - len);
   char buf[8], zulu[] = "Z";
@@ -3879,7 +3879,7 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
     slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
     if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", (long)tv->tv_usec);
-    pmc_append_rfc9554_timezone(buf, buflen, time2);
+    pmc_append_rfc9557_timezone(buf, buflen, time2);
   }
 }
 

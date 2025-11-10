@@ -744,7 +744,7 @@ int telemetry_daemon(void *t_data_void)
     if (telemetry_misc_db->msglog_backend_methods || telemetry_misc_db->dump_backend_methods) {
       gettimeofday(&telemetry_misc_db->log_tstamp, NULL);
       compose_timestamp(telemetry_misc_db->log_tstamp_str, SRVBUFLEN, &telemetry_misc_db->log_tstamp,
-			!config.timestamps_secs, config.timestamps_since_epoch, config.timestamps_rfc9554,
+			!config.timestamps_secs, config.timestamps_since_epoch, config.timestamps_rfc9557,
 			config.timestamps_utc);
 
       /* let's reset log sequence here as we do not sequence dump_init/dump_close events */
@@ -757,7 +757,7 @@ int telemetry_daemon(void *t_data_void)
           telemetry_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
           telemetry_misc_db->dump.tstamp.tv_usec = 0;
           compose_timestamp(telemetry_misc_db->dump.tstamp_str, SRVBUFLEN, &telemetry_misc_db->dump.tstamp, FALSE,
-                            config.timestamps_since_epoch, config.timestamps_rfc9554, config.timestamps_utc);
+                            config.timestamps_since_epoch, config.timestamps_rfc9557, config.timestamps_utc);
 
           telemetry_handle_dump_event(t_data, max_peers_idx);
           dump_refresh_deadline += telemetry_misc_db->dump.period;

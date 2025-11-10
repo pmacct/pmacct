@@ -48,7 +48,7 @@ void Log(short int level, char *msg, ...)
     }
 
     strftime(timebuf, SRVBUFLEN, "%Y-%m-%dT%H:%M:%S", tmnow);
-    append_rfc9554_timezone(timebuf, SRVBUFLEN, tmnow);
+    append_rfc9557_timezone(timebuf, SRVBUFLEN, tmnow);
 
     if ((!config.syslog && !config.logfile_fd)) {
       if (config.log_stderr_tstamp) {

@@ -836,7 +836,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_start, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%-30s ", tstamp_str);
@@ -846,7 +846,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_end, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%-30s ", tstamp_str);
@@ -856,7 +856,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_arrival, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%-30s ", tstamp_str);
@@ -866,7 +866,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_export, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%-30s ", tstamp_str);
@@ -876,13 +876,13 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &queue[j]->stitch->timestamp_min, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%-30s ", tstamp_str);
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &queue[j]->stitch->timestamp_max, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%-30s ", tstamp_str);
@@ -1290,7 +1290,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_start, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
@@ -1300,7 +1300,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_end, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
@@ -1310,7 +1310,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_arrival, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
@@ -1320,7 +1320,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_export, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
@@ -1330,13 +1330,13 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &queue[j]->stitch->timestamp_min, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &queue[j]->stitch->timestamp_max, TRUE,
-			    config.timestamps_since_epoch, config.timestamps_rfc9554,
+			    config.timestamps_since_epoch, config.timestamps_rfc9557,
 			    config.timestamps_utc);
 
           fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);

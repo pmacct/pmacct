@@ -2559,7 +2559,7 @@ int cfg_key_sql_delimiter(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_timestamps_rfc9554(char *filename, char *name, char *value_ptr)
+int cfg_key_timestamps_rfc9557(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -2568,12 +2568,12 @@ int cfg_key_timestamps_rfc9554(char *filename, char *name, char *value_ptr)
   if (value < 0) return ERR;
 
   if (!name) for (; list; list = list->next, changes++) {
-    list->cfg.timestamps_rfc9554 = value;
+    list->cfg.timestamps_rfc9557 = value;
   }
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.timestamps_rfc9554 = value;
+        list->cfg.timestamps_rfc9557 = value;
         changes++;
         break;
       }

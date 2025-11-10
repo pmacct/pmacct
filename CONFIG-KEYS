@@ -1140,7 +1140,7 @@ DESC:           In SQL this defines the table to use; in print plugin it defines
 
 		%z		The +hhmm numeric time zone in ISO8601:1988 format (ie. -0400)
 
-		$tzone		The time zone in rfc9554 format (ie. including timezone -04:00,
+		$tzone		The time zone in rfc9557 format (ie. including timezone -04:00,
 				+00:00)
 
 		$ref		Configured refresh time value for the plugin.
@@ -1658,10 +1658,10 @@ DESC:		Sets timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival pr
 		to first and last switched times in seconds.
 DEFAULT:        false
 
-KEY:		timestamps_rfc9554
+KEY:		timestamps_rfc9557
 VALUES:		[ true | false ]
 DESC:		Formats timestamps (ie. timestamp_start, timestamp_end, timestamp_arrival primitives) in a
-		rfc9554 compliant way, ie. if UTC timezone yyyy-MM-ddTHH:mm:ss(.ss)+00:00. This is set to
+		rfc9557 compliant way, ie. if UTC timezone yyyy-MM-ddTHH:mm:ss(.ss)+00:00. This is set to
 		false for backward compatibility.
 DEFAULT:	false
 
@@ -3124,7 +3124,7 @@ DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data a
 
 		%z			The +hhmm numeric time zone in ISO8601:1988 format (ie. -0400).
 
-		$tzone			The time zone in rfc9554 format (ie. including timezone -04:00,
+		$tzone			The time zone in rfc9557 format (ie. including timezone -04:00,
 					+00:00).
 
 		$peer_src_ip		BGP peer IP address.

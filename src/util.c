@@ -1616,7 +1616,7 @@ void pm_strftime(char *s, int max, char *format, const time_t *time_ref, int utc
   }
 
   strftime(s, max, format, tm_loc);
-  insert_rfc9554_timezone(s, max, tm_loc);
+  insert_rfc9557_timezone(s, max, tm_loc);
 }
 
 /* format is expected in s; tmp being just a temporary buffer;
@@ -1637,11 +1637,11 @@ void pm_strftime_same(char *s, int max, char *tmp, const time_t *time_ref, int u
   }
 
   strftime(tmp, max, s, tm_loc);
-  insert_rfc9554_timezone(tmp, max, tm_loc);
+  insert_rfc9557_timezone(tmp, max, tm_loc);
   strlcpy(s, tmp, max);
 }
 
-void insert_rfc9554_timezone(char *s, int slen, const struct tm *nowtm)
+void insert_rfc9557_timezone(char *s, int slen, const struct tm *nowtm)
 {
   char buf[8], tzone_string[] = "$tzone";
   char *ptr_start = strstr(s, tzone_string);
@@ -1661,7 +1661,7 @@ void insert_rfc9554_timezone(char *s, int slen, const struct tm *nowtm)
   }
 }
 
-void append_rfc9554_timezone(char *s, int slen, const struct tm *nowtm)
+void append_rfc9557_timezone(char *s, int slen, const struct tm *nowtm)
 {
   int len = strlen(s), max = (slen - len);
   char buf[8];
@@ -2503,7 +2503,7 @@ void write_file_binary(FILE *f, void *obj, size_t len)
   if (obj && len) fwrite(obj, len, 1, f);
 }
 
-void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch, int rfc9554, int utc)
+void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch, int rfc9557, int utc)
 {
   int slen;
   time_t time1;
@@ -2525,16 +2525,16 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
     }
     
     if (tv->tv_sec) {
-      if (!rfc9554) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
+      if (!rfc9557) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
       else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
     }
     else {
-      if (!rfc9554) slen = snprintf(buf, buflen, "0000-00-00 00:00:00");
+      if (!rfc9557) slen = snprintf(buf, buflen, "0000-00-00 00:00:00");
       else slen = snprintf(buf, buflen, "0000-00-00T00:00:00");
     }
 
     if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", (long)tv->tv_usec);
-    if (rfc9554) append_rfc9554_timezone(buf, buflen, time2);
+    if (rfc9557) append_rfc9557_timezone(buf, buflen, time2);
   }
 }
 

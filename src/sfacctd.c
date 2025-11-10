@@ -1383,7 +1383,7 @@ int main(int argc,char **argv, char **envp)
     if (sfacctd_counter_backend_methods) {
       gettimeofday(&sf_cnt_misc_db->log_tstamp, NULL);
       compose_timestamp(sf_cnt_misc_db->log_tstamp_str, SRVBUFLEN, &sf_cnt_misc_db->log_tstamp, TRUE,
-			config.timestamps_since_epoch, config.timestamps_rfc9554, config.timestamps_utc);
+			config.timestamps_since_epoch, config.timestamps_rfc9557, config.timestamps_utc);
 
       /* let's reset log sequence here as we do not sequence dump_init/dump_close events */
       if (bgp_peer_log_seq_has_ro_bit(&sf_cnt_misc_db->log_seq))
