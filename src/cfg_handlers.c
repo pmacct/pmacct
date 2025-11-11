@@ -2006,31 +2006,6 @@ int cfg_key_sql_multi_values(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_mongo_insert_batch(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0, value = 0;
-
-  value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'mongo_insert_batch' has to be > 0.\n", filename);
-    return ERR;
-  }
-
-  if (!name) for (; list; list = list->next, changes++) list->cfg.mongo_insert_batch = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.mongo_insert_batch = value;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

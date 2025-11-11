@@ -156,24 +156,6 @@ static const struct _dictionary_line dictionary[] = {
   {"print_preprocess", cfg_key_sql_preprocess},
   {"print_preprocess_type", cfg_key_sql_preprocess_type},
   {"print_startup_delay", cfg_key_sql_startup_delay},
-  {"mongo_host", cfg_key_sql_host},
-  {"mongo_table", cfg_key_sql_table},
-  {"mongo_user", cfg_key_sql_user},
-  {"mongo_passwd", cfg_key_sql_passwd},
-  {"mongo_refresh_time", cfg_key_sql_refresh_time},
-  {"mongo_cache_entries", cfg_key_print_cache_entries},
-  {"mongo_history", cfg_key_sql_history},
-  {"mongo_history_offset", cfg_key_sql_history_offset},
-  {"mongo_history_roundoff", cfg_key_sql_history_roundoff},
-  {"mongo_time_roundoff", cfg_key_sql_history_roundoff},
-  {"mongo_trigger_exec", cfg_key_sql_trigger_exec},
-  {"mongo_insert_batch", cfg_key_mongo_insert_batch},
-  {"mongo_indexes_file", cfg_key_sql_table_schema},
-  {"mongo_max_writers", cfg_key_dump_max_writers},
-  {"mongo_preprocess", cfg_key_sql_preprocess},
-  {"mongo_preprocess_type", cfg_key_sql_preprocess_type},
-  {"mongo_startup_delay", cfg_key_sql_startup_delay},
-  {"mongo_num_protos", cfg_key_num_protos},
   {"avro_buffer_size", cfg_key_avro_buffer_size},
   {"avro_schema_output_file", cfg_key_avro_schema_file}, /* to be discontinued */
   {"avro_schema_file", cfg_key_avro_schema_file},
@@ -680,10 +662,6 @@ static struct plugin_type_entry plugin_types_list[] = {
 #endif
 #ifdef WITH_SQLITE3
   {PLUGIN_ID_SQLITE3,   "sqlite3",      sqlite3_plugin},
-#endif
-#ifdef WITH_MONGODB
-  {PLUGIN_ID_UNKNOWN,   "mongodb",              mongodb_legacy_warning}, /* Legacy plugin */
-  {PLUGIN_ID_MONGODB,   "mongodb_legacy",       mongodb_plugin}, /* Legacy plugin */
 #endif
 #ifdef WITH_RABBITMQ
   {PLUGIN_ID_AMQP,      "amqp",         amqp_plugin},

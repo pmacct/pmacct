@@ -32,9 +32,8 @@
 #define PLUGIN_ID_PGSQL         6
 #define PLUGIN_ID_SQLITE3       7
 #define PLUGIN_ID_TEE		8
-#define PLUGIN_ID_MONGODB	9
-#define PLUGIN_ID_AMQP		10
-#define PLUGIN_ID_KAFKA		11
+#define PLUGIN_ID_AMQP		9
+#define PLUGIN_ID_KAFKA		10
 #define PLUGIN_ID_UNKNOWN	255 
 
 /* vars */

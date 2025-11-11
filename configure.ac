@@ -460,64 +460,6 @@ AC_ARG_ENABLE(pgsql,
 )
 dnl finish: pgsql handling
 
-dnl start: mongodb handling
-AC_MSG_CHECKING(whether to enable MongoDB support)
-AC_ARG_ENABLE(mongodb,
-  [  --enable-mongodb                 Enable MongoDB support (default: no)],
-  [ case "$enableval" in
-  yes)
-    AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([MONGODB], [libmongoc],, [
-        AC_MSG_CHECKING([default locations for libmongoc])
-        if test -r /usr/lib/libmongoc.a -o -r /usr/lib/libmongoc.so; then
-                MONGODB_LIBS="-L/usr/lib -lmongoc"
-                AC_MSG_RESULT([found in /usr/lib])
-        elif test -r /usr/lib64/libmongoc.a -o -r /usr/lib64/libmongoc.so; then
-                MONGODB_LIBS="-L/usr/lib64 -lmongoc"
-                AC_MSG_RESULT([found in /usr/lib64])
-        elif test -r /usr/local/lib/libmongoc.a -o -r /usr/local/lib/libmongoc.so; then
-                MONGODB_LIBS="-L/usr/local/lib -lmongoc"
-                AC_MSG_RESULT([found in /usr/local/lib])
-        else
-                AC_MSG_RESULT([not found])
-                _save_LIBS="$LIBS"
-                LIBS="$LIBS $MONGODB_LIBS"
-                AC_CHECK_LIB([mongoc], [mongo_connect], [], [AC_MSG_ERROR([
-                        ERROR: missing MongoDB library (0.8 version). Refer to: https://github.com/mongodb/mongo-c-driver-legacy
-                ])])
-                LIBS="$_save_LIBS"
-        fi
-
-        AC_MSG_CHECKING([default locations for mongo.h])
-        if test -r /usr/include/mongo.h; then
-                MONGODB_CFLAGS="-I/usr/include"
-                AC_MSG_RESULT([found in /usr/include])
-        elif test -r /usr/local/include/mongo.h; then
-                MONGODB_CFLAGS="-I/usr/local/include"
-                AC_MSG_RESULT([found in /usr/local/include])
-        else
-                AC_MSG_RESULT([not found])
-                _save_CFLAGS="$CFLAGS"
-                CFLAGS="$CFLAGS $MONGODB_CFLAGS"
-                AC_CHECK_HEADER([mongo.h], [], [AC_MSG_ERROR(ERROR: missing MongoDB headers)])
-                CFLAGS="$_save_CFLAGS"
-        fi
-    ])
-    PLUGINS="${PLUGINS} mongodb"
-    USING_MONGODB="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $MONGODB_CFLAGS"
-    AC_DEFINE(WITH_MONGODB, 1)
-    ;;
-  no)
-    AC_MSG_RESULT(no)
-    ;;
-  esac ],
-  [
-    AC_MSG_RESULT(no)
-  ]
-)
-dnl finish: mongodb handling
-
 dnl start: sqlite3 handling
 AC_MSG_CHECKING(whether to enable SQLite3 support)
 AC_ARG_ENABLE(sqlite3,

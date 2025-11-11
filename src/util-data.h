@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -23,7 +23,6 @@ const struct dynname_token_dict_registry_line dynname_token_dict_registry[] = {
   {DYN_STR_KAFKA_TOPIC, "kafka_topic", NULL},
   {DYN_STR_KAFKA_PART, "kafka_parttion", NULL},
   {DYN_STR_RABBITMQ_RK, "amqp_routing_key", NULL},
-  {DYN_STR_MONGODB_TABLE, "mongodb_table", NULL},
   {DYN_STR_SQL_TABLE, "sql_table", NULL},
   {DYN_STR_PRINT_FILE, "print_output_file", NULL},
   {DYN_STR_WRITER_ID, "writer_id", dtdr_writer_id},

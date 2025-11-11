@@ -81,11 +81,6 @@ libdaemons_la_SOURCES += pgsql_plugin.c
 libdaemons_la_LIBADD  += @PGSQL_LIBS@
 libdaemons_la_CFLAGS  += @PGSQL_CFLAGS@
 endif
-if WITH_MONGODB
-libdaemons_la_SOURCES += mongodb_plugin.c
-libdaemons_la_LIBADD  += @MONGODB_LIBS@
-libdaemons_la_CFLAGS  += @MONGODB_CFLAGS@
-endif
 if WITH_SQLITE3
 libdaemons_la_SOURCES += sqlite3_plugin.c
 libdaemons_la_LIBADD  += @SQLITE3_LIBS@

@@ -164,7 +164,6 @@ struct configuration {
   int timestamps_utc;
   int timestamps_secs;
   int timestamps_since_epoch;
-  int mongo_insert_batch;
   int message_broker_output;
   int avro_buffer_size;
   char *avro_schema_file;

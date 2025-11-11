@@ -509,11 +509,10 @@
 #define DYN_STR_KAFKA_TOPIC		1
 #define DYN_STR_KAFKA_PART		2
 #define DYN_STR_RABBITMQ_RK		3
-#define DYN_STR_MONGODB_TABLE		4
-#define DYN_STR_SQL_TABLE		5
-#define DYN_STR_PRINT_FILE		6
-#define DYN_STR_WRITER_ID		7
-#define DYN_STR_MAX			7
+#define DYN_STR_SQL_TABLE		4
+#define DYN_STR_PRINT_FILE		5
+#define DYN_STR_WRITER_ID		6
+#define DYN_STR_MAX			6
 
 #define DRY_RUN_UNKNOWN			0
 #define DRY_RUN_CONFIG			1

@@ -108,7 +108,6 @@ extern int cfg_key_timestamps_rfc9557(char *, char *, char *);
 extern int cfg_key_timestamps_utc(char *, char *, char *);
 extern int cfg_key_timestamps_secs(char *, char *, char *);
 extern int cfg_key_timestamps_since_epoch(char *, char *, char *);
-extern int cfg_key_mongo_insert_batch(char *, char *, char *);
 extern int cfg_key_message_broker_output(char *, char *, char *);
 extern int cfg_key_avro_buffer_size(char *, char *, char *);
 extern int cfg_key_avro_schema_file(char *, char *, char *);
