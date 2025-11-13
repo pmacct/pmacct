@@ -334,6 +334,8 @@ extern int cfg_key_tee_max_receivers(char *, char *, char *);
 extern int cfg_key_tee_max_receiver_pools(char *, char *, char *);
 extern int cfg_key_tee_pipe_size(char *, char *, char *);
 extern int cfg_key_tee_kafka_config_file(char *, char *, char *);
+extern int cfg_key_tee_counters_refresh_time(char *, char *, char *);
+extern int cfg_key_tee_counters_path(char *, char *, char *);
 extern int cfg_key_bgp_daemon(char *, char *, char *);
 extern int cfg_key_bgp_daemon_msglog_output(char *, char *, char *);
 extern int cfg_key_bgp_daemon_msglog_file(char *, char *, char *);
