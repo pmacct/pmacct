@@ -1118,7 +1118,7 @@ int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, u_int8_t 
       else {
 	char hex[16];
 
-	snprintf(hex, sizeof(hex), "%lx", tmp64);
+	snprintf(hex, sizeof(hex), "%" PRIx64, tmp64);
 	tmp64_json = json_string(hex);
       }
 
