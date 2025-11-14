@@ -134,7 +134,7 @@ def transform_log_file(filename: str, repro_ip: str = None):
         helpers.replace_in_file(filename, '${RANDOM}', token2)
     escape_regex.escape_file(filename)
     if helpers.file_contains_string(filename, token1):
-        helpers.replace_in_file(filename, token1, '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z')
+        helpers.replace_in_file(filename, token1, '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}')
     if helpers.file_contains_string(filename, token2):
         helpers.replace_in_file(filename, token2, '.+')
     if token_ip:
