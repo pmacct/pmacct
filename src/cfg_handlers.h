@@ -95,6 +95,7 @@ extern int cfg_key_sql_history_offset(char *, char *, char *);
 extern int cfg_key_sql_history_roundoff(char *, char *, char *);
 extern int cfg_key_sql_recovery_backup_host(char *, char *, char *);
 extern int cfg_key_sql_trigger_exec(char *, char *, char *);
+extern int cfg_key_sql_trigger_exec_async(char *, char *, char *);
 extern int cfg_key_sql_trigger_time(char *, char *, char *);
 extern int cfg_key_sql_cache_entries(char *, char *, char *);
 extern int cfg_key_sql_dont_try_update(char *, char *, char *);
