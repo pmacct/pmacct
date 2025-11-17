@@ -764,6 +764,7 @@ int telemetry_dump_init_kafka_host(void *tdkh)
 void telemetry_tag_print_json(json_t *netop_labels, telemetry_tag_t *tag)
 {
   json_t *tag_obj = json_object(), *ret = NULL;
+  int dont_decref_tag_obj = FALSE;
 
   bgp_tag_print_json(tag_obj, tag);
 
@@ -787,6 +788,7 @@ void telemetry_tag_print_json(json_t *netop_labels, telemetry_tag_t *tag)
         json_object_set_new_nocheck(netop_label, "name", json_string("label"));
         json_object_set_new_nocheck(netop_label, "anydata-values", ret);
         json_array_append(netop_labels, netop_label);
+	dont_decref_tag_obj = TRUE;
       }
     }
     else if json_is_string(ret) {
@@ -800,6 +802,9 @@ void telemetry_tag_print_json(json_t *netop_labels, telemetry_tag_t *tag)
   }
 
   exit_lane:
-  json_decref(tag_obj);
+
+  if (!dont_decref_tag_obj) {
+    json_decref(tag_obj);
+  }
 }
 #endif
