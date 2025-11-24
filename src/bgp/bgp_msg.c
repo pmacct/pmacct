@@ -505,6 +505,7 @@ int bgp_write_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *
   char my_id_static[] = "1.2.3.4", *my_id = my_id_static;
   struct host_addr my_id_addr, bgp_ip, bgp_id;
   u_int16_t local_as;
+  u_int32_t local_as32;
 
   memset(bopen_reply->bgpo_marker, 0xff, BGP_MARKER_SIZE);
   bopen_reply->bgpo_type = BGP_OPEN;
@@ -513,7 +514,8 @@ int bgp_write_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *
   if (peer->myas > BGP_AS_MAX) {
     if (cap_as4_ptr) {
       bopen_reply->bgpo_myas = htons(BGP_AS_TRANS);
-      *cap_as4_ptr = htonl(peer->myas);
+      local_as32 = htonl(peer->myas);
+      memcpy(cap_as4_ptr, &local_as32, 4); 
     }
     /* This is currently an unsupported configuration */
     else return ERR;
@@ -522,7 +524,8 @@ int bgp_write_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *
     local_as = peer->myas;
     bopen_reply->bgpo_myas = htons(local_as);
     if (cap_as4_ptr) {
-      *cap_as4_ptr = htonl(peer->myas);
+      local_as32 = htonl(peer->myas);
+      memcpy(cap_as4_ptr, &local_as32, 4);
     }
   }
 
