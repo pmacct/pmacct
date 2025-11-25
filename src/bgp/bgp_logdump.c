@@ -2329,9 +2329,13 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
   }
 #endif
 
-  if (config.bgp_table_dump_latest_file && peer) {
-    bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
-    link_latest_output_file(latest_filename, last_filename);
+  if (config.bgp_table_dump_file) {
+    if (config.bgp_table_dump_latest_file && peer) {
+      bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
+      link_latest_output_file(latest_filename, last_filename);
+    }
+
+    close_output_file(peer->log->fd);
   }
 
   if (fd_buf) {
