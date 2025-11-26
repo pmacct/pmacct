@@ -173,106 +173,106 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
         Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): [%s] BGP-LS Unknown TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
       }
     }
-  }
 
-  if (tlv_type == BGP_LS_IP_REACH) {
-    if (!bms->skip_rib) {
-      pfx.family = blsn.nlri.topo_pfx.p.pdesc.addr.family;
-      pfx.prefixlen = blsn.nlri.topo_pfx.p.pdesc.mask.len;
-      pfx_size = ((blsn.nlri.topo_pfx.p.pdesc.mask.len + 7) / 8);
-      memcpy(&pfx.u.prefix, pnt, pfx_size);
-      afi = family2afi(pfx.family);
-      safi = SAFI_UNICAST;
+    if (tlv_type == BGP_LS_IP_REACH) {
+      if (!bms->skip_rib) {
+        pfx.family = blsn.nlri.topo_pfx.p.pdesc.addr.family;
+        pfx.prefixlen = blsn.nlri.topo_pfx.p.pdesc.mask.len;
+        pfx_size = ((blsn.nlri.topo_pfx.p.pdesc.mask.len + 7) / 8);
+        memcpy(&pfx.u.prefix, pnt, pfx_size);
+        afi = family2afi(pfx.family);
+        safi = SAFI_UNICAST;
 
-      route = bgp_node_get(peer, bgp_ls_routing_db->rib[afi][safi], &pfx);
-      for (ri = route->info[modulo]; ri; ri = ri->next) {
-	if (ri->peer == peer) {
-	  break;
-	}
+        route = bgp_node_get(peer, bgp_ls_routing_db->rib[afi][safi], &pfx);
+        for (ri = route->info[modulo]; ri; ri = ri->next) {
+	  if (ri->peer == peer) {
+	    break;
+	  }
+        }
       }
     }
-  }
 
-  if (type == BGP_NLRI_UPDATE) {
-    void *attr_aux = NULL;
-    struct bgp_attr_ls *attr_hdr = NULL, *attr_hdr_prev = NULL;
+    if (type == BGP_NLRI_UPDATE) {
+      void *attr_aux = NULL;
+      struct bgp_attr_ls *attr_hdr = NULL, *attr_hdr_prev = NULL;
 
-    if (!bms->skip_rib) {
-      if (attr_extra && attr_extra->ls.ptr) {
-        attr_hdr = malloc(sizeof(struct bgp_attr_ls));
-        attr_aux = malloc(attr_extra->ls.len);
-        if (attr_hdr && attr_aux) {
-	  memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);
-	  attr_hdr->ptr = attr_aux;
-	  attr_hdr->len = attr_extra->ls.len;
+      if (!bms->skip_rib) {
+        if (attr_extra && attr_extra->ls.ptr) {
+          attr_hdr = malloc(sizeof(struct bgp_attr_ls));
+          attr_aux = malloc(attr_extra->ls.len);
+          if (attr_hdr && attr_aux) {
+	    memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);
+	    attr_hdr->ptr = attr_aux;
+	    attr_hdr->len = attr_extra->ls.len;
 
-	  ret = cdada_map_insert_replace(bgp_ls_nlri_map, &blsn, attr_hdr, (void **) &attr_hdr_prev);
-	  if (ret != CDADA_SUCCESS) {
-	    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-	    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI Insert/Replace\n", config.name, config.type, bgp_peer_str);
-	  }
-	  else {
-	    if (attr_hdr_prev) {
-	      free(attr_hdr_prev->ptr);
-	      free(attr_hdr_prev);
+	    ret = cdada_map_insert_replace(bgp_ls_nlri_map, &blsn, attr_hdr, (void **) &attr_hdr_prev);
+	    if (ret != CDADA_SUCCESS) {
+	      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	      Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI Insert/Replace\n", config.name, config.type, bgp_peer_str);
+	    }
+	    else {
+	      if (attr_hdr_prev) {
+	        free(attr_hdr_prev->ptr);
+	        free(attr_hdr_prev);
+	      }
+	    }
+ 	  }
+        }
+
+        if (tlv_type == BGP_LS_IP_REACH) {
+	  /* New info */
+	  if (!ri) {
+	    new = bgp_info_new(peer);
+
+	    if (new) {
+	      new->peer = peer;
+	      bgp_info_add(peer, route, new, modulo);
+	    }
+	    else {
+	      bgp_unlock_node(peer, route);
+	      goto exit_fail_lane;
 	    }
 	  }
- 	}
-      }
 
-      if (tlv_type == BGP_LS_IP_REACH) {
-	/* New info */
-	if (!ri) {
-	  new = bgp_info_new(peer);
+	  bgp_unlock_node(peer, route);
+        }
 
-	  if (new) {
-	    new->peer = peer;
-	    bgp_info_add(peer, route, new, modulo);
-	  }
-	  else {
-	    bgp_unlock_node(peer, route);
-	    goto exit_fail_lane;
-	  }
-	}
-
-	bgp_unlock_node(peer, route);
-      }
-
-      log_type = BGP_LOG_TYPE_UPDATE;
-    }
-  }
-  else if (type == BGP_NLRI_WITHDRAW) {
-    struct bgp_attr_ls *blsa = NULL;
-
-    if (!bms->skip_rib) {
-      ret = cdada_map_find(bgp_ls_nlri_map, &blsn, (void **) &blsa);
-      if (ret == CDADA_SUCCESS && blsa) {
-        cdada_map_erase(bgp_ls_nlri_map, &blsn);
-        free(blsa->ptr);
-	free(blsa);
-      }
-      else {
-	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-        Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI Withdraw\n", config.name, config.type, bgp_peer_str);
-      }
-
-      if (tlv_type == BGP_LS_IP_REACH) {
-	/* Withdraw specified route from routing table. */
-	if (ri) {
-	  bgp_info_delete(peer, route, ri, modulo);
-	}
-
-	bgp_unlock_node(peer, route);
+        log_type = BGP_LOG_TYPE_UPDATE;
       }
     }
+    else if (type == BGP_NLRI_WITHDRAW) {
+      struct bgp_attr_ls *blsa = NULL;
 
-    log_type = BGP_LOG_TYPE_WITHDRAW;
-  }
+      if (!bms->skip_rib) {
+        ret = cdada_map_find(bgp_ls_nlri_map, &blsn, (void **) &blsa);
+        if (ret == CDADA_SUCCESS && blsa) {
+          cdada_map_erase(bgp_ls_nlri_map, &blsn);
+          free(blsa->ptr);
+	  free(blsa);
+        }
+        else {
+	  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+          Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI Withdraw\n", config.name, config.type, bgp_peer_str);
+        }
 
-  if (bms->msglog_backend_methods) {
-    char event_type[] = "log";
+        if (tlv_type == BGP_LS_IP_REACH) {
+	  /* Withdraw specified route from routing table. */
+	  if (ri) {
+	    bgp_info_delete(peer, route, ri, modulo);
+	  }
 
-    bgp_ls_log_msg(&blsn, &attr_extra->ls, AFI_BGP_LS, blsn.safi, bms->tag, event_type, bms->msglog_output, NULL, log_type);
+	  bgp_unlock_node(peer, route);
+        }
+      }
+
+      log_type = BGP_LOG_TYPE_WITHDRAW;
+    }
+
+    if (bms->msglog_backend_methods) {
+      char event_type[] = "log";
+
+      bgp_ls_log_msg(&blsn, &attr_extra->ls, AFI_BGP_LS, blsn.safi, bms->tag, event_type, bms->msglog_output, NULL, log_type);
+    }
   }
 
   return SUCCESS;
