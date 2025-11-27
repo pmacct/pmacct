@@ -1642,6 +1642,28 @@ int cfg_key_sql_trigger_exec(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sql_trigger_exec_async(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_trigger_exec_async = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.sql_trigger_exec_async = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sql_trigger_time(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
