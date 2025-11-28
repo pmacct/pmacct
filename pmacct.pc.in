@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: @PACKAGE_NAME@
+Description: Build flags exported by pmacct
+Version: @PACKAGE_VERSION@
+Cflags: @A_PC_CFLAGS@
+Libs: @A_PC_LIBS@
