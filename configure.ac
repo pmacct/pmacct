@@ -1277,6 +1277,12 @@ AM_CONDITIONAL([USING_BGP_BINS], [test x"$USING_BGP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
 
+A_PC_CFLAGS="$PMACCT_CFLAGS"
+A_PC_LIBS="$LIBS"
+
+AC_SUBST([A_PC_CFLAGS])
+AC_SUBST([A_PC_LIBS])
+
 AC_CONFIG_FILES([
             src/pmacct-version.h Makefile \
             src/Makefile src/external_libs/Makefile \
@@ -1287,6 +1293,7 @@ AC_CONFIG_FILES([
 	    src/ndpi/Makefile src/filters/Makefile \
 	    examples/lg/Makefile src/ebpf/Makefile \
 	    examples/custom/Makefile \
-      src/buildflags.txt ])
+      src/buildflags.txt \
+      pmacct.pc ])
 
 AC_OUTPUT
