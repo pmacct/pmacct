@@ -37,9 +37,9 @@
 #endif
 
 struct tunnel_entry tunnel_handlers_list[] = {
-  {"gtp", 	ACCT_PM | ACCT_UL, gtp_tunnel_func, 	gtp_tunnel_configurator},
-  {"vxlan", 	ACCT_NF, vxlan_tunnel_func, 	vxlan_tunnel_configurator},
-  {"", 		0, NULL,			NULL},
+  {"gtp", 	ACCT_PM | ACCT_UL, 	gtp_tunnel_configurator},
+  {"vxlan", 	ACCT_SF, 	vxlan_tunnel_configurator},
+  {"", 		0,			NULL},
 };
 
 void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
