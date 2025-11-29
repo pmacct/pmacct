@@ -1170,7 +1170,7 @@ AC_ARG_WITH(external-deps,
 if test x"$WITH_EXTERNAL_DEPS" = x"yes"; then
         dnl Compiled-in dependencies
         INCLUDES="-I${ac_pwd}/src/external_libs/rootfs/include ${INCLUDES} "
-        LDFLAGS="-L${ac_pwd}/src/external_libs/rootfs/lib ${LDFLAGS}"
+        LDFLAGS="-L${ac_pwd}/src/external_libs/rootfs/lib -L/usr/local/lib ${LDFLAGS}"
         AC_MSG_RESULT(yes)
 else
         AC_MSG_RESULT(no)
@@ -1277,8 +1277,8 @@ AM_CONDITIONAL([USING_BGP_BINS], [test x"$USING_BGP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
 
-A_PC_CFLAGS="$PMACCT_CFLAGS"
-A_PC_LIBS="$LIBS"
+A_PC_CFLAGS="$CFLAGS $PMACCT_CFLAGS"
+A_PC_LIBS="$LDFLAGS $LIBS"
 
 AC_SUBST([A_PC_CFLAGS])
 AC_SUBST([A_PC_LIBS])
