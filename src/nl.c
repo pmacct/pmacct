@@ -686,6 +686,8 @@ void tunnel_registry_init()
 // This function reads a VXLAN packet and makes its payload the
 // target for all the packet analysis/inspection, effectively
 // ignoring the entire L2+L3+VXLAN headers that wrap the payload
+//
+// This function is only compatible with sfacctd
 int vxlan_tunnel_func(register struct packet_ptrs *pp) {
 
   SFSample *sample = (SFSample *)pp->f_data;
@@ -739,6 +741,7 @@ int gtp_tunnel_configurator(struct tunnel_handler *th, char *opts)
   return 0;
 }
 
+// This function is only compatible with pmacct and uacctd
 int gtp_tunnel_func(register struct packet_ptrs *pptrs)
 {
   register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
