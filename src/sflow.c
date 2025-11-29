@@ -34,6 +34,7 @@
 #include "ip_frag.h"
 #include "pmacct-data.h"
 #include "crc32.h"
+#include "plugin_common.h"
 
 /*_________________---------------------------__________________
   _________________    lengthCheck            __________________
@@ -64,6 +65,7 @@ int lengthCheck(SFSample *sample, u_char *start, u_int32_t len)
 
 void decodeLinkLayer(SFSample *sample)
 {
+
   u_char *start = (u_char *)sample->header;
   u_char *end = start + sample->headerLen;
   u_char *ptr = start;
@@ -185,6 +187,7 @@ void decodeLinkLayer(SFSample *sample)
 
 void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol)
 {
+  sample->ip_payload = ptr;
   u_char *end = sample->header + sample->headerLen;
   if(ptr > (end - 8)) return; // not enough header bytes left
   switch(ipProtocol) {
@@ -216,10 +219,10 @@ void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol)
       sample->dcd_sport = ntohs(udp.uh_sport);
       sample->dcd_dport = ntohs(udp.uh_dport);
       sample->udp_pduLen = ntohs(udp.uh_ulen);
+      ptr += sizeof(udp);
 
       if (sample->dcd_dport == UDP_PORT_VXLAN) {
-	ptr += sizeof(udp);
-	decodeVXLAN(sample, ptr);
+        decodeVXLAN(sample, ptr);
       }
     }
     break;
@@ -235,37 +238,39 @@ void decodeVXLAN(SFSample *sample, u_char *ptr)
   u_int32_t vni;
   u_char *end = sample->header + sample->headerLen;
 
-  if (ptr > (end - 8)) return;
+  if (ptr > end - sizeof(struct vxlan_hdr)) return;
 
   hdr = (struct vxlan_hdr *) ptr;
 
-  if (hdr->flags & VXLAN_FLAG_I) {
-    vni_ptr = hdr->vni;
+  if (!(hdr->flags & VXLAN_FLAG_I)) return;
 
-    /* decode 24-bit label */
-    vni = *vni_ptr++;
-    vni <<= 8;
-    vni += *vni_ptr++;
-    vni <<= 8;
-    vni += *vni_ptr++;
+  vni_ptr = hdr->vni;
 
-    sample->vni = vni;
-    ptr += sizeof(struct vxlan_hdr);
+  /* decode 24-bit label */
+  vni = *vni_ptr++;
+  vni <<= 8;
+  vni += *vni_ptr++;
+  vni <<= 8;
+  vni += *vni_ptr++;
 
-    if (sample->sppi) {
-      SFSample *sppi = (SFSample *) sample->sppi;
+  sample->vni = vni;
+  ptr += sizeof(struct vxlan_hdr);
 
-      /* preps */
-      sppi->datap = (u_int32_t *) ptr;
-      sppi->header = ptr;
-      sppi->headerLen = (end - ptr);
+  // this pointer has a value only if
+  // the tunnel_* inspection aggregates are configured
+  if (!sample->sppi) return;
 
-      /* decoding inner packet */
-      decodeLinkLayer(sppi);
-      if (sppi->gotIPV4) decodeIPV4(sppi);
-      else if (sppi->gotIPV6) decodeIPV6(sppi);
-    }
-  }
+  SFSample *sppi = (SFSample *) sample->sppi;
+
+  /* preps */
+  sppi->datap = (u_int32_t *) ptr;
+  sppi->header = ptr;
+  sppi->headerLen = end - ptr;
+
+  /* decoding inner packet */
+  decodeLinkLayer(sppi);
+  if (sppi->gotIPV4) decodeIPV4(sppi);
+  else if (sppi->gotIPV6) decodeIPV6(sppi);
 }
 
 /*_________________---------------------------__________________
@@ -275,6 +280,7 @@ void decodeVXLAN(SFSample *sample, u_char *ptr)
 
 void decodeIPV4(SFSample *sample)
 {
+
   if (sample->gotIPV4) {
     u_char *end = sample->header + sample->headerLen;
     u_char *ptr = sample->header + sample->offsetToIPV4;
@@ -1021,162 +1027,6 @@ void readFlowSample_IPv6(SFSample *sample)
 }
 
 /*_________________---------------------------__________________
-  _________________    readv2v4FlowSample    __________________
-  -----------------___________________________------------------
-*/
-
-void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)
-{
-  sample->samplesGenerated = getData32(sample);
-  {
-    u_int32_t samplerId = getData32(sample);
-    sample->ds_class = samplerId >> 24;
-    sample->ds_index = samplerId & 0x00ffffff;
-  }
-  
-  sample->meanSkipCount = getData32(sample);
-  sample->samplePool = getData32(sample);
-  sample->dropEvents = getData32(sample);
-  sample->inputPort = getData32(sample);
-  sample->outputPort = getData32(sample);
-  sample->packet_data_tag = getData32(sample);
-  
-  switch(sample->packet_data_tag) {
-    
-  case INMPACKETTYPE_HEADER: readFlowSample_header(sample); break;
-  case INMPACKETTYPE_IPV4: readFlowSample_IPv4(sample); break;
-  case INMPACKETTYPE_IPV6: readFlowSample_IPv6(sample); break;
-  default: 
-    SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v2/v4 Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
-    xflow_status_table.tot_bad_datagrams++;
-    break;
-  }
-
-  sample->extended_data_tag = 0;
-  {
-    u_int32_t x;
-    sample->num_extended = getData32(sample);
-    for(x = 0; x < sample->num_extended; x++) {
-      u_int32_t extended_tag;
-      extended_tag = getData32(sample);
-      switch(extended_tag) {
-      case INMEXTENDED_SWITCH: readExtendedSwitch(sample); break;
-      case INMEXTENDED_ROUTER: readExtendedRouter(sample); break;
-      case INMEXTENDED_GATEWAY:
-	if(sample->datagramVersion == 2) readExtendedGateway_v2(sample);
-	else readExtendedGateway(sample);
-	break;
-      case INMEXTENDED_USER: readExtendedUser(sample); break;
-      case INMEXTENDED_URL: readExtendedUrl(sample); break;
-      default: 
-	SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v2/v4 Extended Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
-	xflow_status_table.tot_bad_datagrams++;
-	break;
-      }
-    }
-  }
-
-  finalizeSample(sample, pptrsv, req);
-}
-
-/*_________________---------------------------__________________
-  _________________    readv5FlowSample         __________________
-  -----------------___________________________------------------
-*/
-
-void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req, int finalize)
-{
-  struct sfv5_modules_db_field *db_field = NULL;
-  u_int32_t num_elements, sampleLength;
-  u_char *sampleStart;
-
-  sampleLength = getData32(sample);
-  sampleStart = (u_char *)sample->datap;
-  sample->samplesGenerated = getData32(sample);
-  if(expanded) {
-    sample->ds_class = getData32(sample);
-    sample->ds_index = getData32(sample);
-  }
-  else {
-    u_int32_t samplerId = getData32(sample);
-    sample->ds_class = samplerId >> 24;
-    sample->ds_index = samplerId & 0x00ffffff;
-  }
-
-  sample->meanSkipCount = getData32(sample);
-  sample->samplePool = getData32(sample);
-  sample->dropEvents = getData32(sample);
-  if(expanded) {
-    sample->inputPortFormat = getData32(sample);
-    sample->inputPort = getData32(sample);
-    sample->outputPortFormat = getData32(sample);
-    sample->outputPort = getData32(sample);
-  }
-  else {
-    u_int32_t inp, outp;
-    inp = getData32(sample);
-    outp = getData32(sample);
-    sample->inputPortFormat = inp >> 30;
-    sample->outputPortFormat = outp >> 30;
-    sample->inputPort = inp; // skip 0x3fffffff mask
-    sample->outputPort = outp; // skip 0x3fffffff mask
-  }
-
-  num_elements = getData32(sample);
-
-  {
-    u_int32_t el;
-
-    for (el = 0; el < num_elements; el++) {
-      u_int32_t tag, length;
-      u_char *start;
-      tag = getData32(sample);
-      length = getData32(sample);
-      start = (u_char *)sample->datap;
-
-      switch(tag) {
-      case SFLFLOW_HEADER:     readFlowSample_header(sample); break;
-      case SFLFLOW_ETHERNET:   readFlowSample_ethernet(sample); break;
-      case SFLFLOW_IPV4:       readFlowSample_IPv4(sample); break;
-      case SFLFLOW_IPV6:       readFlowSample_IPv6(sample); break;
-      case SFLFLOW_EX_SWITCH:  readExtendedSwitch(sample); break;
-      case SFLFLOW_EX_ROUTER:  readExtendedRouter(sample); break;
-      case SFLFLOW_EX_GATEWAY: readExtendedGateway(sample); break;
-      case SFLFLOW_EX_USER:    readExtendedUser(sample); break;
-      case SFLFLOW_EX_URL:     readExtendedUrl(sample); break;
-      case SFLFLOW_EX_MPLS:    readExtendedMpls(sample); break;
-      case SFLFLOW_EX_NAT:     readExtendedNat(sample); break;
-      case SFLFLOW_EX_MPLS_TUNNEL:  readExtendedMplsTunnel(sample); break;
-      case SFLFLOW_EX_MPLS_VC:      readExtendedMplsVC(sample); break;
-      case SFLFLOW_EX_MPLS_FTN:     readExtendedMplsFTN(sample); break;
-      case SFLFLOW_EX_MPLS_LDP_FEC: readExtendedMplsLDP_FEC(sample); break;
-      case SFLFLOW_EX_VLAN_TUNNEL:  readExtendedVlanTunnel(sample); break;
-/*    case SFLFLOW_EX_PROCESS:      readExtendedProcess(sample); break; */
-      case SFLFLOW_EX_CLASS2:	    readExtendedClass2(sample); break;
-      case SFLFLOW_EX_TAG:	    readExtendedTag(sample); break;
-      default:
-	if (skipBytesAndCheck(sample, length) == ERR) return;
-	break;
-      }
-
-      db_field = sfv5_modules_db_get_next_ie(tag);
-      if (db_field) {
-	db_field->type = tag;
-	db_field->ptr = start;
-	db_field->len = length;
-      }
-      else Log(LOG_WARNING, "WARN ( %s/core ): readv5FlowSample(): no IEs available in SFv5 modules DB.\n", config.name);
-
-      if (lengthCheck(sample, start, length) == ERR) return;
-    }
-  }
-
-  if (lengthCheck(sample, sampleStart, sampleLength) == ERR) return;
-
-  if (finalize) finalizeSample(sample, pptrsv, req);
-}
-
-/*_________________---------------------------__________________
   _________________    skipv5Sample           __________________
   -----------------___________________________------------------
 */
@@ -1189,114 +1039,3 @@ void skipv5Sample(SFSample *sample)
   skipBytes(sample, sampleLength);
 }
 
-
-void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv)
-{
-  struct sfv5_modules_db_field *db_field = NULL;
-  struct xflow_status_entry *xse = NULL;
-  struct bgp_peer *peer = NULL;
-  u_int32_t sampleLength, num_elements, idx;
-  u_char *sampleStart;
-
-  if (sfacctd_counter_backend_methods) {
-    if (pptrsv) xse = (struct xflow_status_entry *) pptrsv->v4.f_status;
-    if (xse) peer = (struct bgp_peer *) xse->sf_cnt; 
-  }
-
-  sampleLength = getData32(sample);
-  sampleStart = (u_char *)sample->datap;
-  sample->cntSequenceNo = getData32(sample);
-
-  if (expanded) {
-    sample->ds_class = getData32(sample);
-    sample->ds_index = getData32(sample);
-  }
-  else {
-    u_int32_t samplerId = getData32(sample);
-    sample->ds_class = samplerId >> 24;
-    sample->ds_index = samplerId & 0x00ffffff;
-  }
-
-  num_elements = getData32(sample);
-
-  for (idx = 0; idx < num_elements; idx++) {
-    u_int32_t tag, length;
-    u_char *start;
-    char buf[51];
-
-    tag = getData32(sample);
-    length = getData32(sample);
-    start = (u_char *)sample->datap;
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): readv5CountersSample(): element tag %s.\n", config.name, printTag(tag, buf, 50));
-
-    db_field = sfv5_modules_db_get_next_ie(tag); 
-    if (db_field) {
-      db_field->type = tag;
-      db_field->ptr = start;
-      db_field->len = length;
-    }
-    else Log(LOG_WARNING, "WARN ( %s/core ): readv5CountersSample(): no IEs available in SFv5 modules DB.\n", config.name);
-
-    if (sfacctd_counter_backend_methods) sf_cnt_log_msg(peer, sample, sample->datagramVersion, length, "log", config.sfacctd_counter_output, tag);
-    else skipBytes(sample, length);
-  }
-
-  if (lengthCheck(sample, sampleStart, sampleLength) == ERR) return;
-}
-
-/*
-   seems like sFlow v2/v4 does not supply any meaningful information
-   about the length of current sample. This is because we still need
-   to parse the very first part of the sample
-*/ 
-void readv2v4CountersSample(SFSample *sample, struct packet_ptrs_vector *pptrsv)
-{
-  struct xflow_status_entry *xse = NULL;
-  struct bgp_peer *peer = NULL;
-  int have_sample = FALSE;
-  u_int32_t length = 0;
-
-  if (sfacctd_counter_backend_methods) {
-    if (pptrsv) xse = (struct xflow_status_entry *) pptrsv->v4.f_status;
-    if (xse) peer = (struct bgp_peer *) xse->sf_cnt;
-  }
-
-  sample->cntSequenceNo = getData32(sample);
-
-  {
-    uint32_t samplerId = getData32(sample);
-    sample->ds_class = samplerId >> 24;
-    sample->ds_index = samplerId & 0x00ffffff;
-  }
-
-  sample->statsSamplingInterval = getData32(sample);
-  sample->counterBlockVersion = getData32(sample);
-
-  switch(sample->counterBlockVersion) {
-  case INMCOUNTERSVERSION_GENERIC:
-  case INMCOUNTERSVERSION_ETHERNET:
-  case INMCOUNTERSVERSION_TOKENRING:
-  case INMCOUNTERSVERSION_FDDI:
-  case INMCOUNTERSVERSION_VG:
-  case INMCOUNTERSVERSION_WAN: length += 88; break;
-  case INMCOUNTERSVERSION_VLAN: break;
-  default: return; 
-  }
-
-  /* now see if there are any specific counter blocks to add */
-  switch(sample->counterBlockVersion) {
-  case INMCOUNTERSVERSION_GENERIC: have_sample = TRUE; break;
-  case INMCOUNTERSVERSION_ETHERNET: have_sample = TRUE; length += 52; break;
-  case INMCOUNTERSVERSION_TOKENRING: length += 72; break;
-  case INMCOUNTERSVERSION_FDDI: break;
-  case INMCOUNTERSVERSION_VG: length += 80; break;
-  case INMCOUNTERSVERSION_WAN: break;
-  case INMCOUNTERSVERSION_VLAN: have_sample = TRUE; length += 28; break;
-  default: return; 
-  }
-
-  if (sfacctd_counter_backend_methods && have_sample)
-    sf_cnt_log_msg(peer, sample, sample->datagramVersion, length, "log", config.sfacctd_counter_output, sample->counterBlockVersion);
-  else
-    skipBytes(sample, length);
-}

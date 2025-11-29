@@ -571,6 +571,279 @@ typedef struct _SFLSample_datagram_hdr {
 
 #define SFL_DATA_PAD 400
 
+
+typedef struct _SFSample {
+  struct timeval *ts;
+  struct sockaddr_storage sourceIP;
+  SFLAddress agent_addr;
+  u_int32_t agentSubId;
+
+  /* the raw pdu */
+  u_char *rawSample;
+  u_int32_t rawSampleLen;
+  u_char *endp;
+  u_int32_t *datap;
+
+  u_int32_t datagramVersion;
+  u_int32_t sampleType;
+  u_int32_t ds_class;
+  u_int32_t ds_index;
+
+  /* generic interface counter sample */
+  SFLIf_counters ifCounters;
+
+  /* sample stream info */
+  u_int32_t sysUpTime;
+  u_int32_t sequenceNo;
+  u_int32_t cntSequenceNo;
+  u_int32_t sampledPacketSize;
+  u_int32_t samplesGenerated;
+  u_int32_t meanSkipCount;
+  u_int32_t samplePool;
+  u_int32_t dropEvents;
+
+  /* the sampled header */
+  u_int32_t packet_data_tag;
+  u_int32_t headerProtocol;
+  u_char *header;
+  int headerLen;
+  u_int32_t stripped;
+
+  /* header decode */
+  int gotIPV4;
+  int offsetToIPV4;
+  int gotIPV6;
+  int offsetToIPV6;
+  struct in_addr dcd_srcIP;
+  struct in_addr dcd_dstIP;
+  u_int32_t dcd_ipProtocol;
+  u_int32_t dcd_ipTos;
+  u_int32_t dcd_ipTTL;
+  u_int32_t dcd_sport;
+  u_int32_t dcd_dport;
+  u_int32_t dcd_tcpFlags;
+  u_int32_t dcd_flowLabel;
+  u_int32_t ip_fragmentOffset;
+  u_int32_t udp_pduLen;
+
+  /* ports */
+  u_int32_t inputPortFormat;
+  u_int32_t outputPortFormat;
+  u_int32_t inputPort;
+  u_int32_t outputPort;
+
+  /* ethernet */
+  u_int32_t eth_type;
+  u_int32_t eth_len;
+  u_char eth_src[8];
+  u_char eth_dst[8];
+
+  /* vlan */
+  u_int32_t in_vlan;
+  u_int32_t in_priority;
+  u_int32_t internalPriority;
+  u_int32_t out_vlan;
+  u_int32_t out_priority;
+  u_int32_t cvlan;
+  u_int32_t cvlan_priority;
+
+  /* MPLS hack */
+  SFLLabelStack lstk;
+  SFLLabelStack lstk_out;
+
+  /* extended data fields */
+  u_int32_t num_extended;
+  u_int32_t extended_data_tag;
+#define SASAMPLE_EXTENDED_DATA_SWITCH 1
+#define SASAMPLE_EXTENDED_DATA_ROUTER 4
+#define SASAMPLE_EXTENDED_DATA_GATEWAY 8
+#define SASAMPLE_EXTENDED_DATA_USER 16
+#define SASAMPLE_EXTENDED_DATA_URL 32
+#define SASAMPLE_EXTENDED_DATA_MPLS 64
+#define SASAMPLE_EXTENDED_DATA_NAT 128
+#define SASAMPLE_EXTENDED_DATA_MPLS_TUNNEL 256
+#define SASAMPLE_EXTENDED_DATA_MPLS_VC 512
+#define SASAMPLE_EXTENDED_DATA_MPLS_FTN 1024
+#define SASAMPLE_EXTENDED_DATA_MPLS_LDP_FEC 2048
+#define SASAMPLE_EXTENDED_DATA_VLAN_TUNNEL 4096
+
+  /* IP forwarding info */
+  SFLAddress nextHop;
+  u_int32_t srcMask;
+  u_int32_t dstMask;
+
+  /* BGP info */
+  SFLAddress bgp_nextHop;
+  u_int32_t my_as;
+  u_int32_t src_as;
+  u_int32_t src_peer_as;
+
+  u_int32_t dst_as_path_len;
+  char dst_as_path[LARGEBUFLEN];
+
+  u_int32_t dst_peer_as;
+  u_int32_t dst_as;
+
+  u_int32_t communities_len;
+  char comms[LARGEBUFLEN];
+  u_int32_t localpref;
+
+  /* user id */
+#define SA_MAX_EXTENDED_USER_LEN 200
+  u_int32_t src_user_charset;
+  u_int32_t src_user_len;
+  char src_user[SA_MAX_EXTENDED_USER_LEN+1];
+  u_int32_t dst_user_charset;
+  u_int32_t dst_user_len;
+  char dst_user[SA_MAX_EXTENDED_USER_LEN+1];
+
+  /* url */
+#define SA_MAX_EXTENDED_URL_LEN 200
+#define SA_MAX_EXTENDED_HOST_LEN 200
+  u_int32_t url_direction;
+  u_int32_t url_len;
+  char url[SA_MAX_EXTENDED_URL_LEN+1];
+  u_int32_t host_len;
+  char host[SA_MAX_EXTENDED_HOST_LEN+1];
+
+  /* mpls */
+  SFLAddress mpls_nextHop;
+  u_int32_t mpls_vll_vc_id;
+  u_int32_t mpls_tunnel_id;
+
+  /* nat */
+  SFLAddress nat_src;
+  SFLAddress nat_dst;
+
+  /* vxlan */
+  u_char *ip_payload;
+  u_int32_t vni;
+
+  /* counter blocks */
+  u_int32_t statsSamplingInterval;
+  u_int32_t counterBlockVersion;
+
+  /* classification */
+  pm_class_t class;
+#if defined (WITH_NDPI)
+  pm_class2_t ndpi_class;
+#endif
+
+  pm_id_t tag;
+  pm_id_t tag2;
+
+  SFLAddress ipsrc;
+  SFLAddress ipdst;
+
+  struct packet_ptrs hdr_ptrs;
+  struct pcap_pkthdr hdr_pcap;
+
+  void *sppi;
+} SFSample;
+
+/* define my own IP header struct - to ease portability */
+struct SF_iphdr
+{
+  u_int8_t version_and_headerLen;
+  u_int8_t tos;
+  u_int16_t tot_len;
+  u_int16_t id;
+  u_int16_t frag_off;
+  u_int8_t ttl;
+  u_int8_t protocol;
+  u_int16_t check;
+  u_int32_t saddr;
+  u_int32_t daddr;
+};
+
+/* same for tcp */
+struct SF_tcphdr
+{
+  u_int16_t th_sport;
+  u_int16_t th_dport;
+  u_int32_t th_seq;
+  u_int32_t th_ack;
+  u_int8_t th_off_and_unused;
+  u_int8_t th_flags;
+  u_int16_t th_win;
+  u_int16_t th_sum;
+  u_int16_t th_urp;
+};
+
+/* and UDP */
+struct SF_udphdr {
+  u_int16_t uh_sport;
+  u_int16_t uh_dport;
+  u_int16_t uh_ulen;
+  u_int16_t uh_sum;
+};
+
+/* and ICMP */
+struct SF_icmphdr
+{
+  u_int8_t type;
+  u_int8_t code;
+  /* ignore the rest */
+};
+
+struct SF_dissect {
+  u_char *hdrBasePtr;
+  u_char *hdrEndPtr;
+  u_int32_t hdrLen;
+  u_char *flowBasePtr;
+  u_char *flowEndPtr;
+  u_int32_t flowLen;
+  u_int32_t *samplesInPkt;
+};
+
+extern void readv2v4FlowSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
+extern void readv5FlowSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *, int);
+extern void readv2v4CountersSample(SFSample *, struct packet_ptrs_vector *);
+extern void readv5CountersSample(SFSample *, int, struct packet_ptrs_vector *);
+extern void skipv5Sample(SFSample *);
+extern void finalizeSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
+extern void InterSampleCleanup(SFSample *);
+extern void decodeMpls(SFSample *, u_char **);
+extern void decodePPP(SFSample *);
+extern void decodeLinkLayer(SFSample *);
+extern void decodeIPLayer4(SFSample *, u_char *, u_int32_t);
+extern void decodeIPV4(SFSample *);
+extern void decodeIPV6(SFSample *);
+extern void decodeVXLAN(SFSample *, u_char *);
+extern void readExtendedSwitch(SFSample *);
+extern void readExtendedRouter(SFSample *);
+extern void readExtendedGateway_v2(SFSample *);
+extern void readExtendedGateway(SFSample *);
+extern void readExtendedUser(SFSample *);
+extern void readExtendedUrl(SFSample *);
+extern void mplsLabelStack(SFSample *, u_int8_t);
+extern void readExtendedMpls(SFSample *);
+extern void readExtendedNat(SFSample *);
+extern void readExtendedMplsTunnel(SFSample *);
+extern void readExtendedMplsVC(SFSample *);
+extern void readExtendedMplsFTN(SFSample *);
+extern void readExtendedMplsLDP_FEC(SFSample *);
+extern void readExtendedVlanTunnel(SFSample *);
+extern void readExtendedProcess(SFSample *);
+extern void readExtendedClass2(SFSample *);
+extern void readExtendedTag(SFSample *);
+extern void readFlowSample_header(SFSample *);
+extern void readFlowSample_ethernet(SFSample *);
+extern void readFlowSample_IPv4(SFSample *);
+extern void readFlowSample_IPv6(SFSample *);
+
+extern char *getPointer(SFSample *);
+extern u_int32_t getData32(SFSample *);
+extern u_int32_t getData32_nobswap(SFSample *);
+extern u_int64_t getData64(SFSample *);
+extern u_int32_t getAddress(SFSample *, SFLAddress *);
+extern char *printTag(u_int32_t, char *, int);
+extern void skipBytes(SFSample *, int);
+extern int skipBytesAndCheck(SFSample *, int);
+extern int lengthCheck(SFSample *, u_char *, u_int32_t);
+extern u_int32_t getString(SFSample *, char *, u_int32_t);
+
+
 #if defined(__cplusplus)
 }  /* extern "C" */
 #endif

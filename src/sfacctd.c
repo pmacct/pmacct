@@ -530,7 +530,6 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
 	  alloc_sppi = TRUE;
 	}
-
         if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK))
           list->cfg.data_type |= PIPE_TYPE_VLEN;
 
@@ -655,6 +654,8 @@ int main(int argc,char **argv, char **envp)
 
   sighandler_action.sa_handler = PM_sigalrm_noop_handler;
   sigaction(SIGALRM, &sighandler_action, NULL);
+
+  tunnel_registry_init();
 
 #ifdef WITH_REDIS
   /* Signals for BMP-BGP-HA feature */
@@ -980,8 +981,8 @@ int main(int argc,char **argv, char **envp)
   pptrs.v4.pkthdr = &dummy_pkthdr;
   Assign16(((struct eth_header *)pptrs.v4.packet_ptr)->ether_type, htons(ETHERTYPE_IP)); /* 0x800 */
   pptrs.v4.mac_ptr = (u_char *)((struct eth_header *)pptrs.v4.packet_ptr)->ether_dhost; 
-  pptrs.v4.iph_ptr = pptrs.v4.packet_ptr + ETHER_HDRLEN; 
-  pptrs.v4.tlh_ptr = pptrs.v4.packet_ptr + ETHER_HDRLEN + sizeof(struct pm_iphdr); 
+  pptrs.v4.iph_ptr = pptrs.v4.packet_ptr + ETHER_HDRLEN;
+  pptrs.v4.tlh_ptr = pptrs.v4.packet_ptr + ETHER_HDRLEN + sizeof(struct pm_iphdr);
   Assign8(((struct pm_iphdr *)pptrs.v4.iph_ptr)->ip_vhl, 5);
   // pptrs.v4.pkthdr->caplen = 38; /* eth_header + pm_iphdr + pm_tlhdr */
   pptrs.v4.pkthdr->caplen = 55;
@@ -1796,382 +1797,389 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
      - sample->eth_type == ETHERTYPE_ARP : pass ARP samples in case we want to account for them.
      - !sample->eth_type : we don't know the L3 protocol. VLAN or MPLS accounting case.
   */
-  if (sample->gotIPV4 || sample->gotIPV6 || sample->eth_type == ETHERTYPE_ARP || !sample->eth_type) {
-    reset_net_status_v(pptrsv);
-    pptrs->flow_type.traffic_type = SF_evaluate_flow_type(pptrs);
+  if (!sample->gotIPV4 && !sample->gotIPV6 && sample->eth_type != ETHERTYPE_ARP && sample->eth_type) {
+    return;
+  }
 
-    if (config.classifier_ndpi || config.aggregate_primitives || sample->eth_type == ETHERTYPE_ARP) {
-      sf_flow_sample_hdr_decode(sample);
+  reset_net_status_v(pptrsv);
+  pptrs->flow_type.traffic_type = SF_evaluate_flow_type(pptrs);
+  if (config.classifier_ndpi || config.aggregate_primitives || sample->eth_type == ETHERTYPE_ARP) {
+    sf_flow_sample_hdr_decode(sample);
+  }
+
+  const tun_reg_find_result result = tunnel_registry_find(pptrs->tun_stack, pptrs->tun_layer, sample->dcd_ipProtocol, sample->dcd_dport);
+  if (result.func) {
+    result.func(pptrs);
+  }
+
+  /* we need to understand the IP protocol version in order to build the fake packet */
+  switch (pptrs->flow_type.traffic_type) {
+  case PM_FTYPE_IPV4:
+    if (req->bpf_filter) {
+      reset_mac(pptrs);
+      reset_ip4(pptrs);
+
+      memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
+      memcpy(pptrs->mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
+      ((struct pm_iphdr *)pptrs->iph_ptr)->ip_vhl = 0x45;
+      memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, &sample->dcd_srcIP, 4);
+      memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, &sample->dcd_dstIP, 4);
+      memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, &dcd_ipProtocol, 1);
+      memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, &dcd_ipTos, 1);
+      memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, &dcd_sport, 2);
+      memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, &dcd_dport, 2);
+      memcpy(&((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
     }
 
-    /* we need to understand the IP protocol version in order to build the fake packet */
-    switch (pptrs->flow_type.traffic_type) {
-    case PM_FTYPE_IPV4:
-      if (req->bpf_filter) {
-        reset_mac(pptrs);
-        reset_ip4(pptrs);
+    pptrs->lm_mask_src = sample->srcMask;
+    pptrs->lm_mask_dst = sample->dstMask;
+    pptrs->lm_method_src = NF_NET_KEEP;
+    pptrs->lm_method_dst = NF_NET_KEEP;
 
-        memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
-        memcpy(pptrs->mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
-	((struct pm_iphdr *)pptrs->iph_ptr)->ip_vhl = 0x45;
-        memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, &sample->dcd_srcIP, 4);
-        memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, &sample->dcd_dstIP, 4);
-        memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, &dcd_ipProtocol, 1);
-        memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, &dcd_ipTos, 1);
-        memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, &dcd_sport, 2);
-        memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, &dcd_dport, 2);
-        memcpy(&((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
+    pptrs->l4_proto = sample->dcd_ipProtocol;
+
+    if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
+    if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
+    if (config.bgp_daemon) {
+      bgp_ls_srcdst_lookup(pptrs, FUNC_TYPE_BGP_LS);
+      bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+    }
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
+    if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
+    if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
+    if (config.bmp_daemon) bmp_srcdst_lookup(pptrs, NULL);
+
+    exec_plugins(pptrs, req);
+    break;
+  case PM_FTYPE_IPV6:
+    memcpy(&pptrsv->v6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
+
+    if (req->bpf_filter) {
+      reset_mac(&pptrsv->v6);
+      reset_ip6(&pptrsv->v6);
+
+      ((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
+      memcpy(pptrsv->v6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
+      memcpy(pptrsv->v6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
+      memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz);
+      memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz);
+      memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_nxt, &dcd_ipProtocol, 1);
+      /* XXX: class ID ? */
+      memcpy(&((struct pm_tlhdr *)pptrsv->v6.tlh_ptr)->src_port, &dcd_sport, 2);
+      memcpy(&((struct pm_tlhdr *)pptrsv->v6.tlh_ptr)->dst_port, &dcd_dport, 2);
+      memcpy(&((struct pm_tcphdr *)pptrsv->v6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
+    }
+
+    pptrsv->v6.lm_mask_src = sample->srcMask;
+    pptrsv->v6.lm_mask_dst = sample->dstMask;
+    pptrsv->v6.lm_method_src = NF_NET_KEEP;
+    pptrsv->v6.lm_method_dst = NF_NET_KEEP;
+
+    pptrsv->v6.l4_proto = sample->dcd_ipProtocol;
+
+    if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, &pptrsv->v6.bta2);
+    if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->v6, &pptrsv->v6.bitr, NULL);
+    if (config.bgp_daemon) {
+      bgp_ls_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP_LS);
+      bgp_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP, NULL);
+    }
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
+    if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
+    if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->v6, &pptrsv->v6.bmed, NULL);
+    if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6, NULL);
+    exec_plugins(&pptrsv->v6, req);
+    break;
+  case PM_FTYPE_VLAN_IPV4:
+    memcpy(&pptrsv->vlan4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
+
+    if (req->bpf_filter) {
+      reset_mac_vlan(&pptrsv->vlan4);
+      reset_ip4(&pptrsv->vlan4);
+
+      memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
+      memcpy(pptrsv->vlan4.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
+      memcpy(pptrsv->vlan4.vlan_ptr, &vlan, 2);
+      ((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_vhl = 0x45;
+      memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_src, &sample->dcd_srcIP, 4);
+      memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_dst, &sample->dcd_dstIP, 4);
+      memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_p, &dcd_ipProtocol, 1);
+      memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_tos, &dcd_ipTos, 1);
+      memcpy(&((struct pm_tlhdr *)pptrsv->vlan4.tlh_ptr)->src_port, &dcd_sport, 2);
+      memcpy(&((struct pm_tlhdr *)pptrsv->vlan4.tlh_ptr)->dst_port, &dcd_dport, 2);
+      memcpy(&((struct pm_tcphdr *)pptrsv->vlan4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
+    }
+
+    pptrsv->vlan4.lm_mask_src = sample->srcMask;
+    pptrsv->vlan4.lm_mask_dst = sample->dstMask;
+    pptrsv->vlan4.lm_method_src = NF_NET_KEEP;
+    pptrsv->vlan4.lm_method_dst = NF_NET_KEEP;
+
+    pptrsv->vlan4.l4_proto = sample->dcd_ipProtocol;
+
+    if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, &pptrsv->vlan4.bta2);
+    if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan4, &pptrsv->vlan4.bitr, NULL);
+    if (config.bgp_daemon) {
+      bgp_ls_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP_LS);
+      bgp_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP, NULL);
+    }
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
+    if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
+    if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan4, &pptrsv->vlan4.bmed, NULL);
+    if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan4, NULL);
+    exec_plugins(&pptrsv->vlan4, req);
+    break;
+  case PM_FTYPE_VLAN_IPV6:
+    memcpy(&pptrsv->vlan6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
+
+    if (req->bpf_filter) {
+      reset_mac_vlan(&pptrsv->vlan6);
+      reset_ip6(&pptrsv->vlan6);
+
+      memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
+      memcpy(pptrsv->vlan6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
+      memcpy(pptrsv->vlan6.vlan_ptr, &vlan, 2);
+      ((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
+      memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz);
+      memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz);
+      memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_nxt, &dcd_ipProtocol, 1);
+      /* XXX: class ID ? */
+      memcpy(&((struct pm_tlhdr *)pptrsv->vlan6.tlh_ptr)->src_port, &dcd_sport, 2);
+      memcpy(&((struct pm_tlhdr *)pptrsv->vlan6.tlh_ptr)->dst_port, &dcd_dport, 2);
+      memcpy(&((struct pm_tcphdr *)pptrsv->vlan6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
+    }
+
+    pptrsv->vlan6.lm_mask_src = sample->srcMask;
+    pptrsv->vlan6.lm_mask_dst = sample->dstMask;
+    pptrsv->vlan6.lm_method_src = NF_NET_KEEP;
+    pptrsv->vlan6.lm_method_dst = NF_NET_KEEP;
+
+    pptrsv->vlan6.l4_proto = sample->dcd_ipProtocol;
+
+    if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, &pptrsv->vlan6.bta2);
+    if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan6, &pptrsv->vlan6.bitr, NULL);
+    if (config.bgp_daemon) {
+      bgp_ls_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP_LS);
+      bgp_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP, NULL);
+    }
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
+    if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
+    if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan6, &pptrsv->vlan6.bmed, NULL);
+    if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan6, NULL);
+    exec_plugins(&pptrsv->vlan6, req);
+    break;
+  case PM_FTYPE_MPLS_IPV4:
+    memcpy(&pptrsv->mpls4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
+
+    if (req->bpf_filter) {
+      u_char *ptr = pptrsv->mpls4.mpls_ptr;
+      u_int32_t label, idx;
+
+      /* XXX: fix caplen */
+      reset_mac(&pptrsv->mpls4);
+
+      memcpy(pptrsv->mpls4.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
+      memcpy(pptrsv->mpls4.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
+
+      for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
+        label = sample->lstk.stack[idx];
+        memcpy(ptr, &label, 4);
+        ptr += 4;
       }
+      stick_bosbit(ptr-4);
+      pptrsv->mpls4.iph_ptr = ptr;
+      pptrsv->mpls4.tlh_ptr = ptr + IP4HdrSz;
+      reset_ip4(&pptrsv->mpls4);
 
-      pptrs->lm_mask_src = sample->srcMask;
-      pptrs->lm_mask_dst = sample->dstMask;
-      pptrs->lm_method_src = NF_NET_KEEP;
-      pptrs->lm_method_dst = NF_NET_KEEP;
+      ((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_vhl = 0x45;
+      memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_src, &sample->dcd_srcIP, 4);
+      memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_dst, &sample->dcd_dstIP, 4);
+      memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_p, &dcd_ipProtocol, 1);
+      memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_tos, &dcd_ipTos, 1);
+      memcpy(&((struct pm_tlhdr *)pptrsv->mpls4.tlh_ptr)->src_port, &dcd_sport, 2);
+      memcpy(&((struct pm_tlhdr *)pptrsv->mpls4.tlh_ptr)->dst_port, &dcd_dport, 2);
+      memcpy(&((struct pm_tcphdr *)pptrsv->mpls4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
+    }
 
-      pptrs->l4_proto = sample->dcd_ipProtocol;
+    pptrsv->mpls4.lm_mask_src = sample->srcMask;
+    pptrsv->mpls4.lm_mask_dst = sample->dstMask;
+    pptrsv->mpls4.lm_method_src = NF_NET_KEEP;
+    pptrsv->mpls4.lm_method_dst = NF_NET_KEEP;
 
+    pptrsv->mpls4.l4_proto = sample->dcd_ipProtocol;
+
+    if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, &pptrsv->mpls4.bta2);
+    if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls4, &pptrsv->mpls4.bitr, NULL);
+    if (config.bgp_daemon) {
+      bgp_ls_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP_LS);
+      bgp_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP, NULL);
+    }
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
+    if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
+    if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls4, &pptrsv->mpls4.bmed, NULL);
+    if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls4, NULL);
+    exec_plugins(&pptrsv->mpls4, req);
+    break;
+  case PM_FTYPE_MPLS_IPV6:
+    memcpy(&pptrsv->mpls6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
+
+    if (req->bpf_filter) {
+      u_char *ptr = pptrsv->mpls6.mpls_ptr;
+      u_int32_t label, idx;
+
+      /* XXX: fix caplen */
+      reset_mac(&pptrsv->mpls6);
+      memcpy(pptrsv->mpls6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
+      memcpy(pptrsv->mpls6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
+
+      for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
+        label = sample->lstk.stack[idx];
+        memcpy(ptr, &label, 4);
+        ptr += 4;
+      }
+      stick_bosbit(ptr-4);
+      pptrsv->mpls6.iph_ptr = ptr;
+      pptrsv->mpls6.tlh_ptr = ptr + IP6HdrSz;
+      reset_ip6(&pptrsv->mpls6);
+
+      ((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
+      memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz);
+      memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz);
+      memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_nxt, &dcd_ipProtocol, 1);
+      /* XXX: class ID ? */
+      memcpy(&((struct pm_tlhdr *)pptrsv->mpls6.tlh_ptr)->src_port, &dcd_sport, 2);
+      memcpy(&((struct pm_tlhdr *)pptrsv->mpls6.tlh_ptr)->dst_port, &dcd_dport, 2);
+      memcpy(&((struct pm_tcphdr *)pptrsv->mpls6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
+    }
+
+    pptrsv->mpls6.lm_mask_src = sample->srcMask;
+    pptrsv->mpls6.lm_mask_dst = sample->dstMask;
+    pptrsv->mpls6.lm_method_src = NF_NET_KEEP;
+    pptrsv->mpls6.lm_method_dst = NF_NET_KEEP;
+
+    pptrsv->mpls6.l4_proto = sample->dcd_ipProtocol;
+
+    if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, &pptrsv->mpls6.bta2);
+    if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls6, &pptrsv->mpls6.bitr, NULL);
+    if (config.bgp_daemon) {
+      bgp_ls_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP_LS);
+      bgp_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP, NULL);
+    }
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
+    if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
+    if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls6, &pptrsv->mpls6.bmed, NULL);
+    if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls6, NULL);
+    exec_plugins(&pptrsv->mpls6, req);
+    break;
+  case PM_FTYPE_VLAN_MPLS_IPV4:
+    memcpy(&pptrsv->vlanmpls4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
+
+    if (req->bpf_filter) {
+      u_char *ptr = pptrsv->vlanmpls4.mpls_ptr;
+      u_int32_t label, idx;
+
+      /* XXX: fix caplen */
+      reset_mac_vlan(&pptrsv->vlanmpls4);
+      memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
+      memcpy(pptrsv->vlanmpls4.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
+      memcpy(pptrsv->vlanmpls4.vlan_ptr, &vlan, 2);
+
+      for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
+        label = sample->lstk.stack[idx];
+        memcpy(ptr, &label, 4);
+        ptr += 4;
+      }
+      stick_bosbit(ptr-4);
+      pptrsv->vlanmpls4.iph_ptr = ptr;
+      pptrsv->vlanmpls4.tlh_ptr = ptr + IP4HdrSz;
+      reset_ip4(&pptrsv->vlanmpls4);
+
+      ((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_vhl = 0x45;
+      memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_src, &sample->dcd_srcIP, 4);
+      memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_dst, &sample->dcd_dstIP, 4);
+      memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_p, &dcd_ipProtocol, 1);
+      memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_tos, &dcd_ipTos, 1);
+      memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->src_port, &dcd_sport, 2);
+      memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->dst_port, &dcd_dport, 2);
+      memcpy(&((struct pm_tcphdr *)pptrsv->vlanmpls4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
+    }
+
+    pptrsv->vlanmpls4.lm_mask_src = sample->srcMask;
+    pptrsv->vlanmpls4.lm_mask_dst = sample->dstMask;
+    pptrsv->vlanmpls4.lm_method_src = NF_NET_KEEP;
+    pptrsv->vlanmpls4.lm_method_dst = NF_NET_KEEP;
+
+    pptrsv->vlanmpls4.l4_proto = sample->dcd_ipProtocol;
+
+    if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, &pptrsv->vlanmpls4.bta2);
+    if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bitr, NULL);
+    if (config.bgp_daemon) {
+      bgp_ls_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP_LS);
+      bgp_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP, NULL);
+    }
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
+    if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
+    if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bmed, NULL);
+    if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls4, NULL);
+    exec_plugins(&pptrsv->vlanmpls4, req);
+    break;
+  case PM_FTYPE_VLAN_MPLS_IPV6:
+    memcpy(&pptrsv->vlanmpls6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
+
+    if (req->bpf_filter) {
+      u_char *ptr = pptrsv->vlanmpls6.mpls_ptr;
+      u_int32_t label, idx;
+
+      /* XXX: fix caplen */
+      reset_mac_vlan(&pptrsv->vlanmpls6);
+      memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
+      memcpy(pptrsv->vlanmpls6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
+      memcpy(pptrsv->vlanmpls6.vlan_ptr, &vlan, 2);
+
+      for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
+        label = sample->lstk.stack[idx];
+        memcpy(ptr, &label, 4);
+        ptr += 4;
+      }
+      stick_bosbit(ptr-4);
+      pptrsv->vlanmpls6.iph_ptr = ptr;
+      pptrsv->vlanmpls6.tlh_ptr = ptr + IP6HdrSz;
+      reset_ip6(&pptrsv->vlanmpls6);
+
+      ((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
+      memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz);
+      memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz);
+      memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_nxt, &dcd_ipProtocol, 1);
+      /* XXX: class ID ? */
+      memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->src_port, &dcd_sport, 2);
+      memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->dst_port, &dcd_dport, 2);
+      memcpy(&((struct pm_tcphdr *)pptrsv->vlanmpls6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
+    }
+
+    pptrsv->vlanmpls6.lm_mask_src = sample->srcMask;
+    pptrsv->vlanmpls6.lm_mask_dst = sample->dstMask;
+    pptrsv->vlanmpls6.lm_method_src = NF_NET_KEEP;
+    pptrsv->vlanmpls6.lm_method_dst = NF_NET_KEEP;
+
+    pptrsv->vlanmpls6.l4_proto = sample->dcd_ipProtocol;
+
+    if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, &pptrsv->vlanmpls6.bta2);
+    if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bitr, NULL);
+    if (config.bgp_daemon) {
+      bgp_ls_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP_LS);
+      bgp_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP, NULL);
+    }
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
+    if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
+    if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bmed, NULL);
+    if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls6, NULL);
+    exec_plugins(&pptrsv->vlanmpls6, req);
+    break;
+  default:
+    if (config.aggregate_unknown_etype && sample->eth_type == ETHERTYPE_ARP) {
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
-      if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-      if (config.bgp_daemon) {
-	bgp_ls_srcdst_lookup(pptrs, FUNC_TYPE_BGP_LS);
-	bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
-      }
-      if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
-      if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
-      if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(pptrs, NULL);
       exec_plugins(pptrs, req);
-      break;
-    case PM_FTYPE_IPV6:
-      memcpy(&pptrsv->v6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
-
-      if (req->bpf_filter) {
-        reset_mac(&pptrsv->v6);
-        reset_ip6(&pptrsv->v6);
-
-	((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
-        memcpy(pptrsv->v6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
-        memcpy(pptrsv->v6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN);
-        memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz);
-        memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz);
-        memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_nxt, &dcd_ipProtocol, 1);
-        /* XXX: class ID ? */
-        memcpy(&((struct pm_tlhdr *)pptrsv->v6.tlh_ptr)->src_port, &dcd_sport, 2);
-        memcpy(&((struct pm_tlhdr *)pptrsv->v6.tlh_ptr)->dst_port, &dcd_dport, 2);
-        memcpy(&((struct pm_tcphdr *)pptrsv->v6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
-      }
-
-      pptrsv->v6.lm_mask_src = sample->srcMask;
-      pptrsv->v6.lm_mask_dst = sample->dstMask;
-      pptrsv->v6.lm_method_src = NF_NET_KEEP;
-      pptrsv->v6.lm_method_dst = NF_NET_KEEP;
-
-      pptrsv->v6.l4_proto = sample->dcd_ipProtocol;
-
-      if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, &pptrsv->v6.bta2);
-      if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->v6, &pptrsv->v6.bitr, NULL);
-      if (config.bgp_daemon) {
-	bgp_ls_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP_LS);
-	bgp_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP, NULL);
-      }
-      if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
-      if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
-      if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->v6, &pptrsv->v6.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6, NULL);
-      exec_plugins(&pptrsv->v6, req);
-      break;
-    case PM_FTYPE_VLAN_IPV4:
-      memcpy(&pptrsv->vlan4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
-
-      if (req->bpf_filter) {
-        reset_mac_vlan(&pptrsv->vlan4);
-        reset_ip4(&pptrsv->vlan4);
-
-        memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlan4.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlan4.vlan_ptr, &vlan, 2); 
-	((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_vhl = 0x45;
-        memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_src, &sample->dcd_srcIP, 4);
-        memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_dst, &sample->dcd_dstIP, 4);
-        memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_p, &dcd_ipProtocol, 1);
-        memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_tos, &dcd_ipTos, 1); 
-        memcpy(&((struct pm_tlhdr *)pptrsv->vlan4.tlh_ptr)->src_port, &dcd_sport, 2);
-        memcpy(&((struct pm_tlhdr *)pptrsv->vlan4.tlh_ptr)->dst_port, &dcd_dport, 2);
-        memcpy(&((struct pm_tcphdr *)pptrsv->vlan4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
-      }
-
-      pptrsv->vlan4.lm_mask_src = sample->srcMask;
-      pptrsv->vlan4.lm_mask_dst = sample->dstMask;
-      pptrsv->vlan4.lm_method_src = NF_NET_KEEP;
-      pptrsv->vlan4.lm_method_dst = NF_NET_KEEP;
-
-      pptrsv->vlan4.l4_proto = sample->dcd_ipProtocol;
-
-      if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, &pptrsv->vlan4.bta2);
-      if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan4, &pptrsv->vlan4.bitr, NULL);
-      if (config.bgp_daemon) {
-	bgp_ls_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP_LS);
-	bgp_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP, NULL);
-      }
-      if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
-      if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
-      if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan4, &pptrsv->vlan4.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan4, NULL);
-      exec_plugins(&pptrsv->vlan4, req);
-      break;
-    case PM_FTYPE_VLAN_IPV6:
-      memcpy(&pptrsv->vlan6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
-
-      if (req->bpf_filter) {
-        reset_mac_vlan(&pptrsv->vlan6);
-        reset_ip6(&pptrsv->vlan6);
-
-        memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN);
-        memcpy(pptrsv->vlan6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlan6.vlan_ptr, &vlan, 2); 
-	((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
-        memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz); 
-        memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz);
-        memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_nxt, &dcd_ipProtocol, 1); 
-        /* XXX: class ID ? */
-        memcpy(&((struct pm_tlhdr *)pptrsv->vlan6.tlh_ptr)->src_port, &dcd_sport, 2);
-        memcpy(&((struct pm_tlhdr *)pptrsv->vlan6.tlh_ptr)->dst_port, &dcd_dport, 2);
-        memcpy(&((struct pm_tcphdr *)pptrsv->vlan6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
-      }
-
-      pptrsv->vlan6.lm_mask_src = sample->srcMask;
-      pptrsv->vlan6.lm_mask_dst = sample->dstMask;
-      pptrsv->vlan6.lm_method_src = NF_NET_KEEP;
-      pptrsv->vlan6.lm_method_dst = NF_NET_KEEP;
-
-      pptrsv->vlan6.l4_proto = sample->dcd_ipProtocol;
-
-      if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, &pptrsv->vlan6.bta2);
-      if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan6, &pptrsv->vlan6.bitr, NULL);
-      if (config.bgp_daemon) {
-	bgp_ls_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP_LS);
-	bgp_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP, NULL);
-      }
-      if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
-      if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
-      if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan6, &pptrsv->vlan6.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan6, NULL);
-      exec_plugins(&pptrsv->vlan6, req);
-      break;
-    case PM_FTYPE_MPLS_IPV4:
-      memcpy(&pptrsv->mpls4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
-
-      if (req->bpf_filter) {
-        u_char *ptr = pptrsv->mpls4.mpls_ptr;
-        u_int32_t label, idx;
-
-        /* XXX: fix caplen */
-        reset_mac(&pptrsv->mpls4);
-
-        memcpy(pptrsv->mpls4.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
-        memcpy(pptrsv->mpls4.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-
-        for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) { 
-          label = sample->lstk.stack[idx];
-          memcpy(ptr, &label, 4);
-          ptr += 4;
-        }
-	stick_bosbit(ptr-4);
-        pptrsv->mpls4.iph_ptr = ptr;
-        pptrsv->mpls4.tlh_ptr = ptr + IP4HdrSz;
-        reset_ip4(&pptrsv->mpls4);
-	
-	((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_vhl = 0x45;
-        memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_src, &sample->dcd_srcIP, 4);
-        memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_dst, &sample->dcd_dstIP, 4); 
-        memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_p, &dcd_ipProtocol, 1); 
-        memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_tos, &dcd_ipTos, 1); 
-        memcpy(&((struct pm_tlhdr *)pptrsv->mpls4.tlh_ptr)->src_port, &dcd_sport, 2);
-        memcpy(&((struct pm_tlhdr *)pptrsv->mpls4.tlh_ptr)->dst_port, &dcd_dport, 2);
-        memcpy(&((struct pm_tcphdr *)pptrsv->mpls4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
-      }
-
-      pptrsv->mpls4.lm_mask_src = sample->srcMask;
-      pptrsv->mpls4.lm_mask_dst = sample->dstMask;
-      pptrsv->mpls4.lm_method_src = NF_NET_KEEP;
-      pptrsv->mpls4.lm_method_dst = NF_NET_KEEP;
-
-      pptrsv->mpls4.l4_proto = sample->dcd_ipProtocol;
-
-      if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, &pptrsv->mpls4.bta2);
-      if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls4, &pptrsv->mpls4.bitr, NULL);
-      if (config.bgp_daemon) {
-	bgp_ls_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP_LS);
-	bgp_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP, NULL);
-      }
-      if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
-      if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
-      if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls4, &pptrsv->mpls4.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls4, NULL);
-      exec_plugins(&pptrsv->mpls4, req);
-      break;
-    case PM_FTYPE_MPLS_IPV6:
-      memcpy(&pptrsv->mpls6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
-
-      if (req->bpf_filter) {
-        u_char *ptr = pptrsv->mpls6.mpls_ptr;
-        u_int32_t label, idx;
-
-        /* XXX: fix caplen */
-        reset_mac(&pptrsv->mpls6);
-        memcpy(pptrsv->mpls6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
-        memcpy(pptrsv->mpls6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-
-	for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
-	  label = sample->lstk.stack[idx];
-	  memcpy(ptr, &label, 4);
-	  ptr += 4;
-	}
-	stick_bosbit(ptr-4);
-        pptrsv->mpls6.iph_ptr = ptr;
-        pptrsv->mpls6.tlh_ptr = ptr + IP6HdrSz;
-        reset_ip6(&pptrsv->mpls6);
-
-	((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
-        memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz); 
-        memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz); 
-        memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_nxt, &dcd_ipProtocol, 1); 
-        /* XXX: class ID ? */
-        memcpy(&((struct pm_tlhdr *)pptrsv->mpls6.tlh_ptr)->src_port, &dcd_sport, 2);
-        memcpy(&((struct pm_tlhdr *)pptrsv->mpls6.tlh_ptr)->dst_port, &dcd_dport, 2);
-        memcpy(&((struct pm_tcphdr *)pptrsv->mpls6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
-      }
-
-      pptrsv->mpls6.lm_mask_src = sample->srcMask;
-      pptrsv->mpls6.lm_mask_dst = sample->dstMask;
-      pptrsv->mpls6.lm_method_src = NF_NET_KEEP;
-      pptrsv->mpls6.lm_method_dst = NF_NET_KEEP;
-
-      pptrsv->mpls6.l4_proto = sample->dcd_ipProtocol;
-
-      if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, &pptrsv->mpls6.bta2);
-      if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls6, &pptrsv->mpls6.bitr, NULL);
-      if (config.bgp_daemon) {
-	bgp_ls_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP_LS);
-	bgp_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP, NULL);
-      }
-      if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
-      if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
-      if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls6, &pptrsv->mpls6.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls6, NULL);
-      exec_plugins(&pptrsv->mpls6, req);
-      break;
-    case PM_FTYPE_VLAN_MPLS_IPV4:
-      memcpy(&pptrsv->vlanmpls4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
-
-      if (req->bpf_filter) {
-        u_char *ptr = pptrsv->vlanmpls4.mpls_ptr;
-        u_int32_t label, idx;
-
-        /* XXX: fix caplen */
-        reset_mac_vlan(&pptrsv->vlanmpls4);
-        memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlanmpls4.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlanmpls4.vlan_ptr, &vlan, 2); 
-
-	for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
-	  label = sample->lstk.stack[idx];
-	  memcpy(ptr, &label, 4);
-	  ptr += 4;
-	}
-	stick_bosbit(ptr-4);
-        pptrsv->vlanmpls4.iph_ptr = ptr;
-        pptrsv->vlanmpls4.tlh_ptr = ptr + IP4HdrSz;
-        reset_ip4(&pptrsv->vlanmpls4);
-
-	((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_vhl = 0x45;
-        memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_src, &sample->dcd_srcIP, 4); 
-        memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_dst, &sample->dcd_dstIP, 4);
-        memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_p, &dcd_ipProtocol, 1);
-        memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_tos, &dcd_ipTos, 1);
-        memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->src_port, &dcd_sport, 2);
-        memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->dst_port, &dcd_dport, 2);
-        memcpy(&((struct pm_tcphdr *)pptrsv->vlanmpls4.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
-      }
-
-      pptrsv->vlanmpls4.lm_mask_src = sample->srcMask;
-      pptrsv->vlanmpls4.lm_mask_dst = sample->dstMask;
-      pptrsv->vlanmpls4.lm_method_src = NF_NET_KEEP;
-      pptrsv->vlanmpls4.lm_method_dst = NF_NET_KEEP;
-
-      pptrsv->vlanmpls4.l4_proto = sample->dcd_ipProtocol;
-
-      if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, &pptrsv->vlanmpls4.bta2);
-      if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bitr, NULL);
-      if (config.bgp_daemon) {
-	bgp_ls_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP_LS);
-	bgp_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP, NULL);
-      }
-      if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
-      if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
-      if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls4, NULL);
-      exec_plugins(&pptrsv->vlanmpls4, req);
-      break;
-    case PM_FTYPE_VLAN_MPLS_IPV6:
-      memcpy(&pptrsv->vlanmpls6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
-
-      if (req->bpf_filter) {
-        u_char *ptr = pptrsv->vlanmpls6.mpls_ptr;
-        u_int32_t label, idx;
-
-        /* XXX: fix caplen */
-        reset_mac_vlan(&pptrsv->vlanmpls6);
-        memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN, &sample->eth_src, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlanmpls6.mac_ptr, &sample->eth_dst, ETH_ADDR_LEN); 
-        memcpy(pptrsv->vlanmpls6.vlan_ptr, &vlan, 2); 
-
-	for (idx = 0; idx <= sample->lstk.depth && idx < 10; idx++) {
-	  label = sample->lstk.stack[idx];
-	  memcpy(ptr, &label, 4);
-	  ptr += 4;
-	}
-	stick_bosbit(ptr-4);
-        pptrsv->vlanmpls6.iph_ptr = ptr;
-        pptrsv->vlanmpls6.tlh_ptr = ptr + IP6HdrSz;
-        reset_ip6(&pptrsv->vlanmpls6);
-
-	((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
-        memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_src, &sample->ipsrc.address.ip_v6, IP6AddrSz); 
-        memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_dst, &sample->ipdst.address.ip_v6, IP6AddrSz); 
-        memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_nxt, &dcd_ipProtocol, 1); 
-        /* XXX: class ID ? */
-        memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->src_port, &dcd_sport, 2);
-        memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->dst_port, &dcd_dport, 2);
-        memcpy(&((struct pm_tcphdr *)pptrsv->vlanmpls6.tlh_ptr)->th_flags, &dcd_tcpFlags, 1);
-      }
-
-      pptrsv->vlanmpls6.lm_mask_src = sample->srcMask;
-      pptrsv->vlanmpls6.lm_mask_dst = sample->dstMask;
-      pptrsv->vlanmpls6.lm_method_src = NF_NET_KEEP;
-      pptrsv->vlanmpls6.lm_method_dst = NF_NET_KEEP;
-
-      pptrsv->vlanmpls6.l4_proto = sample->dcd_ipProtocol;
-
-      if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, &pptrsv->vlanmpls6.bta2);
-      if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bitr, NULL);
-      if (config.bgp_daemon) {
-	bgp_ls_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP_LS);
-	bgp_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP, NULL);
-      }
-      if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
-      if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
-      if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls6, NULL);
-      exec_plugins(&pptrsv->vlanmpls6, req);
-      break;
-    default:
-      if (config.aggregate_unknown_etype && sample->eth_type == ETHERTYPE_ARP) {
-	if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
-        exec_plugins(pptrs, req);
-      }
-      break;
     }
+    break;
   }
 }
 
@@ -2748,14 +2756,14 @@ void sf_flow_sample_hdr_decode(SFSample *sample)
     if (sample->headerProtocol == SFLHEADER_ETHERNET_ISO8023) { 
       eth_handler(&sample->hdr_pcap, pptrs);
       if (pptrs->iph_ptr) {
-	if ((*pptrs->l3_handler)(pptrs)) {
+	      if ((*pptrs->l3_handler)(pptrs)) {
 #if defined (WITH_NDPI)
 	  if (config.classifier_ndpi && pm_ndpi_wfl) {
 	    sample->ndpi_class = pm_ndpi_workflow_process_packet(pm_ndpi_wfl, pptrs);
 	  }
 #endif
-	  set_index_pkt_ptrs(pptrs);
-	}
+	        set_index_pkt_ptrs(pptrs);
+	      }
       }
     }
   }
@@ -2794,3 +2802,272 @@ void SF_init_zmq_host(void *zh, int *pipe_fd)
   if (pipe_fd) (*pipe_fd) = p_zmq_get_fd(zmq_host);
 }
 #endif
+
+
+/*_________________---------------------------__________________
+  _________________    readv2v4FlowSample    __________________
+  -----------------___________________________------------------
+*/
+
+void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)
+{
+  sample->samplesGenerated = getData32(sample);
+  {
+    u_int32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
+  }
+
+  sample->meanSkipCount = getData32(sample);
+  sample->samplePool = getData32(sample);
+  sample->dropEvents = getData32(sample);
+  sample->inputPort = getData32(sample);
+  sample->outputPort = getData32(sample);
+  sample->packet_data_tag = getData32(sample);
+
+  switch(sample->packet_data_tag) {
+
+  case INMPACKETTYPE_HEADER: readFlowSample_header(sample); break;
+  case INMPACKETTYPE_IPV4: readFlowSample_IPv4(sample); break;
+  case INMPACKETTYPE_IPV6: readFlowSample_IPv6(sample); break;
+  default:
+    SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v2/v4 Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
+    xflow_status_table.tot_bad_datagrams++;
+    break;
+  }
+
+  sample->extended_data_tag = 0;
+  {
+    u_int32_t x;
+    sample->num_extended = getData32(sample);
+    for(x = 0; x < sample->num_extended; x++) {
+      u_int32_t extended_tag;
+      extended_tag = getData32(sample);
+      switch(extended_tag) {
+      case INMEXTENDED_SWITCH: readExtendedSwitch(sample); break;
+      case INMEXTENDED_ROUTER: readExtendedRouter(sample); break;
+      case INMEXTENDED_GATEWAY:
+	if(sample->datagramVersion == 2) readExtendedGateway_v2(sample);
+	else readExtendedGateway(sample);
+	break;
+      case INMEXTENDED_USER: readExtendedUser(sample); break;
+      case INMEXTENDED_URL: readExtendedUrl(sample); break;
+      default:
+	SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v2/v4 Extended Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
+	xflow_status_table.tot_bad_datagrams++;
+	break;
+      }
+    }
+  }
+
+  finalizeSample(sample, pptrsv, req);
+}
+
+/*_________________---------------------------__________________
+  _________________    readv5FlowSample         __________________
+  -----------------___________________________------------------
+*/
+
+void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req, int finalize)
+{
+  struct sfv5_modules_db_field *db_field = NULL;
+  u_int32_t num_elements, sampleLength;
+  u_char *sampleStart;
+
+  sampleLength = getData32(sample);
+  sampleStart = (u_char *)sample->datap;
+  sample->samplesGenerated = getData32(sample);
+  if(expanded) {
+    sample->ds_class = getData32(sample);
+    sample->ds_index = getData32(sample);
+  }
+  else {
+    u_int32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
+  }
+
+  sample->meanSkipCount = getData32(sample);
+  sample->samplePool = getData32(sample);
+  sample->dropEvents = getData32(sample);
+  if(expanded) {
+    sample->inputPortFormat = getData32(sample);
+    sample->inputPort = getData32(sample);
+    sample->outputPortFormat = getData32(sample);
+    sample->outputPort = getData32(sample);
+  }
+  else {
+    u_int32_t inp, outp;
+    inp = getData32(sample);
+    outp = getData32(sample);
+    sample->inputPortFormat = inp >> 30;
+    sample->outputPortFormat = outp >> 30;
+    sample->inputPort = inp; // skip 0x3fffffff mask
+    sample->outputPort = outp; // skip 0x3fffffff mask
+  }
+
+  num_elements = getData32(sample);
+
+  {
+    u_int32_t el;
+
+    for (el = 0; el < num_elements; el++) {
+      u_int32_t tag, length;
+      u_char *start;
+      tag = getData32(sample);
+      length = getData32(sample);
+      start = (u_char *)sample->datap;
+
+      switch(tag) {
+      case SFLFLOW_HEADER:     readFlowSample_header(sample); break;
+      case SFLFLOW_ETHERNET:   readFlowSample_ethernet(sample); break;
+      case SFLFLOW_IPV4:       readFlowSample_IPv4(sample); break;
+      case SFLFLOW_IPV6:       readFlowSample_IPv6(sample); break;
+      case SFLFLOW_EX_SWITCH:  readExtendedSwitch(sample); break;
+      case SFLFLOW_EX_ROUTER:  readExtendedRouter(sample); break;
+      case SFLFLOW_EX_GATEWAY: readExtendedGateway(sample); break;
+      case SFLFLOW_EX_USER:    readExtendedUser(sample); break;
+      case SFLFLOW_EX_URL:     readExtendedUrl(sample); break;
+      case SFLFLOW_EX_MPLS:    readExtendedMpls(sample); break;
+      case SFLFLOW_EX_NAT:     readExtendedNat(sample); break;
+      case SFLFLOW_EX_MPLS_TUNNEL:  readExtendedMplsTunnel(sample); break;
+      case SFLFLOW_EX_MPLS_VC:      readExtendedMplsVC(sample); break;
+      case SFLFLOW_EX_MPLS_FTN:     readExtendedMplsFTN(sample); break;
+      case SFLFLOW_EX_MPLS_LDP_FEC: readExtendedMplsLDP_FEC(sample); break;
+      case SFLFLOW_EX_VLAN_TUNNEL:  readExtendedVlanTunnel(sample); break;
+/*    case SFLFLOW_EX_PROCESS:      readExtendedProcess(sample); break; */
+      case SFLFLOW_EX_CLASS2:	    readExtendedClass2(sample); break;
+      case SFLFLOW_EX_TAG:	    readExtendedTag(sample); break;
+      default:
+	if (skipBytesAndCheck(sample, length) == ERR) return;
+	break;
+      }
+
+      db_field = sfv5_modules_db_get_next_ie(tag);
+      if (db_field) {
+	db_field->type = tag;
+	db_field->ptr = start;
+	db_field->len = length;
+      }
+      else Log(LOG_WARNING, "WARN ( %s/core ): readv5FlowSample(): no IEs available in SFv5 modules DB.\n", config.name);
+
+      if (lengthCheck(sample, start, length) == ERR) return;
+    }
+  }
+
+  if (lengthCheck(sample, sampleStart, sampleLength) == ERR) return;
+
+  if (finalize) finalizeSample(sample, pptrsv, req);
+}
+
+
+void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv)
+{
+  struct sfv5_modules_db_field *db_field = NULL;
+  struct xflow_status_entry *xse = NULL;
+  struct bgp_peer *peer = NULL;
+  u_int32_t sampleLength, num_elements, idx;
+  u_char *sampleStart;
+
+  if (sfacctd_counter_backend_methods) {
+    if (pptrsv) xse = (struct xflow_status_entry *) pptrsv->v4.f_status;
+    if (xse) peer = (struct bgp_peer *) xse->sf_cnt;
+  }
+
+  sampleLength = getData32(sample);
+  sampleStart = (u_char *)sample->datap;
+  sample->cntSequenceNo = getData32(sample);
+
+  if (expanded) {
+    sample->ds_class = getData32(sample);
+    sample->ds_index = getData32(sample);
+  }
+  else {
+    u_int32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
+  }
+
+  num_elements = getData32(sample);
+
+  for (idx = 0; idx < num_elements; idx++) {
+    u_int32_t tag, length;
+    u_char *start;
+    char buf[51];
+
+    tag = getData32(sample);
+    length = getData32(sample);
+    start = (u_char *)sample->datap;
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): readv5CountersSample(): element tag %s.\n", config.name, printTag(tag, buf, 50));
+
+    db_field = sfv5_modules_db_get_next_ie(tag);
+    if (db_field) {
+      db_field->type = tag;
+      db_field->ptr = start;
+      db_field->len = length;
+    }
+    else Log(LOG_WARNING, "WARN ( %s/core ): readv5CountersSample(): no IEs available in SFv5 modules DB.\n", config.name);
+
+    if (sfacctd_counter_backend_methods) sf_cnt_log_msg(peer, sample, sample->datagramVersion, length, "log", config.sfacctd_counter_output, tag);
+    else skipBytes(sample, length);
+  }
+
+  if (lengthCheck(sample, sampleStart, sampleLength) == ERR) return;
+}
+
+/*
+   seems like sFlow v2/v4 does not supply any meaningful information
+   about the length of current sample. This is because we still need
+   to parse the very first part of the sample
+*/
+void readv2v4CountersSample(SFSample *sample, struct packet_ptrs_vector *pptrsv)
+{
+  struct xflow_status_entry *xse = NULL;
+  struct bgp_peer *peer = NULL;
+  int have_sample = FALSE;
+  u_int32_t length = 0;
+
+  if (sfacctd_counter_backend_methods) {
+    if (pptrsv) xse = (struct xflow_status_entry *) pptrsv->v4.f_status;
+    if (xse) peer = (struct bgp_peer *) xse->sf_cnt;
+  }
+
+  sample->cntSequenceNo = getData32(sample);
+
+  {
+    uint32_t samplerId = getData32(sample);
+    sample->ds_class = samplerId >> 24;
+    sample->ds_index = samplerId & 0x00ffffff;
+  }
+
+  sample->statsSamplingInterval = getData32(sample);
+  sample->counterBlockVersion = getData32(sample);
+
+  switch(sample->counterBlockVersion) {
+  case INMCOUNTERSVERSION_GENERIC:
+  case INMCOUNTERSVERSION_ETHERNET:
+  case INMCOUNTERSVERSION_TOKENRING:
+  case INMCOUNTERSVERSION_FDDI:
+  case INMCOUNTERSVERSION_VG:
+  case INMCOUNTERSVERSION_WAN: length += 88; break;
+  case INMCOUNTERSVERSION_VLAN: break;
+  default: return;
+  }
+
+  /* now see if there are any specific counter blocks to add */
+  switch(sample->counterBlockVersion) {
+  case INMCOUNTERSVERSION_GENERIC: have_sample = TRUE; break;
+  case INMCOUNTERSVERSION_ETHERNET: have_sample = TRUE; length += 52; break;
+  case INMCOUNTERSVERSION_TOKENRING: length += 72; break;
+  case INMCOUNTERSVERSION_FDDI: break;
+  case INMCOUNTERSVERSION_VG: length += 80; break;
+  case INMCOUNTERSVERSION_WAN: break;
+  case INMCOUNTERSVERSION_VLAN: have_sample = TRUE; length += 28; break;
+  default: return;
+  }
+
+  if (sfacctd_counter_backend_methods && have_sample)
+    sf_cnt_log_msg(peer, sample, sample->datagramVersion, length, "log", config.sfacctd_counter_output, sample->counterBlockVersion);
+  else
+    skipBytes(sample, length);
+}

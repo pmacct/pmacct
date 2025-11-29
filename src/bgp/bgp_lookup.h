@@ -23,6 +23,7 @@
 #ifndef _BGP_LOOKUP_H_
 #define _BGP_LOOKUP_H_
 
+#include "bgp.h"
 
 /* Struct with additional information required to perform correlation of NFv9/IPFIX with BGP information */
 struct bgp_lookup_info {
