@@ -1780,8 +1780,7 @@ void SF_notify_malf_packet(short int severity, char *severity_str, char *ostr, s
   Log(severity, "%s", errstr);
 }
 
-void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)
-{
+void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req) {
   struct packet_ptrs *pptrs = &pptrsv->v4;
   u_int16_t dcd_sport = htons(sample->dcd_sport), dcd_dport = htons(sample->dcd_dport);
   u_int8_t dcd_ipProtocol = sample->dcd_ipProtocol, dcd_ipTos = sample->dcd_ipTos;
@@ -1803,13 +1802,16 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
   reset_net_status_v(pptrsv);
   pptrs->flow_type.traffic_type = SF_evaluate_flow_type(pptrs);
-  if (config.classifier_ndpi || config.aggregate_primitives || sample->eth_type == ETHERTYPE_ARP) {
-    sf_flow_sample_hdr_decode(sample);
+
+  if (config.tunnel0) {
+    const tun_reg_find_result result = tunnel_registry_find(pptrs->tun_stack, pptrs->tun_layer, sample->dcd_ipProtocol, sample->dcd_dport);
+    if (result.func) {
+      result.func(pptrs);
+    }
   }
 
-  const tun_reg_find_result result = tunnel_registry_find(pptrs->tun_stack, pptrs->tun_layer, sample->dcd_ipProtocol, sample->dcd_dport);
-  if (result.func) {
-    result.func(pptrs);
+  if (config.classifier_ndpi || config.aggregate_primitives || sample->eth_type == ETHERTYPE_ARP) {
+    sf_flow_sample_hdr_decode(sample);
   }
 
   /* we need to understand the IP protocol version in order to build the fake packet */

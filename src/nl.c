@@ -305,17 +305,15 @@ int ip_handler(register struct packet_ptrs *pptrs)
 	  u_int16_t dst_port = ntohs(((struct pm_udphdr *)pptrs->tlh_ptr)->uh_dport);
 
 	  if (dst_port == UDP_PORT_VXLAN && (off + sizeof(struct vxlan_hdr) <= caplen)) {
-	    printf("%s is vxlan\n", __func__);
-	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr; 
+	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr;
 
-	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni; 
+	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni;
 	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
 
 	    if (pptrs->tun_pptrs) {
-	      printf("%s tun_pptrs\n", __func__);
 	      struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
-	      tpptrs->pkthdr->caplen = (pptrs->pkthdr->caplen - (pptrs->payload_ptr - pptrs->packet_ptr)); 
+	      tpptrs->pkthdr->caplen = (pptrs->pkthdr->caplen - (pptrs->payload_ptr - pptrs->packet_ptr));
 	      tpptrs->packet_ptr = pptrs->payload_ptr;
 
 	      eth_handler(tpptrs->pkthdr, tpptrs);
@@ -691,6 +689,8 @@ void tunnel_registry_init()
 int vxlan_tunnel_func(register struct packet_ptrs *pp) {
 
   SFSample *sample = (SFSample *)pp->f_data;
+  if (!sample) return ERR;
+
   u_char * cursor = sample->ip_payload;
 
   if (!cursor) return ERR;
