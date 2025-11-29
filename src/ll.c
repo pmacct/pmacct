@@ -34,7 +34,6 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
   u_int8_t cursor = 0;
 
   if (caplen < ETHER_HDRLEN) {
-    printf("too shotr\n");
     pptrs->iph_ptr = NULL;
     return;
   }

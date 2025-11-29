@@ -671,6 +671,10 @@ typedef struct _SFSample {
   SFLAddress nextHop;
   u_int32_t srcMask;
   u_int32_t dstMask;
+  /* pointer to the ip_payload,
+   * avoids double parsing of ip headers for tunnels
+   */
+  u_char *ip_payload;
 
   /* BGP info */
   SFLAddress bgp_nextHop;
@@ -716,7 +720,6 @@ typedef struct _SFSample {
   SFLAddress nat_dst;
 
   /* vxlan */
-  u_char *ip_payload;
   u_int32_t vni;
 
   /* counter blocks */
