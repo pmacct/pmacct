@@ -37,9 +37,9 @@
 #endif
 
 struct tunnel_entry tunnel_handlers_list[] = {
-  {"gtp", 	gtp_tunnel_func, 	gtp_tunnel_configurator},
-  {"vxlan", 	vxlan_tunnel_func, 	vxlan_tunnel_configurator},
-  {"", 		NULL,			NULL},
+  {"gtp", 	ACCT_PM | ACCT_UL, gtp_tunnel_func, 	gtp_tunnel_configurator},
+  {"vxlan", 	ACCT_NF, vxlan_tunnel_func, 	vxlan_tunnel_configurator},
+  {"", 		0, NULL,			NULL},
 };
 
 void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
@@ -653,42 +653,34 @@ void compute_once()
   IP6AddrSz = sizeof(struct in6_addr);
 }
 
+// Initializes the stack 0 of tunnel_registry for the tunnel_0 config knob
+// Looks through tunnel_handlers_list
+// Finds entries with name identical to the config line processed
+// Keeps the first handler compatible with the current daemon and calls its configurator
 void tunnel_registry_init()
 {
-  if (config.tunnel0) {
-    char *tun_string = config.tunnel0, *tun_entry = NULL, *tun_type = NULL;
-    int th_index = 0 /* tunnel handler index */, tr_index = 0 /* tunnel registry index */;
+  if (!config.tunnel0)
+    return;
 
-    while ((tun_entry = extract_token(&tun_string, ';'))) {
-      tun_type = extract_token(&tun_entry, ',');
+  char *tun_string = config.tunnel0, *tun_entry = NULL, *tun_type = NULL;
+  int th_index = 0 /* tunnel handler index */, tr_index = 0 /* tunnel registry index */;
 
-      for (th_index = 0; strcmp(tunnel_handlers_list[th_index].type, ""); th_index++) {
-	if (!strcmp(tunnel_handlers_list[th_index].type, tun_type)) {
-	  if (tr_index < TUNNEL_REGISTRY_ENTRIES) {
-	    (*tunnel_handlers_list[th_index].tc)(&tunnel_registry[0][tr_index], tun_entry);
-	    tr_index++;
-	  }
-	  break;
-	}
-      }
+  while ((tun_entry = extract_token(&tun_string, ';'))) {
+    tun_type = extract_token(&tun_entry, ',');
+
+    struct tunnel_entry tunnel_handler;
+    for (th_index = 0; (tunnel_handler = tunnel_handlers_list[th_index]).tc; th_index++) {
+      if (strcmp(tunnel_handler.type, tun_type) != 0)
+        continue;
+
+      const bool is_daemon_compatible = (tunnel_handler.compatible_daemons & config.acct_type) == config.acct_type;
+      if (!is_daemon_compatible || tr_index >= TUNNEL_REGISTRY_ENTRIES) continue;
+
+	    tunnel_handler.tc(&tunnel_registry[0][tr_index], tun_entry);
+      tr_index++;
+	    break;
     }
   }
-}
-
-int gtp_tunnel_configurator(struct tunnel_handler *th, char *opts)
-{
-  th->proto = IPPROTO_UDP;
-  th->port = atoi(opts);
-
-  if (th->port) {
-    th->tf = gtp_tunnel_func;
-  }
-  else {
-    th->tf = NULL;
-    Log(LOG_WARNING, "WARN ( %s/core ): GTP tunnel handler not loaded due to invalid options: '%s'\n", config.name, opts);
-  }
-
-  return 0;
 }
 
 // This function reads a VXLAN packet and makes its payload the
@@ -699,7 +691,7 @@ int vxlan_tunnel_func(register struct packet_ptrs *pp) {
   SFSample *sample = (SFSample *)pp->f_data;
   u_char * cursor = sample->ip_payload;
 
-  if (!cursor) return 1; // TODO ensure 1 is correct
+  if (!cursor) return ERR;
   // we know its udp with some matching port, and it contains vxlan
   cursor += sizeof(struct pm_udphdr);
   cursor += sizeof(struct vxlan_hdr);
@@ -712,7 +704,7 @@ int vxlan_tunnel_func(register struct packet_ptrs *pp) {
   if (sample->gotIPV4) decodeIPV4(sample);
   else decodeIPV6(sample);
 
-  return 0;
+  return SUCCESS;
 }
 
 int vxlan_tunnel_configurator(struct tunnel_handler *th, char *opts)
@@ -726,6 +718,22 @@ int vxlan_tunnel_configurator(struct tunnel_handler *th, char *opts)
   else {
     th->tf = NULL;
     Log(LOG_WARNING, "WARN ( %s/core ): VXLAN tunnel handler not loaded due to invalid options: '%s'\n", config.name, opts);
+  }
+
+  return 0;
+}
+
+int gtp_tunnel_configurator(struct tunnel_handler *th, char *opts)
+{
+  th->proto = IPPROTO_UDP;
+  th->port = atoi(opts);
+
+  if (th->port) {
+    th->tf = gtp_tunnel_func;
+  }
+  else {
+    th->tf = NULL;
+    Log(LOG_WARNING, "WARN ( %s/core ): GTP tunnel handler not loaded due to invalid options: '%s'\n", config.name, opts);
   }
 
   return 0;

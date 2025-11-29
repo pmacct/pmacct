@@ -139,17 +139,19 @@
 #endif
 
 /* Daemon identificator */ 
-#define ACCT_UNKNOWN		0	/* Undefined / unknown daemon */
-#define ACCT_PM			1	/* promiscuous mode */
-#define ACCT_NF			2	/* NetFlow */
-#define ACCT_SF			3	/* sFlow */
-#define ACCT_UL			4	/* Linux NetFilter NFLOG */
-#define ACCT_FWDPLANE_MAX	100	/* Max ID for forwarding-plane daemons */ 
-#define ACCT_PMBGP		101	/* standalone BGP daemon */
-#define ACCT_PMBMP		102	/* standalone BMP daemon */
-#define ACCT_CTLPLANE_MAX	200	/* Max ID for control-plane daemons */ 
-#define ACCT_PMTELE		201	/* Streaming Network Telemetry */
-#define ACCT_INFRA_MAX		300	/* Max ID for infrastructure daemons */ 
+#define ACCT_UNKNOWN		  (0)       /* Undefined / unknown daemon */
+#define ACCT_PM           (1 << 0)  /* promiscuous mode */
+#define ACCT_NF           (1 << 1)  /* NetFlow */
+#define ACCT_SF           (1 << 2)  /* sFlow */
+#define ACCT_UL           (1 << 3)  /* Linux NetFilter NFLOG */
+#define ACCT_FWDPLANE_MAX (1 << 4)  /* Max ID for forwarding-plane daemons */
+
+#define ACCT_PMBGP        (1 << 8)	/* standalone BGP daemon */
+#define ACCT_PMBMP        (1 << 9)	/* standalone BMP daemon */
+#define ACCT_CTLPLANE_MAX	(1 << 11)	/* Max ID for control-plane daemons */
+
+#define ACCT_PMTELE       (1 << 10)	/* Streaming Network Telemetry */
+#define ACCT_INFRA_MAX		(1 << 11)	/* Max ID for infrastructure daemons */
 
 /* map type */
 #define MAP_TAG 		0	/* pre_tag_map */
