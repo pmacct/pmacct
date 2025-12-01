@@ -117,8 +117,10 @@ struct bgp_ls_node_desc {
 };
   
 struct bgp_ls_link_desc {
-  struct host_addr local_addr;
-  struct host_addr neigh_addr;
+  struct host_addr local_addr_v4;
+  struct host_addr neigh_addr_v4;
+  struct host_addr local_addr_v6;
+  struct host_addr neigh_addr_v6;
 };
 
 struct bgp_ls_prefix_desc {

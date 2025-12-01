@@ -484,8 +484,8 @@ int bgp_ls_nlri_tlv_v4_addr_if_handler(u_char *pnt, int len, struct bgp_ls_nlri 
   }
 
   if (len == 4) {
-    blsn->nlri.link.l.ldesc.local_addr.family = AF_INET;
-    memcpy(&blsn->nlri.link.l.ldesc.local_addr.address.ipv4, pnt, 4);
+    blsn->nlri.link.l.ldesc.local_addr_v4.family = AF_INET;
+    memcpy(&blsn->nlri.link.l.ldesc.local_addr_v4.address.ipv4, pnt, 4);
   }
   else {
     char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -508,8 +508,8 @@ int bgp_ls_nlri_tlv_v4_addr_neigh_handler(u_char *pnt, int len, struct bgp_ls_nl
   }
 
   if (len == 4) {
-    blsn->nlri.link.l.ldesc.neigh_addr.family = AF_INET;
-    memcpy(&blsn->nlri.link.l.ldesc.neigh_addr.address.ipv4, pnt, 4);
+    blsn->nlri.link.l.ldesc.neigh_addr_v4.family = AF_INET;
+    memcpy(&blsn->nlri.link.l.ldesc.neigh_addr_v4.address.ipv4, pnt, 4);
   }
   else {
     char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -532,8 +532,8 @@ int bgp_ls_nlri_tlv_v6_addr_if_handler(u_char *pnt, int len, struct bgp_ls_nlri 
   }
 
   if (len == 16) {
-    blsn->nlri.link.l.ldesc.local_addr.family = AF_INET6;
-    memcpy(&blsn->nlri.link.l.ldesc.local_addr.address.ipv6, pnt, 16);
+    blsn->nlri.link.l.ldesc.local_addr_v6.family = AF_INET6;
+    memcpy(&blsn->nlri.link.l.ldesc.local_addr_v6.address.ipv6, pnt, 16);
   }
   else {
     char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -556,8 +556,8 @@ int bgp_ls_nlri_tlv_v6_addr_neigh_handler(u_char *pnt, int len, struct bgp_ls_nl
   }
 
   if (len == 16) {
-    blsn->nlri.link.l.ldesc.neigh_addr.family = AF_INET6;
-    memcpy(&blsn->nlri.link.l.ldesc.neigh_addr.address.ipv6, pnt, 16);
+    blsn->nlri.link.l.ldesc.neigh_addr_v6.family = AF_INET6;
+    memcpy(&blsn->nlri.link.l.ldesc.neigh_addr_v6.address.ipv6, pnt, 16);
   }
   else {
     char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -853,11 +853,25 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
       bgp_ls_log_node_desc(obj, &blsn->nlri.link.l.loc_ndesc, blsn->proto, "local", output);
       bgp_ls_log_node_desc(obj, &blsn->nlri.link.l.rem_ndesc, blsn->proto, "remote", output);
 
-      addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.local_addr);
-      json_object_set_new_nocheck(obj, "local_addr", json_string(ip_address));
+      if (blsn->nlri.link.l.ldesc.local_addr_v4.family) {
+        addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.local_addr_v4);
+        json_object_set_new_nocheck(obj, "local_addr_v4", json_string(ip_address));
+      }
 
-      addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.neigh_addr);
-      json_object_set_new_nocheck(obj, "neigh_addr", json_string(ip_address));
+      if (blsn->nlri.link.l.ldesc.neigh_addr_v4.family) {
+        addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.neigh_addr_v4);
+        json_object_set_new_nocheck(obj, "neigh_addr_v4", json_string(ip_address));
+      }
+
+      if (blsn->nlri.link.l.ldesc.local_addr_v6.family) {
+        addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.local_addr_v6);
+        json_object_set_new_nocheck(obj, "local_addr_v6", json_string(ip_address));
+      }
+    
+      if (blsn->nlri.link.l.ldesc.neigh_addr_v6.family) {
+        addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.neigh_addr_v6);
+        json_object_set_new_nocheck(obj, "neigh_addr_v6", json_string(ip_address));
+      }
 
       break;
     case BGP_LS_NLRI_V4_TOPO_PFX:
