@@ -3698,6 +3698,14 @@ DESC:		If set to true, the "telemetry_data" received from the router will not be
 		for 64-bit integer values that cannot be properly parsed by Jansson JSON library.
 DEFAULT:	false
 
+KEY:		custom_packet_parsing_lib
+DESC:		The absolute path to a custom packet parsing library file. If provided, pmacct will
+		attempt to load the specified dynamic library and replace the function pointers to the
+		4 functions that are expected to be in the library. If the file is not present or does 
+		not contain valid functions, pmacct will stop. If this key isn't provided, pmacct will
+		use the default functions instead.
+DEFAULT:	none
+
 REFERENCES:
 
 (1) https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
