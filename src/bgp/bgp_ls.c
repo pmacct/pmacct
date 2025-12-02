@@ -197,11 +197,16 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
       struct bgp_attr_ls *attr_hdr = NULL, *attr_hdr_prev = NULL;
 
       if (!bms->skip_rib) {
-        if (attr_extra && attr_extra->ls.ptr) {
+        if (attr_extra) {
           attr_hdr = malloc(sizeof(struct bgp_attr_ls));
-          attr_aux = malloc(attr_extra->ls.len);
-          if (attr_hdr && attr_aux) {
-	    memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);
+          if (attr_extra->ls.len) {
+	    attr_aux = malloc(attr_extra->ls.len);
+	  }
+
+          if (attr_hdr) {
+	    if (attr_aux) {
+	      memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);
+	    }
 	    attr_hdr->ptr = attr_aux;
 	    attr_hdr->len = attr_extra->ls.len;
 
