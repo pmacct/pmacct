@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -432,8 +432,6 @@ void pm_dtls_server_bye(pm_dtls_peer_t *peer)
 	if (entry->dtls.conn.fd) {
 	  gnutls_bye(entry->dtls.session, GNUTLS_SHUT_WR);
 	  gnutls_deinit(entry->dtls.session);
-
-	  memset(peer, 0, sizeof(pm_dtls_peer_t));
 	}
 
 	if (entry->next) {
