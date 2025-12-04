@@ -815,40 +815,120 @@ int P_trigger_exec(char *filename)
   }
 
   // second step: populate the arguments array
+  // For async mode, we need to duplicate the string data to avoid race conditions
+  // with copy-on-write memory when the parent frees args
   arg_count = 0;
   saveptr = NULL; // reset saveptr for the second pass
-  token = strtok_r(filename, " ", &saveptr);
-  while (token != NULL) {
-    args[arg_count++] = token;
-    token = strtok_r(NULL, " ", &saveptr);
-  }
-  args[arg_count] = NULL; // NULL-terminate the array
-
-#ifdef HAVE_VFORK
-  switch (pid = vfork()) {
-#else
-  switch (pid = fork()) {
-#endif
-  case ERR:
-    free(args);
-    Log(LOG_ERR,
-        "ERROR ( %s/%s ): P_trigger_exec(): failed to fork/vfork - '%s'\n",
-        config.name, config.type, filename);
-    return ERR;
-  case FALSE:
-    ret = execv(args[0], args);
-    if (ret == ERR) {
-      Log(LOG_WARNING,
-          "WARN ( %s/%s ): P_trigger_exec(): can't execute - '%s' | args: '%s'\n",
-          config.name, config.type, args[0], filename);
-      _exit(1); // use _exit in child to avoid flushing buffers
+  
+  if (config.sql_trigger_exec_async) {
+    // In async mode, duplicate the filename string so children have independent copies
+    char *filename_copy = strdup(filename);
+    if (filename_copy == NULL) {
+      free(args);
+      Log(LOG_ERR,
+          "ERROR ( %s/%s ): P_trigger_exec(): failed to duplicate filename for async mode - '%s'\n",
+          config.name, config.type, filename);
+      return ERR;
     }
-    _exit(0);
+    token = strtok_r(filename_copy, " ", &saveptr);
+    while (token != NULL) {
+      args[arg_count++] = token;
+      token = strtok_r(NULL, " ", &saveptr);
+    }
+    args[arg_count] = NULL; // NULL-terminate the array
+    
+    /* Async mode: use double-fork to completely detach child process */
+    switch (pid = fork()) {
+    case ERR:
+      free(args);
+      free(filename_copy);
+      Log(LOG_ERR,
+          "ERROR ( %s/%s ): P_trigger_exec(): failed to fork - '%s'\n",
+          config.name, config.type, filename);
+      return ERR;
+    case FALSE:
+      /* First child: fork again and exit immediately */
+      switch (pid = fork()) {
+      case ERR:
+        Log(LOG_WARNING,
+            "WARN ( %s/%s ): P_trigger_exec(): failed to fork grandchild - '%s'\n",
+            config.name, config.type, filename);
+        _exit(1);
+      case FALSE:
+        /* Second child (grandchild): execute the command */
+        ret = execv(args[0], args);
+        if (ret == ERR) {
+          Log(LOG_WARNING,
+              "WARN ( %s/%s ): P_trigger_exec(): can't execute - '%s' | args: '%s'\n",
+              config.name, config.type, args[0], filename);
+          _exit(1);
+        }
+        _exit(0);
+      default:
+        /* First child: exit immediately, making grandchild an orphan */
+        _exit(0);
+      }
+    default:
+      /* Parent: wait for first child to exit, then return immediately */
+      {
+        int status;
+        pid_t wpid;
+        while ((wpid = waitpid(pid, &status, 0)) < 0) {
+          if (errno != EINTR) {
+            Log(LOG_WARNING,
+                "WARN ( %s/%s ): P_trigger_exec(): waitpid failed - '%s' (errno: %d)\n",
+                config.name, config.type, filename, errno);
+            break;
+          }
+          /* Retry if interrupted by signal */
+        }
+        if (wpid == pid && WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+          Log(LOG_WARNING,
+              "WARN ( %s/%s ): P_trigger_exec(): first child exited with error - '%s'\n",
+              config.name, config.type, filename);
+        }
+      }
+      free(args);
+      free(filename_copy);
+      return FALSE;
+    }
   }
+  else {
+    // Synchronous mode: use original filename (strtok_r modifies it in place)
+    token = strtok_r(filename, " ", &saveptr);
+    while (token != NULL) {
+      args[arg_count++] = token;
+      token = strtok_r(NULL, " ", &saveptr);
+    }
+    args[arg_count] = NULL; // NULL-terminate the array
+    
+    /* Synchronous mode: use vfork/fork as before */
+#ifdef HAVE_VFORK
+    switch (pid = vfork()) {
+#else
+    switch (pid = fork()) {
+#endif
+    case ERR:
+      free(args);
+      Log(LOG_ERR,
+          "ERROR ( %s/%s ): P_trigger_exec(): failed to fork/vfork - '%s'\n",
+          config.name, config.type, filename);
+      return ERR;
+    case FALSE:
+      ret = execv(args[0], args);
+      if (ret == ERR) {
+        Log(LOG_WARNING,
+            "WARN ( %s/%s ): P_trigger_exec(): can't execute - '%s' | args: '%s'\n",
+            config.name, config.type, args[0], filename);
+        _exit(1); // use _exit in child to avoid flushing buffers
+      }
+      _exit(0);
+    }
 
-  free(args);
+    free(args);
 
-  return FALSE;
+    return FALSE;
+  }
 }
 
 void P_init_historical_acct(time_t now)
