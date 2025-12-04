@@ -698,6 +698,10 @@ int vxlan_tunnel_func(register struct packet_ptrs *pp) {
   cursor += sizeof(struct pm_udphdr);
   cursor += sizeof(struct vxlan_hdr);
 
+  // remove outside encap from packet counters
+  const uint16_t encap_size = cursor - sample->header;
+  sample->sampledPacketSize -= encap_size;
+
   // ensure sample has the info of the packet
   sample->datap = (uint32_t *) cursor;
   sample->header = cursor;
