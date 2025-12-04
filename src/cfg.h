@@ -25,7 +25,7 @@
 #include "bgp/bgp_prefix.h"
 
 /* defines */
-#define CFG_LINE_LEN(x) (SRVBUFLEN-strlen(x))
+#define CFG_LINE_LEN(x) ((SRVBUFLEN - 1) - strlen(x))
 #define MAX_CUSTOM_PRIMITIVES           64
 #define MAX_CUSTOM_PRIMITIVE_NAMELEN    64
 #define MAX_CUSTOM_PRIMITIVE_PD_PTRS    8
