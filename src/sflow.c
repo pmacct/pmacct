@@ -34,7 +34,6 @@
 #include "ip_frag.h"
 #include "pmacct-data.h"
 #include "crc32.h"
-#include "plugin_common.h"
 
 /*_________________---------------------------__________________
   _________________    lengthCheck            __________________

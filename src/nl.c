@@ -698,6 +698,7 @@ int vxlan_tunnel_func(register struct packet_ptrs *pp) {
   cursor += sizeof(struct pm_udphdr);
   cursor += sizeof(struct vxlan_hdr);
 
+  // ensure sample has the info of the packet
   sample->datap = (uint32_t *) cursor;
   sample->header = cursor;
   sample->headerLen = (int)(sample->endp - cursor);

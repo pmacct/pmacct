@@ -1846,7 +1846,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       bgp_ls_srcdst_lookup(pptrs, FUNC_TYPE_BGP_LS);
       bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
     }
-    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
+    if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table*)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
     if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
     if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
     if (config.bmp_daemon) bmp_srcdst_lookup(pptrs, NULL);
