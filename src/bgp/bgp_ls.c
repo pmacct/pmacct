@@ -1305,7 +1305,7 @@ void bgp_ls_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   struct in6_addr pref6;
   safi_t safi = SAFI_UNICAST;
 
-  struct bgp_node *result;
+  struct bgp_node *result = NULL;
   struct bgp_info *info = NULL;
 
   pptrs->igp_src = NULL;
