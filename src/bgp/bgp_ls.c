@@ -1137,7 +1137,7 @@ int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, u_int8_t 
       else {
 	char hex[16];
 
-	snprintf(hex, sizeof(hex), "%" PRIx64, tmp64);
+	snprintf(hex, sizeof(hex), "0x%" PRIx64, tmp64);
 	tmp64_json = json_string(hex);
       }
 
@@ -1183,7 +1183,7 @@ int bgp_ls_attr_tlv_int8_print(u_char *pnt, u_int16_t len, char *key, u_int8_t f
       else {
 	char hex[10];
 
-	sprintf(hex, "%x", tmp8);
+	sprintf(hex, "0x%x", tmp8);
 	tmp8_json = json_string(hex);
       }
 
