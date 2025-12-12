@@ -1002,21 +1002,77 @@ void sql_sum_mac_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *i
 int sql_trigger_exec(char *filename)
 {
   char *args[2] = { filename, NULL };
-  int pid;
+  int pid, ret;
 
-#ifdef HAVE_VFORK
-  switch (pid = vfork()) {
-#else
-  switch (pid = fork()) {
-#endif
-  case -1:
-    return -1;
-  case 0:
-    execv(filename, args);
-    _exit(0);
+  if (config.sql_trigger_exec_async) {
+    /* Async mode: use double-fork to completely detach child process */
+    switch (pid = fork()) {
+    case -1:
+      return -1;
+    case 0:
+      /* First child: fork again and exit immediately */
+      switch (pid = fork()) {
+      case -1:
+        _exit(1);
+      case 0:
+        /* Second child (grandchild): execute the command */
+        ret = execv(filename, args);
+        if (ret == -1) {
+          Log(LOG_WARNING,
+              "WARN ( %s/%s ): sql_trigger_exec(): can't execute - '%s'\n",
+              config.name, config.type, filename);
+          _exit(1);
+        }
+        _exit(0);
+      default:
+        /* First child: exit immediately, making grandchild an orphan */
+        _exit(0);
+      }
+    default:
+      /* Parent: wait for first child to exit, then return immediately */
+      {
+        int status;
+        pid_t wpid;
+        while ((wpid = waitpid(pid, &status, 0)) < 0) {
+          if (errno != EINTR) {
+            Log(LOG_WARNING,
+                "WARN ( %s/%s ): sql_trigger_exec(): waitpid failed - '%s' (errno: %d)\n",
+                config.name, config.type, filename, errno);
+            break;
+          }
+          /* Retry if interrupted by signal */
+        }
+        if (wpid == pid && WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+          Log(LOG_WARNING,
+              "WARN ( %s/%s ): sql_trigger_exec(): first child exited with error - '%s'\n",
+              config.name, config.type, filename);
+        }
+      }
+      return 0;
+    }
   }
+  else {
+    /* Synchronous mode: use vfork/fork as before */
+#ifdef HAVE_VFORK
+    switch (pid = vfork()) {
+#else
+    switch (pid = fork()) {
+#endif
+    case -1:
+      return -1;
+    case 0:
+      ret = execv(filename, args);
+      if (ret == -1) {
+        Log(LOG_WARNING,
+            "WARN ( %s/%s ): sql_trigger_exec(): can't execute - '%s'\n",
+            config.name, config.type, filename);
+        _exit(1);
+      }
+      _exit(0);
+    }
 
-  return 0;
+    return 0;
+  }
 }
 
 void sql_db_ok(struct DBdesc *db)

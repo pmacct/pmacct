@@ -1524,6 +1524,16 @@ NOTES:		* When running in Docker, to avoid the accumulation of zombie processes,
 		  can then output to a file, named differently, that is input for a 3rd party processor.
 DEFAULT:	none
 
+KEY:		[ sql_trigger_exec_async | print_trigger_exec_async | amqp_trigger_exec_async | kafka_trigger_exec_async ]
+VALUES:		[ true | false ]
+DESC:		When set to true, trigger commands are executed asynchronously, allowing multiple triggers
+		to run in parallel without blocking each other. When false (default), triggers execute
+		synchronously one at a time. This is particularly useful when multiple plugins process data
+		in parallel and each needs to execute trigger commands, as it prevents triggers from blocking
+		each other. In async mode, the parent process returns immediately after spawning the trigger
+		command, which is completely detached using a double-fork pattern to avoid zombie processes.
+DEFAULT:	false
+
 KEY:		sql_trigger_time
 VALUES:		#[s|m|h|d|w|M]
 DESC:		Specifies time interval at which the executable specified by 'sql_trigger_exec' has to

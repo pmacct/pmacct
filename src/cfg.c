@@ -125,6 +125,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_delimiter", cfg_key_sql_delimiter},
   {"sql_max_writers", cfg_key_dump_max_writers},
   {"sql_trigger_exec", cfg_key_sql_trigger_exec},
+  {"sql_trigger_exec_async", cfg_key_sql_trigger_exec_async},
   {"sql_trigger_time", cfg_key_sql_trigger_time},
   {"sql_cache_entries", cfg_key_sql_cache_entries},
   {"sql_dont_try_update", cfg_key_sql_dont_try_update},
@@ -149,6 +150,7 @@ static const struct _dictionary_line dictionary[] = {
   {"print_latest_file", cfg_key_print_latest_file},
   {"print_num_protos", cfg_key_num_protos},
   {"print_trigger_exec", cfg_key_sql_trigger_exec},
+  {"print_trigger_exec_async", cfg_key_sql_trigger_exec_async},
   {"print_history", cfg_key_sql_history},
   {"print_history_offset", cfg_key_sql_history_offset},
   {"print_history_roundoff", cfg_key_sql_history_roundoff},
@@ -187,6 +189,7 @@ static const struct _dictionary_line dictionary[] = {
   {"amqp_avro_schema_routing_key", cfg_key_amqp_avro_schema_routing_key}, /* Legacy feature */
   {"amqp_avro_schema_refresh_time", cfg_key_amqp_avro_schema_refresh_time}, /* Legacy feature */
   {"amqp_trigger_exec", cfg_key_sql_trigger_exec},
+  {"amqp_trigger_exec_async", cfg_key_sql_trigger_exec_async},
   {"kafka_refresh_time", cfg_key_sql_refresh_time},
   {"kafka_history", cfg_key_sql_history},
   {"kafka_history_offset", cfg_key_sql_history_offset},
@@ -210,6 +213,7 @@ static const struct _dictionary_line dictionary[] = {
   {"kafka_avro_schema_registry", cfg_key_kafka_avro_schema_registry},
   {"kafka_config_file", cfg_key_kafka_config_file},
   {"kafka_trigger_exec", cfg_key_sql_trigger_exec},
+  {"kafka_trigger_exec_async", cfg_key_sql_trigger_exec_async},
   {"nfacctd_proc_name", cfg_key_proc_name},
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},

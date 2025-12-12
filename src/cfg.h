@@ -153,6 +153,7 @@ struct configuration {
   int sql_trigger_time;
   int sql_trigger_time_howmany; /* internal */
   char *sql_trigger_exec;
+  int sql_trigger_exec_async;
   int sql_max_queries;
   char *sql_preprocess;
   int sql_preprocess_type;
