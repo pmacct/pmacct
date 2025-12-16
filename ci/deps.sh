@@ -38,7 +38,7 @@ cd /tmp
 git clone --depth 1 -b v2.14.1 https://github.com/akheron/jansson
 cd jansson ; rm -rf ./.git ; autoreconf -i ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
-git clone --depth 1 -b v2.11.1 https://github.com/confluentinc/librdkafka
+git clone --depth 1 -b v2.12.1 https://github.com/confluentinc/librdkafka
 cd librdkafka ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 # rabbitmq-c 0.14.0 depends on cmake 3.22 or greater
