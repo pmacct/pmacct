@@ -1293,7 +1293,6 @@ AC_CONFIG_FILES([
 	    src/ndpi/Makefile src/filters/Makefile \
 	    examples/lg/Makefile src/ebpf/Makefile \
 	    examples/custom/Makefile \
-      src/buildflags.txt \
       pmacct.pc ])
 
 AC_OUTPUT

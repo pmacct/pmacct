@@ -8,8 +8,6 @@ TAG='_build'
 
 CUSTOM_LIB_PATH="ci/libnothing.so*"
 
-# Using this as a guide for options https://www.redhat.com/en/blog/arguments-options-bash-scripts
-
 # Get the options
 while getopts ":hp:" option; do
    case $option in
