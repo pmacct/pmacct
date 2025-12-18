@@ -20,6 +20,10 @@
 #include "pmacct.h"
 #include "dynamic_loading.h"
 
+bool dynlib_fn_end(const struct dynlib_fn* fn) {
+  return !fn->name;
+}
+
 enum dynlib_result dynlib_load_and_resolve(const struct dynlib lib) {
   void* handle = dlopen(lib.path, RTLD_NOW);
   // load the dynamic library from name/path

@@ -37,10 +37,6 @@ struct dynlib {
   struct dynlib_fn* table;
 };
 
-static bool dynlib_fn_end(const struct dynlib_fn* fn) {
-  return !fn->name;
-}
-
 enum dynlib_result {
   DL_Error,
   DL_Success,
