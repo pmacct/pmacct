@@ -1116,8 +1116,6 @@ void skinny_bgp_daemon_online()
 	  bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, NULL, &bgp_logdump_tag, TRUE);
 	  bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
 	}
-  Log(LOG_INFO, "INFO ( %s ): bgp_daemon_ip = %p sizeof = %d.\n field offsets : \n - bgp_daemon_id : %d \n - promisc : %d \n - imt_plugin_path : %d \n - writer_id_string : %d\n",
-      config.name, config.bgp_daemon_ip, sizeof(config), offsetof(struct configuration, bgp_daemon_ip), offsetof(struct configuration, promisc), offsetof(struct configuration, imt_plugin_path), offsetof(struct configuration, writer_id_string));
 	ret = active_packet_processor.bgp_parse_msg(peer, now, TRUE);
 	if (ret) {
 	  FD_CLR(recv_fd, &bkp_read_descs);
