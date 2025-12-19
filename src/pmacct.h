@@ -22,7 +22,6 @@
 #ifndef _PMACCT_H_
 #define _PMACCT_H_
 
-#include "build_config.h"
 /* includes */
 #ifdef HAVE_PCAP_PCAP_H
 #include <pcap/pcap.h>

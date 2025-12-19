@@ -6,5 +6,5 @@ includedir=@includedir@
 Name: @PACKAGE_NAME@
 Description: Build flags exported by pmacct
 Version: @PACKAGE_VERSION@
-Cflags: @A_PC_CFLAGS@
+Cflags: @A_PC_CFLAGS@ @PKG_CONFIG_DEFS@
 Libs: @A_PC_LIBS@
