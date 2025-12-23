@@ -243,7 +243,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
   register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
   register unsigned char *ptr;
   register u_int16_t off = pptrs->iph_ptr-pptrs->packet_ptr, off_l4;
-  int ret = TRUE, num, is_fragment = 0;
+  int ret = TRUE, is_fragment = 0;
 
   /* len: number of 32bit words forming the header */
   len = IP_HL(((struct pm_iphdr *) pptrs->iph_ptr));
