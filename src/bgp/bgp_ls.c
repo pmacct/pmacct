@@ -1326,12 +1326,12 @@ void bgp_ls_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 			  &result, &info);
 
       if (result) {
-	pptrs->igp_src = (char *) &result->p;
-	pptrs->igp_src_info = (char *) result->info;
-	if (result->p.prefixlen > pptrs->lm_mask_src) {
-	  pptrs->lm_mask_src = result->p.prefixlen;
-	  pptrs->lm_method_src = NF_NET_IGP;
-	} 
+        pptrs->igp_src = (char *) &result->p;
+        pptrs->igp_src_info = (char *) result->info;
+        if (result->p.prefixlen > pptrs->lm_mask_src) {
+          pptrs->lm_mask_src = result->p.prefixlen;
+          pptrs->lm_method_src = NF_NET_IGP;
+        }
       }
     }
 
@@ -1344,8 +1344,8 @@ void bgp_ls_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 			  &result, &info);
 
       if (result) {
-	pptrs->igp_dst = (char *) &result->p;
-	pptrs->igp_dst_info = (char *) result->info;
+        pptrs->igp_dst = (char *) &result->p;
+        pptrs->igp_dst_info = (char *) result->info;
         if (result->p.prefixlen > pptrs->lm_mask_dst) {
           pptrs->lm_mask_dst = result->p.prefixlen;
           pptrs->lm_method_dst = NF_NET_IGP;
@@ -1381,8 +1381,8 @@ void bgp_ls_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 			  &result, &info);
 
       if (result) {
-	pptrs->igp_dst = (char *) &result->p;
-	pptrs->igp_dst_info = (char *) result->info;
+        pptrs->igp_dst = (char *) &result->p;
+        pptrs->igp_dst_info = (char *) result->info;
         if (result->p.prefixlen > pptrs->lm_mask_dst) {
           pptrs->lm_mask_dst = result->p.prefixlen;
           pptrs->lm_method_dst = NF_NET_IGP;

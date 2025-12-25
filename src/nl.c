@@ -31,13 +31,15 @@
 #include "thread_pool.h"
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"
+#include "sfacctd.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
 
 struct tunnel_entry tunnel_handlers_list[] = {
-  {"gtp", 	gtp_tunnel_func, 	gtp_tunnel_configurator},
-  {"", 		NULL,			NULL},
+  {"gtp", 	ACCT_PM | ACCT_UL, 	gtp_tunnel_configurator},
+  {"vxlan", 	ACCT_SF, 	vxlan_tunnel_configurator},
+  {"", 		0,			NULL},
 };
 
 void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
@@ -201,13 +203,47 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
   if (cb_data->sig.is_set) sigprocmask(SIG_UNBLOCK, &cb_data->sig.set, NULL);
 }
 
+// finds a tunnel in the tunnel_registry
+// if tun_stack is known (!= 0) then the fn of the specified stack/layer is returned
+// if not known (== 0), a lookup is done based on the l4_proto and dst_port
+tun_reg_find_result tunnel_registry_find(const uint8_t tun_stack, const uint8_t tun_layer, const uint16_t l4_proto, const uint16_t dst_port) {
+
+  if (tun_stack) {
+    const struct tunnel_handler th = tunnel_registry[tun_stack][tun_layer];
+    if (th.proto == l4_proto) {
+      if (!th.port || th.port == dst_port) {
+        return (tun_reg_find_result) {
+          .stack = tun_stack,
+          .func = th.tf,
+        };
+      }
+    }
+  } else if (config.tunnel0) {
+    struct tunnel_handler th = { 0 };
+    for (int num = 0; (th = tunnel_registry[0][num]).tf; num++) {
+      if (th.proto == l4_proto && (!th.port || th.port == dst_port)) {
+        return (tun_reg_find_result) {
+          .stack = num,
+          .func = th.tf,
+        };
+      }
+    }
+  }
+
+  return (tun_reg_find_result){
+    .stack = 0,
+    .func = NULL
+  };
+}
+
 int ip_handler(register struct packet_ptrs *pptrs)
 {
+
   register u_int8_t len = 0;
   register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
   register unsigned char *ptr;
   register u_int16_t off = pptrs->iph_ptr-pptrs->packet_ptr, off_l4;
-  int ret = TRUE, num, is_fragment = 0;
+  int ret = TRUE, is_fragment = 0;
 
   /* len: number of 32bit words forming the header */
   len = IP_HL(((struct pm_iphdr *) pptrs->iph_ptr));
@@ -269,15 +305,15 @@ int ip_handler(register struct packet_ptrs *pptrs)
 	  u_int16_t dst_port = ntohs(((struct pm_udphdr *)pptrs->tlh_ptr)->uh_dport);
 
 	  if (dst_port == UDP_PORT_VXLAN && (off + sizeof(struct vxlan_hdr) <= caplen)) {
-	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr; 
+	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr;
 
-	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni; 
+	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni;
 	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
 
 	    if (pptrs->tun_pptrs) {
 	      struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
-	      tpptrs->pkthdr->caplen = (pptrs->pkthdr->caplen - (pptrs->payload_ptr - pptrs->packet_ptr)); 
+	      tpptrs->pkthdr->caplen = (pptrs->pkthdr->caplen - (pptrs->payload_ptr - pptrs->packet_ptr));
 	      tpptrs->packet_ptr = pptrs->payload_ptr;
 
 	      eth_handler(tpptrs->pkthdr, tpptrs);
@@ -316,21 +352,12 @@ int ip_handler(register struct packet_ptrs *pptrs)
       pptrs->tcp_flags = ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags;
 
     /* tunnel handlers here */
-    if (config.tunnel0 && !pptrs->tun_stack) {
-      for (num = 0; pptrs->payload_ptr && !is_fragment && tunnel_registry[0][num].tf; num++) {
-        if (tunnel_registry[0][num].proto == pptrs->l4_proto) {
-	  if (!tunnel_registry[0][num].port || (pptrs->tlh_ptr && tunnel_registry[0][num].port == ntohs(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
-	    pptrs->tun_stack = num;
-	    ret = (*tunnel_registry[0][num].tf)(pptrs);
-	  }
-        }
-      }
-    }
-    else if (pptrs->tun_stack) {
-      if (tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].proto == pptrs->l4_proto) {
-        if (!tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].port || (pptrs->tlh_ptr && tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].port == ntohs(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port))) {
-          ret = (*tunnel_registry[pptrs->tun_stack][pptrs->tun_layer].tf)(pptrs);
-        }
+    if (pptrs->payload_ptr && !is_fragment && pptrs->tlh_ptr) {
+      const uint16_t dst_port = ntohs(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port);
+      const tun_reg_find_result tun = tunnel_registry_find(pptrs->tun_stack, pptrs->tun_layer, pptrs->l4_proto, dst_port);
+      if (tun.func) {
+        pptrs->tun_stack = tun.stack;
+        tun.func(pptrs);
       }
     }
   }
@@ -624,26 +651,83 @@ void compute_once()
   IP6AddrSz = sizeof(struct in6_addr);
 }
 
+// Initializes the stack 0 of tunnel_registry for the tunnel_0 config knob
+// Looks through tunnel_handlers_list
+// Finds entries with name identical to the config line processed
+// Keeps the first handler compatible with the current daemon and calls its configurator
 void tunnel_registry_init()
 {
-  if (config.tunnel0) {
-    char *tun_string = config.tunnel0, *tun_entry = NULL, *tun_type = NULL;
-    int th_index = 0 /* tunnel handler index */, tr_index = 0 /* tunnel registry index */;
+  if (!config.tunnel0)
+    return;
 
-    while ((tun_entry = extract_token(&tun_string, ';'))) {
-      tun_type = extract_token(&tun_entry, ',');
+  char *tun_string = config.tunnel0, *tun_entry = NULL, *tun_type = NULL;
+  int th_index = 0 /* tunnel handler index */, tr_index = 0 /* tunnel registry index */;
 
-      for (th_index = 0; strcmp(tunnel_handlers_list[th_index].type, ""); th_index++) {
-	if (!strcmp(tunnel_handlers_list[th_index].type, tun_type)) {
-	  if (tr_index < TUNNEL_REGISTRY_ENTRIES) {
-	    (*tunnel_handlers_list[th_index].tc)(&tunnel_registry[0][tr_index], tun_entry);
-	    tr_index++;
-	  }
-	  break;
-	}
-      }
+  while ((tun_entry = extract_token(&tun_string, ';'))) {
+    tun_type = extract_token(&tun_entry, ',');
+
+    struct tunnel_entry tunnel_handler;
+    for (th_index = 0; (tunnel_handler = tunnel_handlers_list[th_index]).tc; th_index++) {
+      if (strcmp(tunnel_handler.type, tun_type) != 0)
+        continue;
+
+      const bool is_daemon_compatible = (tunnel_handler.compatible_daemons & config.acct_type) == config.acct_type;
+      if (!is_daemon_compatible || tr_index >= TUNNEL_REGISTRY_ENTRIES) continue;
+
+	    tunnel_handler.tc(&tunnel_registry[0][tr_index], tun_entry);
+      tr_index++;
+	    break;
     }
   }
+}
+
+// This function reads a VXLAN packet and makes its payload the
+// target for all the packet analysis/inspection, effectively
+// ignoring the entire L2+L3+VXLAN headers that wrap the payload
+//
+// This function is only compatible with sfacctd
+int vxlan_tunnel_func(register struct packet_ptrs *pp) {
+
+  SFSample *sample = (SFSample *)pp->f_data;
+  if (!sample) return ERR;
+
+  u_char * cursor = sample->ip_payload;
+
+  if (!cursor) return ERR;
+  // we know its udp with some matching port, and it contains vxlan
+  cursor += sizeof(struct pm_udphdr);
+  cursor += sizeof(struct vxlan_hdr);
+
+  // remove outside encap from packet counters
+  const uint16_t encap_size = cursor - sample->header;
+  sample->sampledPacketSize -= encap_size;
+
+  // ensure sample has the info of the packet
+  sample->datap = (uint32_t *) cursor;
+  sample->header = cursor;
+  sample->headerLen = (int)(sample->endp - cursor);
+
+  decodeLinkLayer(sample);
+  if (sample->gotIPV4) decodeIPV4(sample);
+  else decodeIPV6(sample);
+
+  return SUCCESS;
+}
+
+int vxlan_tunnel_configurator(struct tunnel_handler *th, char *opts)
+{
+  th->proto = IPPROTO_UDP;
+  th->port = atoi(opts);
+
+  if (th->port) {
+    th->tf = vxlan_tunnel_func;
+  }
+  else {
+    th->tf = NULL;
+    Log(LOG_WARNING, "WARN ( %s/core ): VXLAN tunnel handler not loaded due to invalid options: '%s'\n", config.name, opts);
+  }
+
+  return 0;
 }
 
 int gtp_tunnel_configurator(struct tunnel_handler *th, char *opts)
@@ -662,6 +746,7 @@ int gtp_tunnel_configurator(struct tunnel_handler *th, char *opts)
   return 0;
 }
 
+// This function is only compatible with pmacct and uacctd
 int gtp_tunnel_func(register struct packet_ptrs *pptrs)
 {
   register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
