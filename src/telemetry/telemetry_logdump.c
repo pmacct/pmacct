@@ -98,7 +98,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
     if (etype == BGP_LOGDUMP_ET_LOG) {
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("seq"));
-      json_object_set_new_nocheck(netop_label, "anydata-values", json_integer((json_int_t)log_seq));
+      json_object_set_new_nocheck(netop_label, "number-value", json_integer((json_int_t)log_seq));
       json_array_append(netop_labels, netop_label);
 
       json_object_set_new_nocheck(tmesg_meta_obj, "collection-timestamp", json_string(tms->log_tstamp_str));
@@ -106,7 +106,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("seq"));
-      json_object_set_new_nocheck(netop_label, "anydata-values", json_integer((json_int_t) telemetry_log_seq_get(&tms->log_seq)));
+      json_object_set_new_nocheck(netop_label, "number-value", json_integer((json_int_t) telemetry_log_seq_get(&tms->log_seq)));
       json_array_append(netop_labels, netop_label);
 
       json_object_set_new_nocheck(tmesg_meta_obj, "collection-timestamp", json_string(tms->dump.tstamp_str));
@@ -773,7 +773,7 @@ void telemetry_tag_print_json(json_t *netop_labels, telemetry_tag_t *tag)
     if json_is_integer(ret) {
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("tag"));
-      json_object_set_new_nocheck(netop_label, "anydata-values", json_integer(json_integer_value(ret)));
+      json_object_set_new_nocheck(netop_label, "number-value", json_integer(json_integer_value(ret)));
       json_array_append(netop_labels, netop_label);
     }
 
