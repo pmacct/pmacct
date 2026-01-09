@@ -6,7 +6,7 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
-TO:	>= 1.7.10
+TO:	>= 1.8.0
 FROM:	<= 1.7.9
 TOPIC:  timestamps_rfc3339, timestamps_rfc9557 and pmacct IMT client
 DESC:   timestamps_rfc3339 has been deprecated and for an interim period
@@ -18,7 +18,7 @@ DESC:   timestamps_rfc3339 has been deprecated and for an interim period
 	(zulu) for UTC timestamp. Instead +00:00 is used for UTC and
 	-00:00 is used for unknown timezone.
 
-TO:	>= 1.7.10
+TO:	>= 1.8.0
 FROM:	<= 1.7.9
 TOPIC:	pre_tag_label_map behaviour
 DESC:	Given a "pre_tag_label_map: foo" and a label string pre_tag_map (and
