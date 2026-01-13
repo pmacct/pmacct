@@ -716,7 +716,7 @@ typedef int (*tunnel_configurator)(struct tunnel_handler *, char *);
 
 struct tunnel_entry {
   char type[TUNNEL_PROTO_STRING];
-  tunnel_func tf;
+  int compatible_daemons;
   tunnel_configurator tc;
 };
 
