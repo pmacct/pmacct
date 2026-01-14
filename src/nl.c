@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -38,7 +38,7 @@
 
 struct tunnel_entry tunnel_handlers_list[] = {
   {"gtp", 	ACCT_PM | ACCT_UL, 	gtp_tunnel_configurator},
-  {"vxlan", 	ACCT_SF, 	vxlan_tunnel_configurator},
+  {"vxlan", 	ACCT_SF, 		vxlan_tunnel_configurator},
   {"", 		0,			NULL},
 };
 
@@ -686,7 +686,7 @@ void tunnel_registry_init()
 // ignoring the entire L2+L3+VXLAN headers that wrap the payload
 //
 // This function is only compatible with sfacctd
-int vxlan_tunnel_func(register struct packet_ptrs *pp) {
+int SF_vxlan_tunnel_func(register struct packet_ptrs *pp) {
 
   SFSample *sample = (SFSample *)pp->f_data;
   if (!sample) return ERR;
@@ -720,7 +720,7 @@ int vxlan_tunnel_configurator(struct tunnel_handler *th, char *opts)
   th->port = atoi(opts);
 
   if (th->port) {
-    th->tf = vxlan_tunnel_func;
+    th->tf = SF_vxlan_tunnel_func;
   }
   else {
     th->tf = NULL;

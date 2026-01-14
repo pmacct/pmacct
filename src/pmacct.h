@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -366,6 +366,12 @@ struct child_ctl2 {
 
 #include "util.h"
 
+// tunnel matched by tunnel_match, func is NULL if no match found
+typedef struct tun_reg_find_result {
+  uint16_t stack;
+  tunnel_func func;
+} tun_reg_find_result;
+
 /* prototypes */
 void startup_handle_falling_child(int);
 void handle_falling_child(int);
@@ -402,16 +408,9 @@ extern int ip6_handler(register struct packet_ptrs *);
 extern int unknown_etype_handler(register struct packet_ptrs *);
 extern int gtp_tunnel_func(register struct packet_ptrs *);
 extern int gtp_tunnel_configurator(struct tunnel_handler *, char *);
-extern int vxlan_tunnel_func(register struct packet_ptrs *);
+extern int SF_vxlan_tunnel_func(register struct packet_ptrs *);
 extern int vxlan_tunnel_configurator(struct tunnel_handler *, char *);
 extern void tunnel_registry_init();
-
-// tunnel matched by tunnel_match, func is NULL if no match found
-typedef struct tun_reg_find_result {
-  uint16_t stack;
-  tunnel_func func;
-} tun_reg_find_result;
-
 extern tun_reg_find_result tunnel_registry_find(uint8_t tun_stack, uint8_t tun_layer, uint16_t l4_proto, uint16_t dst_port);
 extern void pm_pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
 extern int PM_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);

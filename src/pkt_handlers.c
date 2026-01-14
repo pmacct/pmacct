@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -1537,7 +1537,6 @@ void src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     pdata->primitives.src_ip.address.ipv4.s_addr = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr;
-    printf("set src ip to %s", inet_ntoa(pdata->primitives.src_ip.address.ipv4));
     pdata->primitives.src_ip.family = AF_INET;
   }
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {

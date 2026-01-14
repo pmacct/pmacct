@@ -3347,7 +3347,7 @@ DESC:		Sets the number of packets to queue inside the kernel before sending them
 		values result in less overhead per packet but increase delay until the packets reach userspace.
 DEFAULT:	1
 
-KEY:		tunnel_0 [GLOBAL]
+KEY:		tunnel_0 [GLOBAL, NO_NFACCTD]
 DESC:		Defines tunnel inspection, disabled by default (note: this feature
 		is currently unrelated to tunnel_* primitives). The daemon will then account on tunnelled
 		data rather than on the envelope. The implementation approach is stateless, ie. control
