@@ -612,6 +612,8 @@ struct configuration {
   char *tee_receivers;
   int tee_pipe_size;
   char *tee_kafka_config_file;
+  int tee_counters_refresh_time;
+  char *tee_counters_path;
   int uacctd_group;
   int uacctd_nl_size;
   int uacctd_threshold;
