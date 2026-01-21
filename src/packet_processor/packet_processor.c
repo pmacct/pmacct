@@ -29,10 +29,10 @@ enum dynlib_result packet_processor_dynload(const char* lib_path) {
   const enum dynlib_result result = dynlib_load_and_resolve((struct dynlib){
       .path = lib_path,
       .table = (dynlib_table){
-        {"bgp_parse_msg", (void**) &processor.bgp_parse_msg},
-        {"bmp_process_packet", (void**) &processor.bmp_process_packet},
-        {"bmp_peer_init", (void**) &processor.bmp_peer_init},
-        {"bmp_peer_close", (void**) &processor.bmp_peer_close},
+        {"bgp_parse_msg_hook", (void**) &processor.bgp_parse_msg},
+        {"bmp_process_packet_hook", (void**) &processor.bmp_process_packet},
+        {"bmp_peer_init_hook", (void**) &processor.bmp_peer_init},
+        {"bmp_peer_close_hook", (void**) &processor.bmp_peer_close},
         {NULL,NULL}
       },
     }
