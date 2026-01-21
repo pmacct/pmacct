@@ -17,10 +17,16 @@
 #include "packet_processor.h"
 #include "dynamic_loading.h"
 
-packet_processor active_packet_processor = DEFAULT_PACKET_PROCESSOR;
+// Initialize default packet processor
+packet_processor_t pprocessor = {
+  bgp_parse_msg,
+  bmp_process_packet,
+  bmp_peer_init,
+  bmp_peer_close
+};
 
-enum dynlib_result load_parsing_lib(const char* lib_path) {
-  packet_processor processor = {0};
+enum dynlib_result packet_processor_dynload(const char* lib_path) {
+  packet_processor_t processor = {0};
   const enum dynlib_result result = dynlib_load_and_resolve((struct dynlib){
       .path = lib_path,
       .table = (dynlib_table){
@@ -35,7 +41,7 @@ enum dynlib_result load_parsing_lib(const char* lib_path) {
 
   // On dynlib success, actually set active packet processor to the loaded library
   if (result == DL_Success) {
-    active_packet_processor = processor;
+    pprocessor = processor;
   }
 
   return result;

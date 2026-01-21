@@ -20,11 +20,12 @@
 #include "pmacct.h"
 #include "dynamic_loading.h"
 
-bool dynlib_fn_end(const struct dynlib_fn* fn) {
-  return !fn->name;
-}
-
 enum dynlib_result dynlib_load_and_resolve(const struct dynlib lib) {
+
+  if (!lib.path || !lib.table) {
+    return DL_Error;
+  }
+
   void* handle = dlopen(lib.path, RTLD_NOW);
   // load the dynamic library from name/path
   if (!handle) {
@@ -33,13 +34,16 @@ enum dynlib_result dynlib_load_and_resolve(const struct dynlib lib) {
     return DL_Error;
   }
 
-  struct dynlib_fn* fn;
-  for (int index = 0; !dynlib_fn_end(fn = &lib.table[index]); index++) {
+  int index = 0;
+  struct dynlib_fn* fn = NULL;
+  do {
+    fn = &lib.table[index];
+
     // just ignore symbols we do not have a target for
     if (!fn->store)
       continue;
 
-    // load symbol by name
+    // lookup symbol by name
     void* sym = dlsym(handle, fn->name);
     if (!sym) {
       printf("ERROR ( %s ): [dynlib] expected symbol \"%s\" not found in dynamic library %s.\n", config.name, fn->name,
@@ -49,7 +53,8 @@ enum dynlib_result dynlib_load_and_resolve(const struct dynlib lib) {
 
     // store symbol found into target address
     *fn->store = sym;
-  }
+    index++;
+  } while (fn->name);
 
   return DL_Success;
 }

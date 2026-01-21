@@ -8,7 +8,7 @@ the `dynamic_loading` files offer a generic way of loading a `.so` file and extr
 
 This is meant to be a simple building block for creating modular extensions to pmacct's featureset like the `packet_processor` files.
 
-Example usage can be found in `packet_processor.c` file in the `load_parsing_lib` function.
+Example usage can be found in `packet_processor.c` file in the `packet_processor_dynload` function.
 
 This dynamic library loading works using the `dlopen` and `dlsym` linux functions.
 
