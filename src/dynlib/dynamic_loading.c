@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pmacct.h"
-#include "dynamic_loading.h"
+#include "dynlib/dynamic_loading.h"
 
 enum dynlib_result dynlib_load_and_resolve(const struct dynlib lib) {
 

@@ -21,6 +21,7 @@
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"
 #include <time.h>
+#include "dynlib/dynamic_loading.h"
 
 typedef int (* bgp_parse_msg_f) (struct bgp_peer *peer, time_t time, int online);
 typedef u_int32_t (* bmp_process_packet_f) (char * buf, u_int32_t buf_len, struct bmp_peer *peer, int *term);

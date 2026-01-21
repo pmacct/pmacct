@@ -27,7 +27,7 @@
 #include "thread_pool.h"
 #include "ip_flow.h"
 #include "ip_frag.h"
-#include "custom_packet_parsing/packet_processor.h"
+#include "packet_processor/packet_processor.h"
 #if defined WITH_EBPF
 #include "ebpf/ebpf_rp_balancer.h"
 #endif

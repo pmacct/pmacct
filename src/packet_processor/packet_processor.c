@@ -15,7 +15,6 @@
  */
 
 #include "packet_processor.h"
-#include "dynamic_loading.h"
 
 // Initialize default packet processor
 packet_processor_t pprocessor = {

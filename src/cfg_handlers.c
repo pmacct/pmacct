@@ -22,8 +22,7 @@
 /* includes */
 #include "pmacct.h"
 #include "nfacctd.h"
-#include "custom_packet_parsing/dynamic_loading.h"
-#include "custom_packet_parsing/packet_processor.h"
+#include "packet_processor/packet_processor.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "cfg_handlers.h"
