@@ -535,6 +535,7 @@ extern int cfg_key_bgp_bmp_daemon_ha_cluster_id(char *, char *, char *);
 extern int cfg_key_bgp_bmp_daemon_ha_queue_message_timeout(char *, char *, char *);
 extern int cfg_key_bgp_bmp_daemon_ha_queue_max_size(char *, char *, char *);
 extern int cfg_key_nfacctd_pre_processing_checks(char *, char *, char *);
+extern int cfg_custom_packet_parsing_lib(char *, char *, char *);
 
 extern void parse_time(char *, char *, int *, int *);
 extern void cfg_get_primitive_index_value(u_int64_t, u_int64_t *, u_int64_t *);

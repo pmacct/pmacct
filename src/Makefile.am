@@ -17,6 +17,12 @@ if WITH_AVRO
 AM_LDFLAGS += @AVRO_LIBS@
 endif
 
+# tell the linker to put all symbols into the dynsym table
+# this makes all pmacct functions visible to dynamically loaded
+# libraries such as custom parsers that might want to call
+# some pmacct functions
+AM_LDFLAGS += -Wl,-export-dynamic
+
 AM_CFLAGS = $(PMACCT_CFLAGS)
 
 #Build string autogen
@@ -54,7 +60,8 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
 	ll.c nl.c sflow.c					\
 	base64.c pmsearch.c 					\
 	thread_pool.c						\
-	plugin_cmn_custom.c network.c pmacct-globals.c
+	plugin_cmn_custom.c network.c pmacct-globals.c 			\
+	dynlib/dynamic_loading.c packet_processor/packet_processor.c
 
 libcommon_la_LIBADD  =
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
@@ -169,18 +176,18 @@ endif
 if USING_ST_BINS
 sbin_PROGRAMS += pmtelemetryd
 pmtelemetryd_SOURCES = pmtelemetryd.c
-pmtelemetryd_LDFLAGS = $(DEFS)
+pmtelemetryd_LDFLAGS = $(AM_LDFLAGS) $(DEFS)
 pmtelemetryd_LDADD = libdaemons.la
 endif
 if USING_BGP_BINS
 sbin_PROGRAMS += pmbgpd
 pmbgpd_SOURCES = pmbgpd.c
-pmbgpd_LDFLAGS = $(DEFS)
+pmbgpd_LDFLAGS = $(AM_LDFLAGS) $(DEFS)
 pmbgpd_LDADD = libdaemons.la
 endif
 if USING_BMP_BINS
 sbin_PROGRAMS += pmbmpd
 pmbmpd_SOURCES = pmbmpd.c
-pmbmpd_LDFLAGS = $(DEFS)
+pmbmpd_LDFLAGS = $(AM_LDFLAGS) $(DEFS)
 pmbmpd_LDADD = libdaemons.la
 endif

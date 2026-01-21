@@ -27,6 +27,7 @@
 #include "thread_pool.h"
 #include "ip_flow.h"
 #include "ip_frag.h"
+#include "packet_processor/packet_processor.h"
 #if defined WITH_EBPF
 #include "ebpf/ebpf_rp_balancer.h"
 #endif
@@ -823,7 +824,7 @@ int skinny_bmp_daemon()
             peer = &bmp_peers[peers_idx].self;
 	    bmpp = &bmp_peers[peers_idx];
 
-            if (bmp_peer_init(bmpp, FUNC_TYPE_BMP)) {
+            if (pprocessor.bmp_peer_init(bmpp, FUNC_TYPE_BMP)) {
 	      peer = NULL;
 	      bmpp = NULL;
 	    }
@@ -1018,7 +1019,7 @@ int skinny_bmp_daemon()
       if (ret <= 0) {
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP connection reset by peer (%d).\n", config.name, bmp_misc_db->log_str, peer->addr_str, errno);
         FD_CLR(peer->fd, &bkp_read_descs);
-        bmp_peer_close(bmpp, FUNC_TYPE_BMP);
+        pprocessor.bmp_peer_close(bmpp, FUNC_TYPE_BMP);
         recalc_fds = TRUE;
         goto select_again;
       }
@@ -1037,7 +1038,7 @@ int skinny_bmp_daemon()
     }
 
     do_term = FALSE;
-    bmp_process_packet(peer->buf.base, peer->msglen, bmpp, &do_term);
+    pprocessor.bmp_process_packet(peer->buf.base, peer->msglen, bmpp, &do_term);
 
     if (do_term) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP Term message received. Closing up.\n", config.name, bmp_misc_db->log_str, peer->addr_str);
