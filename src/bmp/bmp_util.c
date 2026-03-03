@@ -452,6 +452,8 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     json_t *obj = void_obj;
     char *bmp_rib_type = NULL;
 
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_id_str = id_buf;
+
     bmp_rib_type = bmp_rib_type_print(bmed_bmp->rib_type);
     json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type));
     if (bmp_rib_type) free(bmp_rib_type);
@@ -469,6 +471,11 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
       json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bmed_bmp->is_out));
     }
+
+    if (!inet_ntop(AF_INET, &bmed_bmp->bgp_id, id_buf, INET6_ADDRSTRLEN)) {
+      bgp_id_str = "";
+    }
+    json_object_set_new_nocheck(obj, "bgp_id", json_string(bgp_id_str));
 
     const char* pd_target = config.bmp_daemon_set_pd ? "pd" : "rd";
     const char* pd_origin_target = config.bmp_daemon_set_pd ? "pd_origin" : "rd_origin";
@@ -488,14 +495,19 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field, p_avro_branch;
     char *bmp_rib_type = NULL;
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_str = id_buf;
 
     bmp_rib_type = bmp_rib_type_print(bmed_bmp->rib_type);
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type));
     if (bmp_rib_type) free(bmp_rib_type);
 
-    pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_int(&p_avro_field, bmed_bmp->is_filtered));
+    if (!inet_ntop(AF_INET, &bmed_bmp->bgp_id, bgp_str, INET6_ADDRSTRLEN)) {
+      bgp_str = "";
+    }
+
+    pm_avro_check(avro_value_get_by_name(obj, "bgp_id", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bgp_str));
 
     if (!bmed_bmp->is_loc && !bmed_bmp->is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
