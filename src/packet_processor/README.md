@@ -34,3 +34,12 @@ The easiest way that pmacct supports is as follows :
 - configure pmacct to build as you want it to
 - `make install` pmacct, this will install a `pmacct.pc` file in your system's `pkg-config` files and create a `config.h` file in `pmacct/src` with all pmacct symbols set to what the configuration requires
 - in your library's build system, import pmacct CFLAGS and LDFLAGS from the `pmacct.pc` pkg-config file and pass them to the compiler which will compile pmacct as a dependency, the `config.h` file is already included in pmacct to properly set internal symbols for external compilation.
+
+### Using with the test-framework
+
+The test-framework supports passing a custom parsing library to pmacct using volumes
+
+To use this feature :
+- copy a dynamic library compatible with the pmacct docker build into `pmacct/test-framework/`
+- add a `packet_processor={dynamic library file name}` argument to the KModuleParams instanciation for the tests you want to use the library with (for example, in `pmacct/tests/300-BGP-IPv6-CISCO-extNH_enc/300_test.py`, change `testParams = KModuleParams(__file__, daemon='nfacctd', ipv6_subnet='cafe::')` to  `testParams = KModuleParams(__file__, daemon='nfacctd', ipv6_subnet='cafe::', packet_processor='libparse.so')`)
+- this test will now run with the dynamic library loaded and the configuration key added automatically

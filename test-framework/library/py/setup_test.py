@@ -29,10 +29,17 @@ def create_pmacct_compose_files(params: KModuleParams):
         data['services']['pmacct']['image'] = pmacct_img
         data['services']['pmacct']['container_name'] = pmacct.name
         vols = data['services']['pmacct']['volumes']
+        remove_packet = None
         for i in range(len(vols)):
             vols[i] = vols[i].replace('${PMACCT_CONF}', pmacct.results_conf_file)
             vols[i] = vols[i].replace('${PMACCT_DAEMON}', params.daemon)
             vols[i] = vols[i].replace('${PMACCT_MOUNT}', pmacct.results_mount_folder)
+            if params.packet_processor is not None and "${PACKET_PROCESSOR}" in vols[i]:
+                vols[i] = vols[i].replace('${PACKET_PROCESSOR}', f"{params.root_folder}/{params.packet_processor}:/usr/local/lib/libparse.so")
+            elif params.packet_processor is None and "${PACKET_PROCESSOR}" in vols[i]:
+                remove_packet = i
+        if remove_packet is not None:
+            vols.pop(remove_packet)
         data['services']['pmacct']['networks']['pmacct_test_network']['ipv4_address'] = pmacct.ipv4
         data['services']['pmacct']['networks']['pmacct_test_network']['ipv6_address'] = pmacct.ipv6
         with open(pmacct.docker_compose_file, 'w') as f:
@@ -76,6 +83,8 @@ def edit_config_with_framework_params(config: KConfigurationFile, params: KModul
     edit_conf_output_folder(config, params)
     config.replace_value_of_key_ending_with('kafka_avro_schema_registry', 'http://schema-registry:8081')
     config.replace_value_of_key('redis_host', '172.21.1.14:6379')
+    if params.packet_processor is not None:
+        config.data["custom_packet_parsing_lib"] = {'':"/usr/local/lib/libparse.so"}
 
 
 # Copy existing files in pmacct_mount to result (=actual) mounted folder

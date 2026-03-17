@@ -94,9 +94,4 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/* && \
   ldconfig
 
-
-ARG CUSTOM_LIB_PATH=ci/libnothing.so*
-
-COPY ${CUSTOM_LIB_PATH} /usr/local/lib/libparse.so
-
 ENTRYPOINT ["/bin/bash"]
