@@ -271,6 +271,7 @@ aspath_unintern(struct bgp_peer *peer, struct aspath *aspath)
   struct aspath *ret = NULL;
   (void) ret;
 
+  if (!aspath) return;
   if (!peer) return;
 
   inter_domain_routing_db = bgp_select_routing_db(peer->type);
