@@ -356,6 +356,28 @@ struct bgp_attr_extra *bgp_attr_extra_process(struct bgp_peer *peer, struct bgp_
     }
   }
 
+  /* EVPN metadata */
+  if (safi == SAFI_EVPN && attr_extra->evpn_route_type) {
+    if (!rie) {
+      rie = bgp_attr_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->evpn_route_type = attr_extra->evpn_route_type;
+      strlcpy(rie->evpn_rd, attr_extra->evpn_rd, sizeof(rie->evpn_rd));
+      strlcpy(rie->evpn_esi, attr_extra->evpn_esi, sizeof(rie->evpn_esi));
+      rie->evpn_eth_tag = attr_extra->evpn_eth_tag;
+      rie->evpn_mac_len = attr_extra->evpn_mac_len;
+      strlcpy(rie->evpn_mac, attr_extra->evpn_mac, sizeof(rie->evpn_mac));
+      rie->evpn_ip_len = attr_extra->evpn_ip_len;
+      strlcpy(rie->evpn_ip, attr_extra->evpn_ip, sizeof(rie->evpn_ip));
+      strlcpy(rie->evpn_prefix, attr_extra->evpn_prefix, sizeof(rie->evpn_prefix));
+      strlcpy(rie->evpn_gw_ip, attr_extra->evpn_gw_ip, sizeof(rie->evpn_gw_ip));
+      strlcpy(rie->evpn_originator_ip, attr_extra->evpn_originator_ip, sizeof(rie->evpn_originator_ip));
+      strlcpy(rie->evpn_label, attr_extra->evpn_label, sizeof(rie->evpn_label));
+    }
+  }
+
   if (rie && !(attr_extra->bitmap & BGP_BMAP_ATTR_AIGP)) rie->bitmap &= ~BGP_BMAP_ATTR_AIGP;
 
   return rie;

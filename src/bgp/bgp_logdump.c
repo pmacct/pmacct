@@ -171,11 +171,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "ip_prefix", json_string(prefix_str));
     }
 
-    if ((afi == AFI_IP || afi == AFI_IP6) &&
-	(safi == SAFI_UNICAST || safi == SAFI_MULTICAST)) {
-      if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
-        json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
-      }
+    if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra && ri->attr_extra->path_id) {
+      json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
     }
 
     if (attr) {
@@ -296,6 +293,54 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
       bgp_label2str(label_str, ri->attr_extra->label);
       json_object_set_new_nocheck(obj, "mpls_label", json_string(label_str));
+    }
+
+    if (safi == SAFI_EVPN && ri && ri->attr_extra && ri->attr_extra->evpn_route_type) {
+      json_object_set_new_nocheck(obj, "evpn_route_type", json_integer((json_int_t)ri->attr_extra->evpn_route_type));
+
+      if (ri->attr_extra->evpn_rd[0]) {
+        json_object_set_new_nocheck(obj, "evpn_rd", json_string(ri->attr_extra->evpn_rd));
+      }
+
+      if (ri->attr_extra->evpn_esi[0]) {
+        json_object_set_new_nocheck(obj, "evpn_esi", json_string(ri->attr_extra->evpn_esi));
+      }
+
+      if (ri->attr_extra->evpn_eth_tag) {
+        json_object_set_new_nocheck(obj, "evpn_eth_tag", json_integer((json_int_t)ri->attr_extra->evpn_eth_tag));
+      }
+
+      if (ri->attr_extra->evpn_mac_len) {
+        json_object_set_new_nocheck(obj, "evpn_mac_len", json_integer((json_int_t)ri->attr_extra->evpn_mac_len));
+      }
+
+      if (ri->attr_extra->evpn_mac[0]) {
+        json_object_set_new_nocheck(obj, "evpn_mac", json_string(ri->attr_extra->evpn_mac));
+      }
+
+      if (ri->attr_extra->evpn_ip_len) {
+        json_object_set_new_nocheck(obj, "evpn_ip_len", json_integer((json_int_t)ri->attr_extra->evpn_ip_len));
+      }
+
+      if (ri->attr_extra->evpn_ip[0]) {
+        json_object_set_new_nocheck(obj, "evpn_ip", json_string(ri->attr_extra->evpn_ip));
+      }
+
+      if (ri->attr_extra->evpn_prefix[0]) {
+        json_object_set_new_nocheck(obj, "evpn_prefix", json_string(ri->attr_extra->evpn_prefix));
+      }
+
+      if (ri->attr_extra->evpn_gw_ip[0]) {
+        json_object_set_new_nocheck(obj, "evpn_gw_ip", json_string(ri->attr_extra->evpn_gw_ip));
+      }
+
+      if (ri->attr_extra->evpn_originator_ip[0]) {
+        json_object_set_new_nocheck(obj, "evpn_originator_ip", json_string(ri->attr_extra->evpn_originator_ip));
+      }
+
+      if (ri->attr_extra->evpn_label[0]) {
+        json_object_set_new_nocheck(obj, "evpn_label", json_string(ri->attr_extra->evpn_label));
+      }
     }
 
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, obj);

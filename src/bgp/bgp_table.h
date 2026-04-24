@@ -80,6 +80,18 @@ struct bgp_attr_extra
   u_int64_t aigp;
   u_int32_t psid_li;
   u_int32_t otc;
+  u_int8_t evpn_route_type; /* 0 means absent */
+  char evpn_rd[SHORTSHORTBUFLEN];
+  char evpn_esi[32];
+  u_int32_t evpn_eth_tag;
+  u_int8_t evpn_mac_len;
+  char evpn_mac[18];        /* "xx:xx:xx:xx:xx:xx" */
+  u_int8_t evpn_ip_len;
+  char evpn_ip[INET6_ADDRSTRLEN];
+  char evpn_prefix[INET6_ADDRSTRLEN + 5];
+  char evpn_gw_ip[INET6_ADDRSTRLEN];
+  char evpn_originator_ip[INET6_ADDRSTRLEN];
+  char evpn_label[SHORTSHORTBUFLEN];
   struct bgp_attr_ls ls;
 };
 

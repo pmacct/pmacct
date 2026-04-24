@@ -68,6 +68,7 @@ static const char __attribute__((unused)) *bgp_msg_types[] = {
 /* Address family numbers */
 #define AFI_IP                    1
 #define AFI_IP6                   2
+#define AFI_L2VPN                 25
 #define AFI_BGP_LS		  16388
 #define AFI_MAX                   3 /* XXX: hotfix */
 
@@ -76,6 +77,7 @@ static const char __attribute__((unused)) *bgp_msg_types[] = {
 #define SAFI_MULTICAST            2
 #define SAFI_UNICAST_MULTICAST    3
 #define SAFI_MPLS_LABEL           4
+#define SAFI_EVPN                 70
 #define SAFI_LS_GLOBAL		  71
 #define SAFI_LS_VPN		  72
 #define SAFI_MPLS_VPN             128
