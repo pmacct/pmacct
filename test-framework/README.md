@@ -143,6 +143,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 206: BMP-high-availability
 - 207: BMP-CISCO-HUAWEI-multiple-sources-dump-spreading
 - 208: BMP-mem-leak-test
+- 209: BMP-EVPN-rawmsg
 ```
 
 ### 3XX - BGP
