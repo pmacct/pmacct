@@ -169,9 +169,11 @@ int main(int argc,char **argv, char **envp)
   extern int optind, opterr, optopt;
   int errflag, cp; 
 
-  /* select() stuff */
-  fd_set read_descs, bkp_read_descs;
-  int select_fd, bkp_select_fd, num_descs;
+  /* poll() stuff */
+  struct pollfd flow_poll_fds[3];
+  nfds_t flow_poll_idx;
+  nfds_t flow_poll_fds_num;
+  int num_descs;
 
 #ifdef WITH_REDIS
   struct p_redis_host redis_host, redis_ha_host;
@@ -243,11 +245,8 @@ int main(int argc,char **argv, char **envp)
   memset(&recv_pptrs, 0, sizeof(recv_pptrs));
   memset(&recv_pkthdr, 0, sizeof(recv_pkthdr));
 
-  select_fd = 0;
-  bkp_select_fd = 0;
+  flow_poll_fds_num = 0;
   num_descs = 0;
-  FD_ZERO(&read_descs);
-  FD_ZERO(&bkp_read_descs);
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_NFACCTD)) != -1)) {
@@ -868,22 +867,27 @@ int main(int argc,char **argv, char **envp)
 #endif
 
     if (config.nfacctd_templates_port || config.nfacctd_dtls_port) {
-      FD_SET(config.sock, &bkp_read_descs);
-      bkp_select_fd = config.sock;
+      flow_poll_fds_num = 0;
+      flow_poll_fds[flow_poll_fds_num].fd = config.sock;
+      flow_poll_fds[flow_poll_fds_num].events = POLLIN;
+      flow_poll_fds[flow_poll_fds_num].revents = 0;
+      flow_poll_fds_num++;
 
       if (config.nfacctd_templates_sock) {
-        FD_SET(config.nfacctd_templates_sock, &bkp_read_descs);
-        bkp_select_fd = (bkp_select_fd < config.nfacctd_templates_sock) ? config.nfacctd_templates_sock : bkp_select_fd;
+        flow_poll_fds[flow_poll_fds_num].fd = config.nfacctd_templates_sock;
+        flow_poll_fds[flow_poll_fds_num].events = POLLIN;
+        flow_poll_fds[flow_poll_fds_num].revents = 0;
+        flow_poll_fds_num++;
       }
 
 #ifdef WITH_GNUTLS
       if (config.nfacctd_dtls_sock) {
-        FD_SET(config.nfacctd_dtls_sock, &bkp_read_descs);
-        bkp_select_fd = (bkp_select_fd < config.nfacctd_dtls_sock) ? config.nfacctd_dtls_sock : bkp_select_fd;
+        flow_poll_fds[flow_poll_fds_num].fd = config.nfacctd_dtls_sock;
+        flow_poll_fds[flow_poll_fds_num].events = POLLIN;
+        flow_poll_fds[flow_poll_fds_num].revents = 0;
+        flow_poll_fds_num++;
       }
 #endif
-
-      bkp_select_fd++;
     }
 
     /* bind socket to port */
@@ -1517,16 +1521,14 @@ int main(int argc,char **argv, char **envp)
       }
       else {
 	select_func_again: 
-	select_fd = bkp_select_fd;
-	memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
-
-	num_descs = select(select_fd, &read_descs, NULL, NULL, NULL);
+	for (flow_poll_idx = 0; flow_poll_idx < flow_poll_fds_num; flow_poll_idx++) flow_poll_fds[flow_poll_idx].revents = 0;
+	num_descs = poll(flow_poll_fds, flow_poll_fds_num, -1);
 
 	select_read_again:
 	if (num_descs > 0) {
-	  if (FD_ISSET(config.sock, &read_descs)) {
+	  if (flow_poll_fds[0].revents & (POLLIN|POLLERR|POLLHUP)) {
             ret = recvfrom(config.sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
-	    FD_CLR(config.sock, &read_descs);
+	    flow_poll_fds[0].revents = 0;
 	    num_descs--;
 
 	    templates_sock = FALSE;
@@ -1535,9 +1537,10 @@ int main(int argc,char **argv, char **envp)
 #endif
 	    collector_port = config.nfacctd_port;
 	  }
-	  else if (FD_ISSET(config.nfacctd_templates_sock, &read_descs)) {
+	  else if (flow_poll_fds_num > 1 && flow_poll_fds[1].fd == config.nfacctd_templates_sock &&
+		   (flow_poll_fds[1].revents & (POLLIN|POLLERR|POLLHUP))) {
 	    ret = recvfrom(config.nfacctd_templates_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
-	    FD_CLR(config.nfacctd_templates_sock, &read_descs);
+	    flow_poll_fds[1].revents = 0;
 	    num_descs--;
 
 	    templates_sock = TRUE;
@@ -1547,10 +1550,16 @@ int main(int argc,char **argv, char **envp)
 	    collector_port = config.nfacctd_templates_port;
 	  }
 #ifdef WITH_GNUTLS
-	  else if (FD_ISSET(config.nfacctd_dtls_sock, &read_descs)) {
+	  else if (
+	      ((flow_poll_fds_num > 1 && flow_poll_fds[1].fd == config.nfacctd_dtls_sock &&
+		(flow_poll_fds[1].revents & (POLLIN|POLLERR|POLLHUP))) ||
+	       (flow_poll_fds_num > 2 && flow_poll_fds[2].fd == config.nfacctd_dtls_sock &&
+		(flow_poll_fds[2].revents & (POLLIN|POLLERR|POLLHUP))))
+	  ) {
 	    /* Peek only here since gnutls wants to consume on its own */
 	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, MSG_PEEK, (struct sockaddr *) &client, &clen);
-	    FD_CLR(config.nfacctd_dtls_sock, &read_descs);
+	    if (flow_poll_fds_num > 1 && flow_poll_fds[1].fd == config.nfacctd_dtls_sock) flow_poll_fds[1].revents = 0;
+	    if (flow_poll_fds_num > 2 && flow_poll_fds[2].fd == config.nfacctd_dtls_sock) flow_poll_fds[2].revents = 0;
 	    num_descs--;
 
 	    templates_sock = FALSE;
