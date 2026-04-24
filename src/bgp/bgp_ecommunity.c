@@ -329,6 +329,8 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 
   for (i = 0; i < ecom->size; i++)
     {
+      int encode_base;
+
       /* Make it sure size is enough.  */
       while (str_pnt + ECOMMUNITY_STR_DEFAULT_LEN >= str_size)
         {
@@ -344,6 +346,71 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 
       /* High-order octet of type. */
       encode = *pnt++;
+
+      /* Low-order octet of type. */
+      type = *pnt++;
+
+      /* Per RFC 4360, the high-order octet contains flags (bit 0: IANA,
+         bit 1: transitive). Mask them out to get the encoding type so that
+         non-transitive variants (0x40, 0x41, 0x42) are handled consistently. */
+      encode_base = (encode & 0x3F);
+
+      /* Raw format: type:subtype:value1:value2 (type/subtype in decimal). */
+      if (format == ECOMMUNITY_FORMAT_RAW || config.bgp_ecommunities_raw)
+	{
+	  len = sprintf(str_buf + str_pnt, "%u:%u:", encode, type);
+	  str_pnt += len;
+
+	  if (encode_base == ECOMMUNITY_ENCODE_AS4)
+	    {
+	      eas.as = (*pnt++ << 24);
+	      eas.as |= (*pnt++ << 16);
+	      eas.as |= (*pnt++ << 8);
+	      eas.as |= (*pnt++);
+
+	      eas.val = (*pnt++ << 8);
+	      eas.val |= (*pnt++);
+
+	      len = sprintf(str_buf + str_pnt, "%u:%u", eas.as, eas.val);
+	      str_pnt += len;
+	    }
+	  else if (encode_base == ECOMMUNITY_ENCODE_AS)
+	    {
+	      eas.as = (*pnt++ << 8);
+	      eas.as |= (*pnt++);
+
+	      eas.val = (*pnt++ << 24);
+	      eas.val |= (*pnt++ << 16);
+	      eas.val |= (*pnt++ << 8);
+	      eas.val |= (*pnt++);
+
+	      len = sprintf(str_buf + str_pnt, "%u:%u", eas.as, eas.val);
+	      str_pnt += len;
+	    }
+	  else if (encode_base == ECOMMUNITY_ENCODE_IP)
+	    {
+	      memcpy(&eip.ip, pnt, 4);
+	      pnt += 4;
+	      eip.val = (*pnt++ << 8);
+	      eip.val |= (*pnt++);
+
+	      len = sprintf(str_buf + str_pnt, "%s:%u", inet_ntoa(eip.ip), eip.val);
+	      str_pnt += len;
+	    }
+	  else
+	    {
+	      /* Unknown/opaque encoding: dump the 6-byte value as hex. */
+	      len = sprintf(str_buf + str_pnt,
+			    "0x%02x%02x%02x%02x%02x%02x",
+			    pnt[0], pnt[1], pnt[2], pnt[3], pnt[4], pnt[5]);
+	      str_pnt += len;
+	    }
+
+	  first = 0;
+	  continue;
+	}
+
+      /* Standard processing for known types */
       if (encode != ECOMMUNITY_ENCODE_AS && encode != ECOMMUNITY_ENCODE_IP
 		      && encode != ECOMMUNITY_ENCODE_AS4)
 	{
@@ -352,9 +419,7 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 	  first = 0;
 	  continue;
 	}
-      
-      /* Low-order octet of type. */
-      type = *pnt++;
+
       if (type !=  ECOMMUNITY_ROUTE_TARGET && type != ECOMMUNITY_SITE_ORIGIN)
 	{
 	  len = sprintf (str_buf + str_pnt, "?");

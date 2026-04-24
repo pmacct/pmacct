@@ -1764,6 +1764,17 @@ DESC:		Defines whether known Standard (ie. "internet") and Extended Communities 
 VALUES:         [ true | false ]
 DEFAULT:        false
 
+KEY:		bgp_ecommunities_raw
+DESC:		Defines whether Extended Communities should be output in raw format without processing.
+		When set to true, extended communities are displayed as type:subtype:value1:value2 format
+		where type and subtype are in decimal format and value1:value2 are processed according
+		to the encoding type (e.g., 0:2:65000:100 for RT on AS16, 1:3:192.168.1.1:100 for SoO on IPv4).
+		This is useful for debugging or when dealing with unknown extended community types.
+		When set to false, extended communities are processed and displayed in human-readable
+		format (e.g., "RT:100:1", "SoO:192.168.1.1:100").
+VALUES:         [ true | false ]
+DEFAULT:        false
+
 KEY:            as_path_encode_as_array
 VALUES:         [ true | false ]
 DESC:           BGP AS_PATH is encoded by default as a string, including an underscore-separated list

@@ -563,6 +563,7 @@ struct configuration {
   int tcpflags_encode_as_array;
   int bgp_comms_encode_as_array;
   int bgp_comms_num;
+  int bgp_ecommunities_raw;
   int as_path_encode_as_array;
   int mpls_label_stack_encode_as_array;
   int fwd_status_encode_as_string;

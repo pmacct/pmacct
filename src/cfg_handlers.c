@@ -735,6 +735,28 @@ int cfg_key_bgp_comms_num(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bgp_ecommunities_raw(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+    
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+  
+  if (!name) for (; list; list = list->next, changes++) list->cfg.bgp_ecommunities_raw = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.bgp_ecommunities_raw = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_as_path_encode_as_array(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

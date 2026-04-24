@@ -96,6 +96,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tcpflags_encode_as_array", cfg_key_tcpflags_encode_as_array},
   {"bgp_comms_encode_as_array", cfg_key_bgp_comms_encode_as_array},
   {"bgp_comms_num", cfg_key_bgp_comms_num},
+  {"bgp_ecommunities_raw", cfg_key_bgp_ecommunities_raw},
   {"as_path_encode_as_array", cfg_key_as_path_encode_as_array},
   {"fwd_status_encode_as_string", cfg_key_fwd_status_encode_as_string},
   {"tos_encode_as_dscp", cfg_key_tos_encode_as_dscp},
