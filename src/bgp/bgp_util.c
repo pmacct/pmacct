@@ -966,7 +966,7 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
 	  if (bms->msglog_backend_methods) {
 	    char event_type[] = "log";
 
-	    bgp_peer_log_msg(node, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+	    bgp_peer_log_msg(node, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE, NULL);
 	  }
 
 	  ri_next = ri->next; /* let's save pointer to next before free up */

@@ -484,6 +484,7 @@ struct configuration {
   int bmp_daemon_msglog_kafka_retry;
   char *bmp_daemon_msglog_kafka_config_file;
   char *bmp_daemon_msglog_kafka_avro_schema_registry;
+  int bmp_daemon_msglog_evpn_raw_msg;
   int bmp_table_peer_buckets;
   int bmp_table_per_peer_buckets;
   int bmp_table_attr_hash_buckets;

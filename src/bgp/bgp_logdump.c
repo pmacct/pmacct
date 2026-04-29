@@ -45,7 +45,7 @@
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
          bgp_tag_t *tag, char *event_type, int output, char **output_data,
-         int log_type)
+         int log_type, struct bgp_msg_data *bmd)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -344,6 +344,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (ri->attr_extra->evpn_label[0]) {
         json_object_set_new_nocheck(obj, "evpn_label", json_string(ri->attr_extra->evpn_label));
       }
+    }
+
+    if (config.bmp_daemon_msglog_evpn_raw_msg && bmd && bmd->unknown_path_attrs &&
+	afi == AFI_L2VPN && safi == SAFI_EVPN) {
+      json_object_set_new_nocheck(obj, "unknown-tlv", json_incref((json_t *)bmd->unknown_path_attrs));
     }
 
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, obj);
@@ -2253,7 +2258,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 	        if (ri->peer == peer) {
             
-		  bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
+		  bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC, NULL);
 		  dump_elems++;
 		  bds.entries++;
 		}

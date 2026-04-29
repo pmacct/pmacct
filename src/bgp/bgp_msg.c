@@ -795,12 +795,28 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   }
 
   if (attribute_len > 0) {
-    ret = bgp_attr_parse(peer, &attr, &attr_extra, pkt, attribute_len, &mp_update, &mp_withdraw);
+    ret = bgp_attr_parse(peer, &attr, &attr_extra, pkt, attribute_len, &mp_update, &mp_withdraw, bmd);
     if (ret < 0) {
+#if defined(WITH_JANSSON)
+      if (bmd->unknown_path_attrs) {
+	json_decref((json_t *)bmd->unknown_path_attrs);
+	bmd->unknown_path_attrs = NULL;
+      }
+#endif
       return ret;
     }
     pkt += attribute_len;
   }
+
+#if defined(WITH_JANSSON)
+  if (config.bmp_daemon_msglog_evpn_raw_msg && bmd->unknown_path_attrs) {
+    int evpn_mp = (mp_update.length && mp_update.afi == AFI_L2VPN && mp_update.safi == SAFI_EVPN);
+    if (!evpn_mp) {
+      json_decref((json_t *)bmd->unknown_path_attrs);
+      bmd->unknown_path_attrs = NULL;
+    }
+  }
+#endif
 
   update_len = end; end = 0;
 
@@ -912,7 +928,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
       memset(&ri, 0, sizeof(ri));
       ri.peer = peer;
       ri.bmed = bmd->extra;
-      bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR);
+      bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR, NULL);
 
       if (afi < AFI_MAX && safi < SAFI_MAX) {
 	peer->eor[afi][safi] = TRUE;
@@ -927,6 +943,13 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	mp_update.length ? mp_update.afi : mp_withdraw.afi,
 	mp_update.length ? mp_update.safi : mp_withdraw.safi);
   }
+
+#if defined(WITH_JANSSON)
+  if (bmd->unknown_path_attrs) {
+    json_decref((json_t *)bmd->unknown_path_attrs);
+    bmd->unknown_path_attrs = NULL;
+  }
+#endif
 
   /* Everything is done.  We unintern temporary structures which
 	 interned in bgp_attr_parse(). */
@@ -1162,9 +1185,61 @@ bgp_attr_parse_tunnel_encap(struct bgp_peer *peer, u_int16_t len, struct bgp_att
   return SUCCESS;
 }
 
+#if defined(WITH_JANSSON)
+static void
+bgp_unknown_path_attr_append(struct bgp_msg_data *bmd, u_int8_t attr_type,
+			     const u_char *data, u_int16_t attr_len)
+{
+  json_t *arr, *obj;
+  char *hex;
+  size_t cap, i, off;
+
+  if (!bmd || !config.bmp_daemon_msglog_evpn_raw_msg)
+    return;
+
+  cap = attr_len;
+  if (cap > 4096)
+    cap = 4096;
+
+  hex = malloc(3 + (size_t)cap * 2 + 1);
+  if (!hex)
+    return;
+
+  memcpy(hex, "0x", 2);
+  off = 2;
+  for (i = 0; i < cap; i++) {
+    snprintf(hex + off, 3, "%02x", data[i]);
+    off += 2;
+  }
+  hex[off] = '\0';
+
+  arr = (json_t *) bmd->unknown_path_attrs;
+  if (!arr) {
+    arr = json_array();
+    if (!arr) {
+      free(hex);
+      return;
+    }
+    bmd->unknown_path_attrs = arr;
+  }
+
+  obj = json_object();
+  if (!obj) {
+    free(hex);
+    return;
+  }
+  json_object_set_new_nocheck(obj, "tlv", json_integer(attr_type));
+  json_object_set_new_nocheck(obj, "hex_dump_tlv_data", json_string(hex));
+  free(hex);
+
+  json_array_append_new(arr, obj);
+}
+#endif
+
 /* BGP UPDATE Attribute parsing */
 int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra,
-		   char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
+		   char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw,
+		   struct bgp_msg_data *bmd)
 {
   struct bgp_misc_structs *bms;
   char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -1257,6 +1332,10 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
       ret = bgp_attr_parse_tunnel_encap(peer, attr_len, attr, ptr, flag);
       break;
     default:
+#if defined(WITH_JANSSON)
+      if (bmd && peer->type == FUNC_TYPE_BMP && config.bmp_daemon_msglog_evpn_raw_msg)
+	bgp_unknown_path_attr_append(bmd, type, (u_char *)ptr, attr_len);
+#endif
       ret = 0;
       break;
     }
@@ -1766,7 +1845,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
 
         bgp_peer_log_msg(NULL, &ri_local, info->afi, info->safi, bms->tag, event_type,
                          bms->msglog_output, NULL,
-                         (attr ? BGP_LOG_TYPE_UPDATE : BGP_LOG_TYPE_WITHDRAW));
+                         (attr ? BGP_LOG_TYPE_UPDATE : BGP_LOG_TYPE_WITHDRAW), bmd);
 
         if (ri_local.attr_extra) {
           bgp_attr_extra_free(peer, &ri_local.attr_extra);
@@ -2158,7 +2237,7 @@ log_update:
   {
     char event_type[] = "log";
 
-    bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_UPDATE);
+    bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_UPDATE, bmd);
   }
 
   if (bms->skip_rib) {
@@ -2232,7 +2311,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
   if (ri && bms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_WITHDRAW);
+    bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_WITHDRAW, bmd);
   }
 
   if (!bms->skip_rib) {

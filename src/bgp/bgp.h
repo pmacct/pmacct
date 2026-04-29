@@ -236,6 +236,7 @@ struct bgp_msg_data {
   struct bgp_msg_extra_data extra;
   int is_blackhole;
   int nlri_count;
+  void *unknown_path_attrs; /* json_t * array when bmp_daemon_msglog_evpn_raw_msg (WITH_JANSSON) */
 };
 
 typedef struct packet_ptrs bgp_tag_t;

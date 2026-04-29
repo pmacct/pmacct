@@ -490,6 +490,7 @@ extern int cfg_key_bmp_daemon_msglog_kafka_partition_key(char *, char *, char *)
 extern int cfg_key_bmp_daemon_msglog_kafka_retry(char *, char *, char *);
 extern int cfg_key_bmp_daemon_msglog_kafka_config_file(char *, char *, char *);
 extern int cfg_key_bmp_daemon_msglog_kafka_avro_schema_registry(char *, char *, char *);
+extern int cfg_key_bmp_daemon_msglog_evpn_raw_msg(char *, char *, char *);
 extern int cfg_key_bmp_daemon_table_peer_buckets(char *, char *, char *);
 extern int cfg_key_bmp_daemon_table_per_peer_buckets(char *, char *, char *);
 extern int cfg_key_bmp_daemon_table_attr_hash_buckets(char *, char *, char *);

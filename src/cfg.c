@@ -612,6 +612,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_daemon_msglog_kafka_retry", cfg_key_bmp_daemon_msglog_kafka_retry},
   {"bmp_daemon_msglog_kafka_config_file", cfg_key_bmp_daemon_msglog_kafka_config_file},
   {"bmp_daemon_msglog_kafka_avro_schema_registry", cfg_key_bmp_daemon_msglog_kafka_avro_schema_registry},
+  {"bmp_daemon_msglog_evpn_raw_msg", cfg_key_bmp_daemon_msglog_evpn_raw_msg},
   {"bmp_table_peer_buckets", cfg_key_bmp_daemon_table_peer_buckets},
   {"bmp_table_per_peer_buckets", cfg_key_bmp_daemon_table_per_peer_buckets},
   {"bmp_table_attr_hash_buckets", cfg_key_bmp_daemon_table_attr_hash_buckets},
