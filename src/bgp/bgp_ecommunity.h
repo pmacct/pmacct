@@ -36,6 +36,31 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #define ECOMMUNITY_ROUTE_TARGET             0x02
 #define ECOMMUNITY_SITE_ORIGIN              0x03
 
+/* BGP Extended Community type high-order octet (RFC 7153 / IANA).  */
+#define ECOMMUNITY_TYPE_EVPN                0x06
+#define ECOMMUNITY_TYPE_OPAQUE              0x03
+
+/* Transitive Opaque Extended Community sub-types (selection).  */
+#define ECOMMUNITY_OPAQUE_ENCAPSULATION     0x0c
+
+/* EVPN Extended Community sub-types (IANA "EVPN Extended Community Sub-Types").  */
+#define ECOMMUNITY_EVPN_MAC_MOBILITY        0x00
+#define ECOMMUNITY_EVPN_ESI_LABEL           0x01
+#define ECOMMUNITY_EVPN_ES_IMPORT           0x02
+#define ECOMMUNITY_EVPN_ROUTER_MAC          0x03
+#define ECOMMUNITY_EVPN_LAYER2_ATTR         0x04
+#define ECOMMUNITY_EVPN_ETREE               0x05
+#define ECOMMUNITY_EVPN_DF_ELECTION         0x06
+#define ECOMMUNITY_EVPN_ARP_ND              0x08
+#define ECOMMUNITY_EVPN_MCAST_FLAGS         0x09
+#define ECOMMUNITY_EVPN_EVI_RT0             0x0a
+#define ECOMMUNITY_EVPN_EVI_RT1             0x0b
+#define ECOMMUNITY_EVPN_EVI_RT2             0x0c
+#define ECOMMUNITY_EVPN_EVI_RT3             0x0d
+#define ECOMMUNITY_EVPN_AC                  0x0e
+#define ECOMMUNITY_EVPN_SVC_CARVING         0x0f
+#define ECOMMUNITY_EVPN_LINK_BANDWIDTH      0x10
+
 /* Extended communities attribute string format.  */
 #define ECOMMUNITY_FORMAT_ROUTE_MAP            0
 #define ECOMMUNITY_FORMAT_COMMUNITY_LIST       1

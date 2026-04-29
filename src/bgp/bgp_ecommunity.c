@@ -25,6 +25,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
 #include "pmacct.h"
+#include <stddef.h>
 #include "bgp_prefix.h"
 #include "bgp.h"
 
@@ -251,6 +252,150 @@ ecommunity_init (int buckets, struct hash **loc_ecomhash)
   (*loc_ecomhash) = hash_create (buckets, ecommunity_hash_make, ecommunity_cmp);
 }
 
+static int
+ecommunity_snprintf_hex_full(char *dst, size_t dst_sz, const u_int8_t *ec)
+{
+  return snprintf(dst, dst_sz,
+                  "EC:0x%02x%02x%02x%02x%02x%02x%02x%02x",
+                  ec[0], ec[1], ec[2], ec[3], ec[4], ec[5], ec[6], ec[7]);
+}
+
+static int
+ecommunity_snprintf_evpn_unknown(char *dst, size_t dst_sz, u_int8_t subtype, const u_int8_t *val)
+{
+  return snprintf(dst, dst_sz,
+                  "EVPN:Unknown(0x%02x):0x%02x%02x%02x%02x%02x%02x",
+                  subtype, val[0], val[1], val[2], val[3], val[4], val[5]);
+}
+
+static const char *
+ecommunity_tunnel_type_name(u_int16_t t)
+{
+  switch (t) {
+  case 1: return "UDP";
+  case 2: return "TCP";
+  case 3: return "IP-in-IP";
+  case 4: return "GRE";
+  case 5: return "MPLS";
+  case 8: return "VXLAN";
+  case 9: return "NVGRE";
+  case 12: return "MPLS-in-GRE";
+  default: return NULL;
+  }
+}
+
+/*
+   Encapsulation Extended Community (RFC 5512 / RFC 9012):
+   Transitive Opaque, sub-type Encapsulation; tunnel type in last two octets of value.
+*/
+static int
+ecommunity_encap_val2str(char *dst, size_t dst_sz, const u_int8_t *val)
+{
+  u_int16_t tun = ((u_int16_t)val[4] << 8) | (u_int16_t)val[5];
+  const char *tn = ecommunity_tunnel_type_name(tun);
+
+  if (tn)
+    return snprintf(dst, dst_sz,
+                    "Encapsulation:tunnel-type=%u(%s):reserved=0x%02x%02x%02x%02x",
+                    (unsigned)tun, tn, val[0], val[1], val[2], val[3]);
+  return snprintf(dst, dst_sz,
+                  "Encapsulation:tunnel-type=%u:reserved=0x%02x%02x%02x%02x",
+                  (unsigned)tun, val[0], val[1], val[2], val[3]);
+}
+
+static int
+ecommunity_evpn_val2str(char *dst, size_t dst_sz, u_int8_t subtype, const u_int8_t *val)
+{
+  u_int32_t seq;
+
+  switch (subtype) {
+  case ECOMMUNITY_EVPN_MAC_MOBILITY:
+    seq = ((u_int32_t)val[2] << 24) | ((u_int32_t)val[3] << 16) |
+          ((u_int32_t)val[4] << 8) | (u_int32_t)val[5];
+    return snprintf(dst, dst_sz,
+                    "MACMobility:flags=0x%02x:reserved=0x%02x:seq=%u",
+                    val[0], val[1], seq);
+
+  case ECOMMUNITY_EVPN_ESI_LABEL:
+    return snprintf(dst, dst_sz,
+                    "ESILabel:flags=0x%02x:value=0x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_ES_IMPORT:
+    return snprintf(dst, dst_sz,
+                    "ESImport:%02x:%02x:%02x:%02x:%02x:%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_ROUTER_MAC:
+    return snprintf(dst, dst_sz,
+                    "EVPNRouterMAC:%02x:%02x:%02x:%02x:%02x:%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_LAYER2_ATTR:
+    return snprintf(dst, dst_sz,
+                    "L2Attrs:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_ETREE:
+    return snprintf(dst, dst_sz,
+                    "ETree:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_DF_ELECTION:
+    return snprintf(dst, dst_sz,
+                    "DFElection:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_ARP_ND:
+    return snprintf(dst, dst_sz,
+                    "ARP/ND:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_MCAST_FLAGS:
+    return snprintf(dst, dst_sz,
+                    "MulticastFlags:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_EVI_RT0:
+    return snprintf(dst, dst_sz,
+                    "EVI-RT-Type0:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_EVI_RT1:
+    return snprintf(dst, dst_sz,
+                    "EVI-RT-Type1:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_EVI_RT2:
+    return snprintf(dst, dst_sz,
+                    "EVI-RT-Type2:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_EVI_RT3:
+    return snprintf(dst, dst_sz,
+                    "EVI-RT-Type3:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_AC:
+    return snprintf(dst, dst_sz,
+                    "EVPN-AC:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_SVC_CARVING:
+    return snprintf(dst, dst_sz,
+                    "ServiceCarvingTime:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  case ECOMMUNITY_EVPN_LINK_BANDWIDTH:
+    return snprintf(dst, dst_sz,
+                    "EVPNLinkBandwidth:0x%02x%02x%02x%02x%02x%02x",
+                    val[0], val[1], val[2], val[3], val[4], val[5]);
+
+  default:
+    return ecommunity_snprintf_evpn_unknown(dst, dst_sz, subtype, val);
+  }
+}
+
 /* Convert extended community attribute to string.  
 
    Due to historical reason of industry standard implementation, there
@@ -329,6 +474,8 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 
   for (i = 0; i < ecom->size; i++)
     {
+      u_int8_t *ec;
+
       /* Make it sure size is enough.  */
       while (str_pnt + ECOMMUNITY_STR_DEFAULT_LEN >= str_size)
         {
@@ -340,28 +487,62 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
       if (! first)
 	str_buf[str_pnt++] = ' ';
 
-      pnt = ecom->val + (i * 8);
+      ec = ecom->val + (i * ECOMMUNITY_SIZE);
+      encode = ec[0];
+      type = ec[1];
 
-      /* High-order octet of type. */
-      encode = *pnt++;
+      /* EVPN Extended Community (IANA type high-order octet 0x06).  */
+      if ((encode & 0x7F) == ECOMMUNITY_TYPE_EVPN) {
+        while (str_pnt + 160 >= str_size) {
+          str_size *= 2;
+          str_buf = realloc(str_buf, str_size);
+        }
+        len = ecommunity_evpn_val2str(str_buf + str_pnt, str_size - str_pnt, (u_int8_t) type, ec + 2);
+        str_pnt += len;
+        first = 0;
+        continue;
+      }
+
+      /* Encapsulation Extended Community (Transitive Opaque, sub-type 0x0c).  */
+      if ((encode & 0x7F) == ECOMMUNITY_TYPE_OPAQUE && type == ECOMMUNITY_OPAQUE_ENCAPSULATION) {
+        while (str_pnt + 160 >= str_size) {
+          str_size *= 2;
+          str_buf = realloc(str_buf, str_size);
+        }
+        len = ecommunity_encap_val2str(str_buf + str_pnt, str_size - str_pnt, ec + 2);
+        str_pnt += len;
+        first = 0;
+        continue;
+      }
+
+      /* Unknown extended community types: full 8-octet hex (no "?").  */
       if (encode != ECOMMUNITY_ENCODE_AS && encode != ECOMMUNITY_ENCODE_IP
 		      && encode != ECOMMUNITY_ENCODE_AS4)
 	{
-	  len = sprintf (str_buf + str_pnt, "?");
+	  while (str_pnt + 64 >= str_size) {
+	    str_size *= 2;
+	    str_buf = realloc(str_buf, str_size);
+	  }
+	  len = ecommunity_snprintf_hex_full(str_buf + str_pnt, str_size - str_pnt, ec);
 	  str_pnt += len;
 	  first = 0;
 	  continue;
 	}
-      
+
       /* Low-order octet of type. */
-      type = *pnt++;
       if (type !=  ECOMMUNITY_ROUTE_TARGET && type != ECOMMUNITY_SITE_ORIGIN)
 	{
-	  len = sprintf (str_buf + str_pnt, "?");
+	  while (str_pnt + 64 >= str_size) {
+	    str_size *= 2;
+	    str_buf = realloc(str_buf, str_size);
+	  }
+	  len = ecommunity_snprintf_hex_full(str_buf + str_pnt, str_size - str_pnt, ec);
 	  str_pnt += len;
 	  first = 0;
 	  continue;
 	}
+
+      pnt = ec + 2;
 
       if (!config.bgp_comms_num) {
         switch (format) {
