@@ -21,6 +21,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include <stdarg.h>
 #include "bgp.h"
 #include "bgp_blackhole.h"
 #include "bgp_ls.h"
@@ -943,6 +944,224 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   return ret;
 }
 
+/* RFC 9012 BGP Tunnel Encapsulation attribute (optional transitive, type 23) */
+#define BGP_TUNNEL_ENCAP_SUB_EGRESS	6
+#define BGP_TUNNEL_ENCAP_SUB_ENCAP	1
+
+#define BGP_TUNNEL_BUF_SZ		4096
+
+static const char *
+bgp_tunnel_type_name(u_int16_t t)
+{
+  switch (t) {
+  case 1: return "L2TPv3";
+  case 2: return "GRE";
+  case 3: return "Transmit";
+  case 8: return "VXLAN";
+  case 9: return "NVGRE";
+  case 11: return "MPLS-in-GRE";
+  default: return "tunnel";
+  }
+}
+
+static void
+bgp_tunnel_encap_append(char *buf, size_t buf_sz, size_t *pos, const char *fmt, ...)
+{
+  va_list ap;
+  int n;
+
+  if (*pos >= buf_sz - 1)
+    return;
+
+  va_start(ap, fmt);
+  n = vsnprintf(buf + *pos, buf_sz - *pos, fmt, ap);
+  va_end(ap);
+
+  if (n > 0 && (size_t) n < buf_sz - *pos)
+    *pos += (size_t) n;
+}
+
+static void
+bgp_tunnel_encap_append_hex(char *buf, size_t buf_sz, size_t *pos, const u_char *p, u_int16_t plen)
+{
+  u_int16_t i;
+
+  for (i = 0; i < plen && *pos + 3 < buf_sz; i++) {
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "%02x", p[i]);
+  }
+}
+
+static void
+bgp_tunnel_encap_vxlan_nvgre(char *buf, size_t buf_sz, size_t *pos, const u_char *sp, u_int16_t slen)
+{
+  u_int8_t fl;
+  unsigned V, M;
+  u_int32_t vni;
+
+  if (slen < 12) {
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "encap=0x");
+    bgp_tunnel_encap_append_hex(buf, buf_sz, pos, sp, slen);
+    return;
+  }
+
+  fl = sp[0];
+  V = (fl >> 7) & 1;
+  M = (fl >> 6) & 1;
+  vni = ((u_int32_t) sp[1] << 16) | ((u_int32_t) sp[2] << 8) | (u_int32_t) sp[3];
+
+  bgp_tunnel_encap_append(buf, buf_sz, pos, "encap(");
+  if (V)
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "vni=%u", vni);
+  if (M) {
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "%sdmac=%02x:%02x:%02x:%02x:%02x:%02x",
+			    V ? "," : "",
+			    sp[4], sp[5], sp[6], sp[7], sp[8], sp[9]);
+  }
+  bgp_tunnel_encap_append(buf, buf_sz, pos, ")");
+}
+
+static void
+bgp_tunnel_encap_egress(char *buf, size_t buf_sz, size_t *pos, const u_char *sp, u_int16_t slen)
+{
+  char addr[INET6_ADDRSTRLEN];
+  u_int16_t afi;
+
+  if (slen == 6) {
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "egress=nexthop");
+    return;
+  }
+
+  if (slen < 10) goto hex_dump;
+
+  afi = ntohs(*(u_int16_t *) (sp + 4));
+
+  if (afi == 1 && slen >= 10) {
+    struct in_addr a;
+
+    memcpy(&a.s_addr, sp + 6, sizeof(a.s_addr));
+    if (inet_ntop(AF_INET, &a, addr, sizeof(addr)))
+      bgp_tunnel_encap_append(buf, buf_sz, pos, "egress=%s", addr);
+    return;
+  }
+
+  if (afi == 2 && slen >= 22) {
+    struct in6_addr a6;
+
+    memcpy(&a6, sp + 6, 16);
+    if (inet_ntop(AF_INET6, &a6, addr, sizeof(addr)))
+      bgp_tunnel_encap_append(buf, buf_sz, pos, "egress=%s", addr);
+    return;
+  }
+
+hex_dump:
+  bgp_tunnel_encap_append(buf, buf_sz, pos, "egress=0x");
+  bgp_tunnel_encap_append_hex(buf, buf_sz, pos, sp, slen);
+}
+
+int
+bgp_attr_parse_tunnel_encap(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
+{
+  u_char *p = (u_char *) ptr;
+  u_int16_t rem = len;
+  char buf[BGP_TUNNEL_BUF_SZ];
+  size_t pos = 0;
+  int first_tlv = 1;
+
+  (void) peer;
+  (void) flag;
+
+  if (attr->tunnel_encap) {
+    free(attr->tunnel_encap);
+    attr->tunnel_encap = NULL;
+  }
+
+  buf[0] = '\0';
+
+  while (rem >= 4) {
+    u_int16_t tunnel_type = ntohs(*(u_int16_t *) p);
+    u_int16_t tlv_len;
+    u_char *val;
+    u_int16_t srem;
+    u_char *sp;
+
+    p += 2;
+    rem -= 2;
+    tlv_len = ntohs(*(u_int16_t *) p);
+    p += 2;
+    rem -= 2;
+
+    if (tlv_len > rem)
+      break;
+
+    val = p;
+
+    if (!first_tlv && pos < BGP_TUNNEL_BUF_SZ - 2)
+      bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, " ");
+    first_tlv = 0;
+
+    bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "TLV%u(%s)", tunnel_type, bgp_tunnel_type_name(tunnel_type));
+
+    /* Sub-TLVs (RFC 9012 §2) */
+    sp = val;
+    srem = tlv_len;
+
+    while (srem >= 2) {
+      u_int8_t stype = sp[0];
+      u_int16_t slen;
+      u_int16_t hdr;
+      u_char *sub_val;
+
+      if (stype <= 127) {
+	if (srem < 2)
+	  break;
+	slen = sp[1];
+	hdr = 2;
+      }
+      else {
+	if (srem < 3)
+	  break;
+	slen = ((u_int16_t) sp[1] << 8) | sp[2];
+	hdr = 3;
+      }
+
+      if ((u_int32_t) hdr + (u_int32_t) slen > srem)
+	break;
+
+      sub_val = sp + hdr;
+
+      bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "{");
+
+      if (stype == BGP_TUNNEL_ENCAP_SUB_EGRESS)
+	bgp_tunnel_encap_egress(buf, BGP_TUNNEL_BUF_SZ, &pos, sub_val, slen);
+      else if (stype == BGP_TUNNEL_ENCAP_SUB_ENCAP) {
+	if (tunnel_type == 8 || tunnel_type == 9)
+	  bgp_tunnel_encap_vxlan_nvgre(buf, BGP_TUNNEL_BUF_SZ, &pos, sub_val, slen);
+	else {
+	  bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "encap=0x");
+	  bgp_tunnel_encap_append_hex(buf, BGP_TUNNEL_BUF_SZ, &pos, sub_val, slen);
+	}
+      }
+      else {
+	bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "sub%u=0x", stype);
+	bgp_tunnel_encap_append_hex(buf, BGP_TUNNEL_BUF_SZ, &pos, sub_val, slen);
+      }
+
+      bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "}");
+
+      srem -= hdr + slen;
+      sp += hdr + slen;
+    }
+
+    p += tlv_len;
+    rem -= tlv_len;
+  }
+
+  if (pos > 0)
+    attr->tunnel_encap = strdup(buf);
+
+  return SUCCESS;
+}
+
 /* BGP UPDATE Attribute parsing */
 int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra,
 		   char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
@@ -1033,6 +1252,10 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
       break;
     case BGP_ATTR_BGP_LS:
       ret = bgp_attr_parse_ls(peer, attr_len, attr_extra, (u_char *)ptr, flag);
+      break;
+    case BGP_ATTR_TUNNEL_ENCAPSULATION:
+      ret = bgp_attr_parse_tunnel_encap(peer, attr_len, attr, ptr, flag);
+      break;
     default:
       ret = 0;
       break;

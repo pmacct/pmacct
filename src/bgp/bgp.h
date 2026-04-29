@@ -68,6 +68,7 @@
 #define BGP_ATTR_LARGE_COMMUNITIES		32
 #define BGP_ATTR_OTC				35 /* rfc9234 */
 #define BGP_ATTR_PREFIX_SID			40
+#define BGP_ATTR_TUNNEL_ENCAPSULATION		23 /* RFC 9012 */
 
 /* BGP4 internal bitmap type codes.  */
 #define BGP_BMAP_ATTR_MULTI_EXIT_DISC		0x01
@@ -357,6 +358,7 @@ struct bgp_attr {
   struct community *community;
   struct ecommunity *ecommunity;
   struct lcommunity *lcommunity;
+  char *tunnel_encap; /* RFC 9012 Tunnel Encapsulation attribute (formatted summary) */
   unsigned long refcnt;
   u_int8_t rpki_maxlen;
   struct in_addr nexthop;

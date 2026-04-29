@@ -484,6 +484,12 @@ unsigned int attrhash_key_make(void *p)
   if (attr->lcommunity)
     key += lcommunity_hash_make(attr->lcommunity);
 
+  if (attr->tunnel_encap) {
+    const unsigned char *s = (const unsigned char *)attr->tunnel_encap;
+    while (*s)
+      key += *s++;
+  }
+
   /* XXX: add mp_nexthop to key */
 
   return key;
@@ -504,8 +510,13 @@ int attrhash_cmp(const void *p1, const void *p2)
       && attr1->lcommunity == attr2->lcommunity
       && attr1->med == attr2->med
       && attr1->local_pref == attr2->local_pref
-      && !host_addr_cmp2((struct host_addr *)&attr1->mp_nexthop, (struct host_addr *)&attr2->mp_nexthop))
-    return TRUE;
+      && !host_addr_cmp2((struct host_addr *)&attr1->mp_nexthop, (struct host_addr *)&attr2->mp_nexthop)) {
+    const char *t1 = attr1->tunnel_encap ? attr1->tunnel_encap : "";
+    const char *t2 = attr2->tunnel_encap ? attr2->tunnel_encap : "";
+
+    if (!strcmp(t1, t2))
+      return TRUE;
+  }
 
   return FALSE;
 }
@@ -554,6 +565,12 @@ struct bgp_attr *bgp_attr_intern(struct bgp_peer *peer, struct bgp_attr *attr)
   }
  
   find = (struct bgp_attr *) hash_get(peer, inter_domain_routing_db->attrhash, attr, bgp_attr_hash_alloc);
+
+  if (find != attr && attr->tunnel_encap) {
+    free(attr->tunnel_encap);
+    attr->tunnel_encap = NULL;
+  }
+
   find->refcnt++;
 
   return find;
@@ -589,6 +606,10 @@ void bgp_attr_unintern(struct bgp_peer *peer, struct bgp_attr *attr)
     ret = (struct bgp_attr *) hash_release(inter_domain_routing_db->attrhash, attr);
     // assert (ret != NULL);
     if (!ret) Log(LOG_INFO, "INFO ( %s/%s ): bgp_attr_unintern() hash lookup failed.\n", config.name, bms->log_str);
+    if (attr->tunnel_encap) {
+      free(attr->tunnel_encap);
+      attr->tunnel_encap = NULL;
+    }
     free(attr);
   }
 

@@ -241,6 +241,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
         }
       }
 
+      if (attr->tunnel_encap)
+        json_object_set_new_nocheck(obj, "tunnel_encap", json_string(attr->tunnel_encap));
+
       if (!config.tmp_bgp_daemon_origin_type_int) {
         json_object_set_new_nocheck(obj, "origin", json_string(bgp_origin_print(attr->origin)));
       }

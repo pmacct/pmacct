@@ -218,6 +218,7 @@ int bgp_blackhole_daemon()
     if (bbitc.attr->community) community_free(bbitc.attr->community);
     if (bbitc.attr->ecommunity) ecommunity_free(bbitc.attr->ecommunity);
     if (bbitc.attr->lcommunity) lcommunity_free(bbitc.attr->lcommunity);
+    if (bbitc.attr->tunnel_encap) free(bbitc.attr->tunnel_encap);
     prefix_free(bbitc.p);
     free(bbitc.attr);
     free(bbitc.peer);
@@ -278,6 +279,7 @@ int bgp_blackhole_instrument(struct bgp_peer *peer, struct prefix *p, void *a, a
   if (attr->community) attr_copy->community = community_dup(attr->community);
   if (attr->ecommunity) attr_copy->ecommunity = ecommunity_dup(attr->ecommunity);
   if (attr->lcommunity) attr_copy->lcommunity = lcommunity_dup(attr->lcommunity);
+  if (attr->tunnel_encap) attr_copy->tunnel_encap = strdup(attr->tunnel_encap);
 
   memset(&bbitc, 0, sizeof(bbitc));
   bbitc.peer = peer_copy;
