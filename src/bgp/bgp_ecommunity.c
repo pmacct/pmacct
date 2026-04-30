@@ -304,6 +304,23 @@ ecommunity_encap_val2str(char *dst, size_t dst_sz, const u_int8_t *val)
 }
 
 static int
+ecommunity_legacy_ospf_val2str(char *dst, size_t dst_sz, u_int8_t subtype, const u_int8_t *val)
+{
+  if (subtype == 0x00) {
+    u_int32_t area = ((u_int32_t)val[0] << 24) | ((u_int32_t)val[1] << 16) |
+                     ((u_int32_t)val[2] << 8) | (u_int32_t)val[3];
+    return snprintf(dst, dst_sz, "OSPF-RT:area=%u:route-type=%u:options=0x%02x",
+                    area, val[4], val[5]);
+  }
+  else if (subtype == 0x01) {
+    return snprintf(dst, dst_sz, "OSPF-RID:%u.%u.%u.%u",
+                    val[0], val[1], val[2], val[3]);
+  }
+
+  return ERR;
+}
+
+static int
 ecommunity_evpn_val2str(char *dst, size_t dst_sz, u_int8_t subtype, const u_int8_t *val)
 {
   u_int32_t seq;
@@ -513,6 +530,21 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
         str_pnt += len;
         first = 0;
         continue;
+      }
+
+      /* RFC4577 legacy compatibility types: 0x8000 (OSPF-RT), 0x8001 (OSPF-RID). */
+      if (encode == 0x80 && (type == 0x00 || type == 0x01)) {
+        while (str_pnt + 96 >= str_size) {
+          str_size *= 2;
+          str_buf = realloc(str_buf, str_size);
+        }
+        len = ecommunity_legacy_ospf_val2str(str_buf + str_pnt, str_size - str_pnt,
+                                             (u_int8_t) type, ec + 2);
+        if (len > 0) {
+          str_pnt += len;
+          first = 0;
+          continue;
+        }
       }
 
       /* Unknown extended community types: full 8-octet hex (no "?").  */
