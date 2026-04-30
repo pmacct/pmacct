@@ -1760,7 +1760,9 @@ DEFAULT:        false
 KEY:            ecomms_list
 VALUES:         [ true | false ]
 DESC:           When true (default), BGP/BMP JSON msglog encodes extended communities as the structured
-                array field "ecomms_list" (one JSON object per 8-octet value) and does not emit the
+                object field "ecomms_list" (singleton keys such as "evpn_router_mac"; array values for
+                repeatable keys such as "encapsulation_tunnel_type", "rt"; "soo" is emitted as singleton)
+                and does not emit the
                 flat "ecomms" string or token array. When false, "ecomms" follows bgp_comms_encode_as_array
                 and "ecomms_list" is omitted. Apache Avro output is unchanged.
 DEFAULT:        true

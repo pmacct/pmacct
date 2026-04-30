@@ -415,101 +415,127 @@ ecommunity_evpn_val2str(char *dst, size_t dst_sz, u_int8_t subtype, const u_int8
 
 #if defined(WITH_JANSSON)
 static void
-ecommunity_json_set_hex_full(json_t *entry, const u_int8_t *ec)
+ecommunity_json_set_hex_full(char *dst, size_t dst_sz, const u_int8_t *ec)
 {
-  char raw[32];
-
-  snprintf(raw, sizeof(raw), "0x%02x%02x%02x%02x%02x%02x%02x%02x",
+  snprintf(dst, dst_sz, "0x%02x%02x%02x%02x%02x%02x%02x%02x",
            ec[0], ec[1], ec[2], ec[3], ec[4], ec[5], ec[6], ec[7]);
-  json_object_set_new_nocheck(entry, "raw", json_string(raw));
 }
 
 static void
-ecommunity_json_set_hex_value(json_t *entry, const u_int8_t *val)
+ecommunity_json_set_hex_value(char *dst, size_t dst_sz, const u_int8_t *val)
 {
-  char raw[24];
-
-  snprintf(raw, sizeof(raw), "0x%02x%02x%02x%02x%02x%02x",
+  snprintf(dst, dst_sz, "0x%02x%02x%02x%02x%02x%02x",
            val[0], val[1], val[2], val[3], val[4], val[5]);
-  json_object_set_new_nocheck(entry, "raw", json_string(raw));
 }
 
 static void
-ecommunity_evpn_val2json(json_t *entry, u_int8_t subtype, const u_int8_t *val)
+ecommunity_json_append_string(json_t *obj, const char *key, const char *value)
 {
-  u_int32_t seq;
-  char mac[18];
+  json_t *arr = json_object_get(obj, key);
 
-  switch (subtype) {
-  case ECOMMUNITY_EVPN_ROUTER_MAC:
-    snprintf(mac, sizeof(mac), "%02x:%02x:%02x:%02x:%02x:%02x",
-             val[0], val[1], val[2], val[3], val[4], val[5]);
-    json_object_set_new_nocheck(entry, "evpn_router_mac", json_string(mac));
-    return;
+  if (!arr) {
+    arr = json_array();
+    if (!arr) return;
 
-  case ECOMMUNITY_EVPN_MAC_MOBILITY:
-    seq = ((u_int32_t)val[2] << 24) | ((u_int32_t)val[3] << 16) |
-          ((u_int32_t)val[4] << 8) | (u_int32_t)val[5];
-    json_object_set_new_nocheck(entry, "evpn_mac_mobility_flags", json_integer((json_int_t)val[0]));
-    json_object_set_new_nocheck(entry, "evpn_mac_mobility_seq", json_integer((json_int_t)seq));
-    return;
-
-  default:
-    json_object_set_new_nocheck(entry, "evpn_subtype", json_integer((json_int_t)subtype));
-    ecommunity_json_set_hex_value(entry, val);
-    return;
+    json_object_set_new_nocheck(obj, key, arr);
   }
+
+  json_array_append_new(arr, json_string(value));
+}
+
+static void
+ecommunity_json_append_integer(json_t *obj, const char *key, u_int32_t value)
+{
+  json_t *arr = json_object_get(obj, key);
+
+  if (!arr) {
+    arr = json_array();
+    if (!arr) return;
+
+    json_object_set_new_nocheck(obj, key, arr);
+  }
+
+  json_array_append_new(arr, json_integer((json_int_t)value));
 }
 
 json_t *
 ecommunity_ecom2json_list(struct bgp_peer *peer, struct ecommunity *ecom)
 {
   int i;
-  json_t *list;
+  json_t *obj;
 
   if (!peer || !ecom) return NULL;
 
-  list = json_array();
-  if (!list) return NULL;
+  obj = json_object();
+  if (!obj) return NULL;
 
   for (i = 0; i < ecom->size; i++) {
     u_int8_t *ec = ecom->val + (i * ECOMMUNITY_SIZE);
     u_int8_t encode = ec[0];
     u_int8_t type = ec[1];
     const u_int8_t *val = ec + 2;
-    json_t *entry = json_object();
-
-    if (!entry || json_array_append_new(list, entry) != 0) {
-      if (entry) json_decref(entry);
-      json_decref(list);
-      return NULL;
-    }
 
     if ((encode & 0x7F) == ECOMMUNITY_TYPE_EVPN) {
-      ecommunity_evpn_val2json(entry, type, val);
+      if (type == ECOMMUNITY_EVPN_ROUTER_MAC) {
+        char mac[18];
+
+        if (!json_object_get(obj, "evpn_router_mac")) {
+          snprintf(mac, sizeof(mac), "%02x:%02x:%02x:%02x:%02x:%02x",
+                   val[0], val[1], val[2], val[3], val[4], val[5]);
+          json_object_set_new_nocheck(obj, "evpn_router_mac", json_string(mac));
+        }
+      }
+      else if (type == ECOMMUNITY_EVPN_MAC_MOBILITY) {
+        u_int32_t seq = ((u_int32_t)val[2] << 24) | ((u_int32_t)val[3] << 16) |
+                        ((u_int32_t)val[4] << 8) | (u_int32_t)val[5];
+
+        if (!json_object_get(obj, "evpn_mac_mobility_flags")) {
+          json_object_set_new_nocheck(obj, "evpn_mac_mobility_flags", json_integer((json_int_t)val[0]));
+        }
+        if (!json_object_get(obj, "evpn_mac_mobility_seq")) {
+          json_object_set_new_nocheck(obj, "evpn_mac_mobility_seq", json_integer((json_int_t)seq));
+        }
+      }
+      else {
+        char raw[24];
+
+        ecommunity_json_set_hex_value(raw, sizeof(raw), val);
+        ecommunity_json_append_integer(obj, "evpn_subtype", type);
+        ecommunity_json_append_string(obj, "raw", raw);
+      }
       continue;
     }
 
     if ((encode & 0x7F) == ECOMMUNITY_TYPE_OPAQUE && type == ECOMMUNITY_OPAQUE_ENCAPSULATION) {
       u_int16_t tun = ((u_int16_t)val[4] << 8) | (u_int16_t)val[5];
-      json_object_set_new_nocheck(entry, "encapsulation_tunnel_type", json_integer((json_int_t)tun));
+
+      ecommunity_json_append_integer(obj, "encapsulation_tunnel_type", tun);
       continue;
     }
 
     if (encode == 0x80 && type == 0x00) {
       u_int32_t area = ((u_int32_t)val[0] << 24) | ((u_int32_t)val[1] << 16) |
                        ((u_int32_t)val[2] << 8) | (u_int32_t)val[3];
-      json_object_set_new_nocheck(entry, "ospf_rt_area", json_integer((json_int_t)area));
-      json_object_set_new_nocheck(entry, "ospf_rt_route_type", json_integer((json_int_t)val[4]));
-      json_object_set_new_nocheck(entry, "ospf_rt_options", json_integer((json_int_t)val[5]));
+
+      if (!json_object_get(obj, "ospf_rt_area")) {
+        json_object_set_new_nocheck(obj, "ospf_rt_area", json_integer((json_int_t)area));
+      }
+      if (!json_object_get(obj, "ospf_rt_route_type")) {
+        json_object_set_new_nocheck(obj, "ospf_rt_route_type", json_integer((json_int_t)val[4]));
+      }
+      if (!json_object_get(obj, "ospf_rt_options")) {
+        json_object_set_new_nocheck(obj, "ospf_rt_options", json_integer((json_int_t)val[5]));
+      }
       continue;
     }
 
     if (encode == 0x80 && type == 0x01) {
       char rid[16];
 
-      snprintf(rid, sizeof(rid), "%u.%u.%u.%u", val[0], val[1], val[2], val[3]);
-      json_object_set_new_nocheck(entry, "ospf_rid", json_string(rid));
+      if (!json_object_get(obj, "ospf_rid")) {
+        snprintf(rid, sizeof(rid), "%u.%u.%u.%u", val[0], val[1], val[2], val[3]);
+        json_object_set_new_nocheck(obj, "ospf_rid", json_string(rid));
+      }
       continue;
     }
 
@@ -536,14 +562,26 @@ ecommunity_ecom2json_list(struct bgp_peer *peer, struct ecommunity *ecom)
         snprintf(comm, sizeof(comm), "%s:%u", inet_ntoa(ip), n);
       }
 
-      json_object_set_new_nocheck(entry, key, json_string(comm));
+      if (type == ECOMMUNITY_SITE_ORIGIN) {
+        if (!json_object_get(obj, "soo")) {
+          json_object_set_new_nocheck(obj, "soo", json_string(comm));
+        }
+      }
+      else {
+        ecommunity_json_append_string(obj, key, comm);
+      }
       continue;
     }
 
-    ecommunity_json_set_hex_full(entry, ec);
+    {
+      char raw[32];
+
+      ecommunity_json_set_hex_full(raw, sizeof(raw), ec);
+      ecommunity_json_append_string(obj, "raw", raw);
+    }
   }
 
-  return list;
+  return obj;
 }
 #endif
 
