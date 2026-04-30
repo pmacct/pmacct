@@ -967,6 +967,64 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   return ret;
 }
 
+/* RFC 6514 PMSI Tunnel attribute (optional transitive, type 22) */
+int
+bgp_attr_parse_pmsi_tunnel(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
+{
+  u_char *p = (u_char *) ptr;
+  u_int16_t id_len;
+  size_t i;
+
+  (void) peer;
+  (void) flag;
+
+  if (len < 5)
+    return ERR;
+
+  if (attr->pmsi_tunnel_id_raw) {
+    free(attr->pmsi_tunnel_id_raw);
+    attr->pmsi_tunnel_id_raw = NULL;
+  }
+
+  memset(attr->pmsi_tunnel_id, 0, sizeof(attr->pmsi_tunnel_id));
+  memset(attr->pmsi_label, 0, sizeof(attr->pmsi_label));
+  attr->pmsi_flags = p[0];
+  attr->pmsi_tunnel_type = p[1];
+  memcpy(attr->pmsi_label, p + 2, 3);
+
+  id_len = (u_int16_t) (len - 5);
+  attr->pmsi_tunnel_id_len = (id_len > 255 ? 255 : (u_int8_t) id_len);
+
+  if (id_len == 4 || id_len == 16) {
+    int af = (id_len == 4 ? AF_INET : AF_INET6);
+
+    if (!inet_ntop(af, p + 5, attr->pmsi_tunnel_id, sizeof(attr->pmsi_tunnel_id))) {
+      memset(attr->pmsi_tunnel_id, 0, sizeof(attr->pmsi_tunnel_id));
+    }
+  }
+  else if (id_len > 0) {
+    size_t cap = id_len;
+    size_t off = 0;
+
+    if (cap > 4096)
+      cap = 4096;
+
+    attr->pmsi_tunnel_id_raw = malloc(3 + (cap * 2) + 1);
+    if (!attr->pmsi_tunnel_id_raw)
+      return SUCCESS;
+
+    memcpy(attr->pmsi_tunnel_id_raw, "0x", 2);
+    off = 2;
+    for (i = 0; i < cap; i++) {
+      snprintf(attr->pmsi_tunnel_id_raw + off, 3, "%02x", p[5 + i]);
+      off += 2;
+    }
+    attr->pmsi_tunnel_id_raw[off] = '\0';
+  }
+
+  return SUCCESS;
+}
+
 /* RFC 9012 BGP Tunnel Encapsulation attribute (optional transitive, type 23) */
 #define BGP_TUNNEL_ENCAP_SUB_EGRESS	6
 #define BGP_TUNNEL_ENCAP_SUB_ENCAP	1
@@ -1324,6 +1382,9 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
       break;
     case BGP_ATTR_OTC:
       ret = bgp_attr_parse_otc(peer, attr_len, attr_extra, ptr, flag);
+      break;
+    case BGP_ATTR_PMSI_TUNNEL:
+      ret = bgp_attr_parse_pmsi_tunnel(peer, attr_len, attr, ptr, flag);
       break;
     case BGP_ATTR_BGP_LS:
       ret = bgp_attr_parse_ls(peer, attr_len, attr_extra, (u_char *)ptr, flag);

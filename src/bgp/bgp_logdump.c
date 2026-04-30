@@ -244,6 +244,21 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->tunnel_encap)
         json_object_set_new_nocheck(obj, "tunnel_encap", json_string(attr->tunnel_encap));
 
+      if (attr->pmsi_tunnel_type || attr->pmsi_flags || attr->pmsi_tunnel_id_len) {
+        char pmsi_label_str[SHORTSHORTBUFLEN];
+
+        json_object_set_new_nocheck(obj, "pmsi_flags", json_integer((json_int_t)attr->pmsi_flags));
+        json_object_set_new_nocheck(obj, "pmsi_tunnel_type", json_integer((json_int_t)attr->pmsi_tunnel_type));
+        bgp_label2str(pmsi_label_str, attr->pmsi_label);
+        json_object_set_new_nocheck(obj, "pmsi_label", json_string(pmsi_label_str));
+        if (attr->pmsi_tunnel_id[0]) {
+          json_object_set_new_nocheck(obj, "pmsi_tunnel_id", json_string(attr->pmsi_tunnel_id));
+        }
+        else if (attr->pmsi_tunnel_id_raw) {
+          json_object_set_new_nocheck(obj, "pmsi_tunnel_id_raw", json_string(attr->pmsi_tunnel_id_raw));
+        }
+      }
+
       if (!config.tmp_bgp_daemon_origin_type_int) {
         json_object_set_new_nocheck(obj, "origin", json_string(bgp_origin_print(attr->origin)));
       }

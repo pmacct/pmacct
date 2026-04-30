@@ -63,12 +63,13 @@
 #define BGP_ATTR_AS4_PATH                       17
 #define BGP_ATTR_AS4_AGGREGATOR                 18
 #define BGP_ATTR_AS_PATHLIMIT                   21
+#define BGP_ATTR_PMSI_TUNNEL                    22 /* RFC 6514 */
+#define BGP_ATTR_TUNNEL_ENCAPSULATION           23 /* RFC 9012 */
 #define BGP_ATTR_AIGP				26
 #define BGP_ATTR_BGP_LS				29
 #define BGP_ATTR_LARGE_COMMUNITIES		32
 #define BGP_ATTR_OTC				35 /* rfc9234 */
 #define BGP_ATTR_PREFIX_SID			40
-#define BGP_ATTR_TUNNEL_ENCAPSULATION		23 /* RFC 9012 */
 
 /* BGP4 internal bitmap type codes.  */
 #define BGP_BMAP_ATTR_MULTI_EXIT_DISC		0x01
@@ -360,8 +361,14 @@ struct bgp_attr {
   struct ecommunity *ecommunity;
   struct lcommunity *lcommunity;
   char *tunnel_encap; /* RFC 9012 Tunnel Encapsulation attribute (formatted summary) */
+  char *pmsi_tunnel_id_raw; /* Hex fallback for non IPv4/IPv6 tunnel-id payloads */
   unsigned long refcnt;
   u_int8_t rpki_maxlen;
+  u_int8_t pmsi_flags;
+  u_int8_t pmsi_tunnel_type;
+  u_int8_t pmsi_tunnel_id_len;
+  u_char pmsi_label[3];
+  char pmsi_tunnel_id[INET6_ADDRSTRLEN];
   struct in_addr nexthop;
   struct host_addr mp_nexthop;
   u_int32_t med;
