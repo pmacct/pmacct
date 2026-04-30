@@ -713,6 +713,32 @@ int cfg_key_bgp_comms_encode_as_array(char *filename, char *name, char *value_pt
   return changes;
 }
 
+int cfg_key_ecomms_list(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) {
+    list->cfg.ecomms_list = value;
+    list->cfg.ecomms_list_user = TRUE;
+  }
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.ecomms_list = value;
+        list->cfg.ecomms_list_user = TRUE;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_bgp_comms_num(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

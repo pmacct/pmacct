@@ -95,6 +95,7 @@ static const struct _dictionary_line dictionary[] = {
   {"timestamps_since_epoch", cfg_key_timestamps_since_epoch},
   {"tcpflags_encode_as_array", cfg_key_tcpflags_encode_as_array},
   {"bgp_comms_encode_as_array", cfg_key_bgp_comms_encode_as_array},
+  {"ecomms_list", cfg_key_ecomms_list},
   {"bgp_comms_num", cfg_key_bgp_comms_num},
   {"as_path_encode_as_array", cfg_key_as_path_encode_as_array},
   {"fwd_status_encode_as_string", cfg_key_fwd_status_encode_as_string},

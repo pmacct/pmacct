@@ -413,6 +413,140 @@ ecommunity_evpn_val2str(char *dst, size_t dst_sz, u_int8_t subtype, const u_int8
   }
 }
 
+#if defined(WITH_JANSSON)
+static void
+ecommunity_json_set_hex_full(json_t *entry, const u_int8_t *ec)
+{
+  char raw[32];
+
+  snprintf(raw, sizeof(raw), "0x%02x%02x%02x%02x%02x%02x%02x%02x",
+           ec[0], ec[1], ec[2], ec[3], ec[4], ec[5], ec[6], ec[7]);
+  json_object_set_new_nocheck(entry, "raw", json_string(raw));
+}
+
+static void
+ecommunity_json_set_hex_value(json_t *entry, const u_int8_t *val)
+{
+  char raw[24];
+
+  snprintf(raw, sizeof(raw), "0x%02x%02x%02x%02x%02x%02x",
+           val[0], val[1], val[2], val[3], val[4], val[5]);
+  json_object_set_new_nocheck(entry, "raw", json_string(raw));
+}
+
+static void
+ecommunity_evpn_val2json(json_t *entry, u_int8_t subtype, const u_int8_t *val)
+{
+  u_int32_t seq;
+  char mac[18];
+
+  switch (subtype) {
+  case ECOMMUNITY_EVPN_ROUTER_MAC:
+    snprintf(mac, sizeof(mac), "%02x:%02x:%02x:%02x:%02x:%02x",
+             val[0], val[1], val[2], val[3], val[4], val[5]);
+    json_object_set_new_nocheck(entry, "evpn_router_mac", json_string(mac));
+    return;
+
+  case ECOMMUNITY_EVPN_MAC_MOBILITY:
+    seq = ((u_int32_t)val[2] << 24) | ((u_int32_t)val[3] << 16) |
+          ((u_int32_t)val[4] << 8) | (u_int32_t)val[5];
+    json_object_set_new_nocheck(entry, "evpn_mac_mobility_flags", json_integer((json_int_t)val[0]));
+    json_object_set_new_nocheck(entry, "evpn_mac_mobility_seq", json_integer((json_int_t)seq));
+    return;
+
+  default:
+    json_object_set_new_nocheck(entry, "evpn_subtype", json_integer((json_int_t)subtype));
+    ecommunity_json_set_hex_value(entry, val);
+    return;
+  }
+}
+
+json_t *
+ecommunity_ecom2json_list(struct bgp_peer *peer, struct ecommunity *ecom)
+{
+  int i;
+  json_t *list;
+
+  if (!peer || !ecom) return NULL;
+
+  list = json_array();
+  if (!list) return NULL;
+
+  for (i = 0; i < ecom->size; i++) {
+    u_int8_t *ec = ecom->val + (i * ECOMMUNITY_SIZE);
+    u_int8_t encode = ec[0];
+    u_int8_t type = ec[1];
+    const u_int8_t *val = ec + 2;
+    json_t *entry = json_object();
+
+    if (!entry || json_array_append_new(list, entry) != 0) {
+      if (entry) json_decref(entry);
+      json_decref(list);
+      return NULL;
+    }
+
+    if ((encode & 0x7F) == ECOMMUNITY_TYPE_EVPN) {
+      ecommunity_evpn_val2json(entry, type, val);
+      continue;
+    }
+
+    if ((encode & 0x7F) == ECOMMUNITY_TYPE_OPAQUE && type == ECOMMUNITY_OPAQUE_ENCAPSULATION) {
+      u_int16_t tun = ((u_int16_t)val[4] << 8) | (u_int16_t)val[5];
+      json_object_set_new_nocheck(entry, "encapsulation_tunnel_type", json_integer((json_int_t)tun));
+      continue;
+    }
+
+    if (encode == 0x80 && type == 0x00) {
+      u_int32_t area = ((u_int32_t)val[0] << 24) | ((u_int32_t)val[1] << 16) |
+                       ((u_int32_t)val[2] << 8) | (u_int32_t)val[3];
+      json_object_set_new_nocheck(entry, "ospf_rt_area", json_integer((json_int_t)area));
+      json_object_set_new_nocheck(entry, "ospf_rt_route_type", json_integer((json_int_t)val[4]));
+      json_object_set_new_nocheck(entry, "ospf_rt_options", json_integer((json_int_t)val[5]));
+      continue;
+    }
+
+    if (encode == 0x80 && type == 0x01) {
+      char rid[16];
+
+      snprintf(rid, sizeof(rid), "%u.%u.%u.%u", val[0], val[1], val[2], val[3]);
+      json_object_set_new_nocheck(entry, "ospf_rid", json_string(rid));
+      continue;
+    }
+
+    if ((encode == ECOMMUNITY_ENCODE_AS || encode == ECOMMUNITY_ENCODE_IP || encode == ECOMMUNITY_ENCODE_AS4) &&
+        (type == ECOMMUNITY_ROUTE_TARGET || type == ECOMMUNITY_SITE_ORIGIN)) {
+      char comm[64];
+      u_int8_t *pnt = ec + 2;
+      const char *key = (type == ECOMMUNITY_ROUTE_TARGET ? "rt" : "soo");
+
+      if (encode == ECOMMUNITY_ENCODE_AS4) {
+        as_t as = (as_t)(pnt[0] << 24 | pnt[1] << 16 | pnt[2] << 8 | pnt[3]);
+        u_int32_t n = (u_int32_t)(pnt[4] << 8 | pnt[5]);
+        snprintf(comm, sizeof(comm), "%u:%u", as, n);
+      }
+      else if (encode == ECOMMUNITY_ENCODE_AS) {
+        as_t as = (as_t)(pnt[0] << 8 | pnt[1]);
+        u_int32_t n = (u_int32_t)(pnt[2] << 24 | pnt[3] << 16 | pnt[4] << 8 | pnt[5]);
+        snprintf(comm, sizeof(comm), "%u:%u", as, n);
+      }
+      else {
+        struct in_addr ip;
+        u_int16_t n = (u_int16_t)(pnt[4] << 8 | pnt[5]);
+        memcpy(&ip, pnt, 4);
+        snprintf(comm, sizeof(comm), "%s:%u", inet_ntoa(ip), n);
+      }
+
+      json_object_set_new_nocheck(entry, key, json_string(comm));
+      continue;
+    }
+
+    ecommunity_json_set_hex_full(entry, ec);
+  }
+
+  return list;
+}
+#endif
+
 /* Convert extended community attribute to string.  
 
    Due to historical reason of industry standard implementation, there

@@ -106,6 +106,10 @@ extern int ecommunity_cmp (const void *, const void *);
 extern void ecommunity_unintern (struct bgp_peer *, struct ecommunity *);
 extern unsigned int ecommunity_hash_make (void *);
 extern char *ecommunity_ecom2str (struct bgp_peer *, struct ecommunity *, int);
+#if defined(WITH_JANSSON)
+#include <jansson.h>
+extern json_t *ecommunity_ecom2json_list(struct bgp_peer *, struct ecommunity *);
+#endif
 extern struct ecommunity *ecommunity_dup(struct ecommunity *);
 
 #endif

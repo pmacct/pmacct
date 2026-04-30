@@ -563,6 +563,8 @@ struct configuration {
   int pretag_label_encode_as_map;
   int tcpflags_encode_as_array;
   int bgp_comms_encode_as_array;
+  int ecomms_list;
+  int ecomms_list_user;
   int bgp_comms_num;
   int as_path_encode_as_array;
   int mpls_label_stack_encode_as_array;

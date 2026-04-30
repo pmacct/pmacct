@@ -1757,6 +1757,14 @@ DESC:           BGP communities are encoded by default as a string, including a 
 		backends not supporting complex types (i.e., SQL plugins).
 DEFAULT:        false
 
+KEY:            ecomms_list
+VALUES:         [ true | false ]
+DESC:           When true (default), BGP/BMP JSON msglog encodes extended communities as the structured
+                array field "ecomms_list" (one JSON object per 8-octet value) and does not emit the
+                flat "ecomms" string or token array. When false, "ecomms" follows bgp_comms_encode_as_array
+                and "ecomms_list" is omitted. Apache Avro output is unchanged.
+DEFAULT:        true
+
 KEY:		bgp_comms_num
 DESC:		Defines whether known Standard (ie. "internet") and Extended Communities (ie. "RT")
 		shdould be presented in string or numerical format. By default communities are looked up
