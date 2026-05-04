@@ -1257,6 +1257,9 @@ https://github.com/pmacct/pmacct
 "
 
 AC_SUBST([PMACCT_CFLAGS])
+AC_SUBST([HAVE_TRAFFIC_BINS])
+AC_SUBST([WITH_KAFKA])
+WITH_KAFKA=1
 
 AM_CONDITIONAL([WITH_MYSQL], [test x"$USING_MYSQL" = x"yes"])
 AM_CONDITIONAL([WITH_PGSQL], [test x"$USING_PGSQL" = x"yes"])
@@ -1300,6 +1303,8 @@ AC_CONFIG_FILES([
 	    src/ndpi/Makefile src/filters/Makefile \
 	    examples/lg/Makefile src/ebpf/Makefile \
 	    examples/custom/Makefile \
-      pmacct.pc ])
+      pmacct.pc \
+      src/build_config.h
+      ])
 
 AC_OUTPUT

@@ -1,0 +1,8 @@
+/* src/build_config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Test */
+#define WITH_KAFKA @WITH_KAFKA@
+
+#define WITH_NDPI @WITH_NDPI@
+
+#define WITH_GNUTLS @WITH_GNUTLS@
