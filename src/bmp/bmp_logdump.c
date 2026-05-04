@@ -387,6 +387,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct cdad
     json_t *obj = (json_t *) vobj;
     char bmp_msg_type[] = "stats";
     char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_id_str = id_buf;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
@@ -395,8 +396,11 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct cdad
 
     json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
 
-    inet_ntop(AF_INET, &bdata->chars.bgp_id, ip_address, INET6_ADDRSTRLEN);
-    json_object_set_new_nocheck(obj, "bgp_id", json_string(ip_address));
+    if (!inet_ntop(AF_INET, &bdata->chars.bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
+      bgp_id_str = "0.0.0.0";
+    }
+
+    json_object_set_new_nocheck(obj, "bgp_id", json_string(bgp_id_str));
 
     json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
@@ -478,6 +482,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct cdad
     avro_value_t *obj = (avro_value_t *) vobj, p_avro_field, p_avro_branch;
     char bmp_msg_type[] = "stats";
     char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_id_str = id_buf;
 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
@@ -489,9 +494,11 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct cdad
     pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_long(&p_avro_field, bdata->peer_asn));
 
-    inet_ntop(AF_INET, &bdata->chars.bgp_id, ip_address, INET6_ADDRSTRLEN);
+    if (!inet_ntop(AF_INET, &bdata->chars.bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
+      bgp_id_str = "0.0.0.0";
+    }
     pm_avro_check(avro_value_get_by_name(obj, "bgp_id", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bgp_id_str));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.peer_type));
@@ -893,6 +900,8 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
 #ifdef WITH_JANSSON
     char bmp_msg_type[] = "peer_up";
     char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_id_str = id_buf;
+
     json_t *obj = (json_t *) vobj;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
@@ -902,8 +911,10 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
 
     json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
 
-    inet_ntop(AF_INET, &bdata->chars.bgp_id, ip_address, INET6_ADDRSTRLEN);
-    json_object_set_new_nocheck(obj, "bgp_id", json_string(ip_address));
+    if (!inet_ntop(AF_INET, &bdata->chars.bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
+      bgp_id_str = "0.0.0.0";
+    }
+    json_object_set_new_nocheck(obj, "bgp_id", json_string(bgp_id_str));
 
     json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
@@ -993,6 +1004,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
     avro_value_t *obj = (avro_value_t *) vobj, p_avro_field, p_avro_branch;
     char bmp_msg_type[] = "peer_up";
     char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_id_str = id_buf;
 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
@@ -1004,9 +1016,11 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
     pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_long(&p_avro_field, bdata->peer_asn));
 
-    inet_ntop(AF_INET, &bdata->chars.bgp_id, ip_address, INET6_ADDRSTRLEN);
+    if (!inet_ntop(AF_INET, &bdata->chars.bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
+      bgp_id_str = "0.0.0.0";
+    }
     pm_avro_check(avro_value_get_by_name(obj, "bgp_id", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bgp_id_str));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.peer_type));
@@ -1179,6 +1193,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
 #ifdef WITH_JANSSON
     char bmp_msg_type[] = "peer_down";
     char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_id_str = id_buf;
     json_t *obj = (json_t *) vobj;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
@@ -1188,8 +1203,10 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
 
     json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
 
-    inet_ntop(AF_INET, &bdata->chars.bgp_id, ip_address, INET6_ADDRSTRLEN);
-    json_object_set_new_nocheck(obj, "bgp_id", json_string(ip_address));
+    if (!inet_ntop(AF_INET, &bdata->chars.bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
+      bgp_id_str = "0.0.0.0";
+    }
+    json_object_set_new_nocheck(obj, "bgp_id", json_string(bgp_id_str));
 
     json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
@@ -1283,6 +1300,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     avro_value_t *obj = (avro_value_t *) vobj, p_avro_field, p_avro_branch;
     char bmp_msg_type[] = "peer_down";
     char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_id_str = id_buf;
 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
@@ -1294,9 +1312,11 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_long(&p_avro_field, bdata->peer_asn));
 
-    inet_ntop(AF_INET, &bdata->chars.bgp_id, ip_address, INET6_ADDRSTRLEN);
+    if (!inet_ntop(AF_INET, &bdata->chars.bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
+      bgp_id_str = "0.0.0.0";
+    }
     pm_avro_check(avro_value_get_by_name(obj, "bgp_id", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bgp_id_str));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.peer_type));

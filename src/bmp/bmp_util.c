@@ -473,7 +473,7 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     }
 
     if (!inet_ntop(AF_INET, &bmed_bmp->bgp_id, id_buf, INET6_ADDRSTRLEN)) {
-      bgp_id_str = "";
+      bgp_id_str = "0.0.0.0";
     }
     json_object_set_new_nocheck(obj, "bgp_id", json_string(bgp_id_str));
 
@@ -495,19 +495,19 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field, p_avro_branch;
     char *bmp_rib_type = NULL;
-    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_str = id_buf;
+    char id_buf[INET6_ADDRSTRLEN] = { 0 }, *bgp_id_str = id_buf;
 
     bmp_rib_type = bmp_rib_type_print(bmed_bmp->rib_type);
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type));
     if (bmp_rib_type) free(bmp_rib_type);
 
-    if (!inet_ntop(AF_INET, &bmed_bmp->bgp_id, bgp_str, INET6_ADDRSTRLEN)) {
-      bgp_str = "";
+    if (!inet_ntop(AF_INET, &bmed_bmp->bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
+      bgp_id_str = "0.0.0.0";
     }
 
     pm_avro_check(avro_value_get_by_name(obj, "bgp_id", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, bgp_str));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bgp_id_str));
 
     if (!bmed_bmp->is_loc && !bmed_bmp->is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
