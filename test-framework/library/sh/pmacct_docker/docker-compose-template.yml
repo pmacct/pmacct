@@ -12,6 +12,9 @@ services:
     volumes:
       - ${PMACCT_CONF}:/etc/pmacct/${PMACCT_DAEMON}.conf
       - ${PMACCT_MOUNT}:/var/log/pmacct
+      - ${PMACCT_MOUNT}/cores:/tmp/cores
+    ulimits:
+      core: -1
     networks:
       pmacct_test_network:
         ipv4_address: 172.21.1.13
