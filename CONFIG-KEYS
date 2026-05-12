@@ -1759,19 +1759,8 @@ DEFAULT:        false
 
 KEY:		bgp_comms_num
 DESC:		Defines whether known Standard (ie. "internet") and Extended Communities (ie. "RT")
-		shdould be presented in string or numerical format. By default communities are looked up
+		should be presented in string or numerical format. By default communities are looked up
 		for their name; setting this knob to true disables the feature.
-VALUES:         [ true | false ]
-DEFAULT:        false
-
-KEY:		bgp_ecommunities_raw
-DESC:		Defines whether Extended Communities should be output in raw format without processing.
-		When set to true, extended communities are displayed as type:subtype:value1:value2 format
-		where type and subtype are in decimal format and value1:value2 are processed according
-		to the encoding type (e.g., 0:2:65000:100 for RT on AS16, 1:3:192.168.1.1:100 for SoO on IPv4).
-		This is useful for debugging or when dealing with unknown extended community types.
-		When set to false, extended communities are processed and displayed in human-readable
-		format (e.g., "RT:100:1", "SoO:192.168.1.1:100").
 VALUES:         [ true | false ]
 DEFAULT:        false
 

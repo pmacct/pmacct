@@ -272,6 +272,59 @@ ecommunity_init (int buckets, struct hash **loc_ecomhash)
    ECOMMUNITY_FORMAT_COMMUNITY_LIST
    ECOMMUNITY_FORMAT_DISPLAY
 */
+
+struct ecommunity_as
+{
+  as_t as;
+  u_int32_t val;
+};
+
+struct ecommunity_ip
+{
+  struct in_addr ip;
+  u_int16_t val;
+};
+
+/* Helper functions to extract extended community values from buffer */
+static inline u_int8_t *
+ecommunity_extract_as4(u_int8_t *pnt, struct ecommunity_as *eas)
+{
+  eas->as = (*pnt++ << 24);
+  eas->as |= (*pnt++ << 16);
+  eas->as |= (*pnt++ << 8);
+  eas->as |= *pnt++;
+
+  eas->val = (*pnt++ << 8);
+  eas->val |= *pnt++;
+
+  return pnt;
+}
+
+static inline u_int8_t *
+ecommunity_extract_as(u_int8_t *pnt, struct ecommunity_as *eas)
+{
+  eas->as = (*pnt++ << 8);
+  eas->as |= *pnt++;
+
+  eas->val = (*pnt++ << 24);
+  eas->val |= (*pnt++ << 16);
+  eas->val |= (*pnt++ << 8);
+  eas->val |= *pnt++;
+
+  return pnt;
+}
+
+static inline u_int8_t *
+ecommunity_extract_ip(u_int8_t *pnt, struct ecommunity_ip *eip)
+{
+  memcpy(&eip->ip, pnt, 4);
+  pnt += 4;
+  eip->val = (*pnt++ << 8);
+  eip->val |= *pnt++;
+
+  return pnt;
+}
+
 char *
 ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 {
@@ -289,17 +342,8 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
   int first = 1;
 
   /* For parse Extended Community attribute tupple. */
-  struct ecommunity_as
-  {
-    as_t as;
-    u_int32_t val;
-  } eas;
-
-  struct ecommunity_ip
-  {
-    struct in_addr ip;
-    u_int16_t val;
-  } eip;
+  struct ecommunity_as eas;
+  struct ecommunity_ip eip;
 
   if (!peer) return NULL;
 
@@ -328,170 +372,130 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
   str_pnt = 0;
 
   for (i = 0; i < ecom->size; i++)
+  {
+    int encode_base;
+
+    /* Make it sure size is enough.  */
+    while (str_pnt + ECOMMUNITY_STR_DEFAULT_LEN >= str_size)
     {
-      int encode_base;
-
-      /* Make it sure size is enough.  */
-      while (str_pnt + ECOMMUNITY_STR_DEFAULT_LEN >= str_size)
-        {
-          str_size *= 2;
-          str_buf = realloc(str_buf, str_size);
-        }
-
-      /* Space between each value.  */
-      if (! first)
-	str_buf[str_pnt++] = ' ';
-
-      pnt = ecom->val + (i * 8);
-
-      /* High-order octet of type. */
-      encode = *pnt++;
-
-      /* Low-order octet of type. */
-      type = *pnt++;
-
-      /* Per RFC 4360, the high-order octet contains flags (bit 0: IANA,
-         bit 1: transitive). Mask them out to get the encoding type so that
-         non-transitive variants (0x40, 0x41, 0x42) are handled consistently. */
-      encode_base = (encode & 0x3F);
-
-      /* Raw format: type:subtype:value1:value2 (type/subtype in decimal). */
-      if (format == ECOMMUNITY_FORMAT_RAW || config.bgp_ecommunities_raw)
-	{
-	  len = sprintf(str_buf + str_pnt, "%u:%u:", encode, type);
-	  str_pnt += len;
-
-	  if (encode_base == ECOMMUNITY_ENCODE_AS4)
-	    {
-	      eas.as = (*pnt++ << 24);
-	      eas.as |= (*pnt++ << 16);
-	      eas.as |= (*pnt++ << 8);
-	      eas.as |= (*pnt++);
-
-	      eas.val = (*pnt++ << 8);
-	      eas.val |= (*pnt++);
-
-	      len = sprintf(str_buf + str_pnt, "%u:%u", eas.as, eas.val);
-	      str_pnt += len;
-	    }
-	  else if (encode_base == ECOMMUNITY_ENCODE_AS)
-	    {
-	      eas.as = (*pnt++ << 8);
-	      eas.as |= (*pnt++);
-
-	      eas.val = (*pnt++ << 24);
-	      eas.val |= (*pnt++ << 16);
-	      eas.val |= (*pnt++ << 8);
-	      eas.val |= (*pnt++);
-
-	      len = sprintf(str_buf + str_pnt, "%u:%u", eas.as, eas.val);
-	      str_pnt += len;
-	    }
-	  else if (encode_base == ECOMMUNITY_ENCODE_IP)
-	    {
-	      memcpy(&eip.ip, pnt, 4);
-	      pnt += 4;
-	      eip.val = (*pnt++ << 8);
-	      eip.val |= (*pnt++);
-
-	      len = sprintf(str_buf + str_pnt, "%s:%u", inet_ntoa(eip.ip), eip.val);
-	      str_pnt += len;
-	    }
-	  else
-	    {
-	      /* Unknown/opaque encoding: dump the 6-byte value as hex. */
-	      len = sprintf(str_buf + str_pnt,
-			    "0x%02x%02x%02x%02x%02x%02x",
-			    pnt[0], pnt[1], pnt[2], pnt[3], pnt[4], pnt[5]);
-	      str_pnt += len;
-	    }
-
-	  first = 0;
-	  continue;
-	}
-
-      /* Standard processing for known types */
-      if (encode != ECOMMUNITY_ENCODE_AS && encode != ECOMMUNITY_ENCODE_IP
-		      && encode != ECOMMUNITY_ENCODE_AS4)
-	{
-	  len = sprintf (str_buf + str_pnt, "?");
-	  str_pnt += len;
-	  first = 0;
-	  continue;
-	}
-
-      if (type !=  ECOMMUNITY_ROUTE_TARGET && type != ECOMMUNITY_SITE_ORIGIN)
-	{
-	  len = sprintf (str_buf + str_pnt, "?");
-	  str_pnt += len;
-	  first = 0;
-	  continue;
-	}
-
-      if (!config.bgp_comms_num) {
-        switch (format) {
-	case ECOMMUNITY_FORMAT_COMMUNITY_LIST:
-	  prefix = (type == ECOMMUNITY_ROUTE_TARGET ? "rt " : "soo ");
-	  break;
-	case ECOMMUNITY_FORMAT_DISPLAY:
-	  prefix = (type == ECOMMUNITY_ROUTE_TARGET ? "RT:" : "SoO:");
-	  break;
-	case ECOMMUNITY_FORMAT_ROUTE_MAP:
-	  prefix = "";
-	  break;
-	default:
-	  prefix = "";
-	  break;
-	}
-      }
-      else {
-	prefix = "";
-      }
-
-      /* Put string into buffer.  */
-      if (encode == ECOMMUNITY_ENCODE_AS4)
-	{
-	  eas.as = (*pnt++ << 24);
-	  eas.as |= (*pnt++ << 16);
-	  eas.as |= (*pnt++ << 8);
-	  eas.as |= (*pnt++);
-
-	  eas.val = (*pnt++ << 8);
-	  eas.val |= (*pnt++);
-
-	  len = sprintf( str_buf + str_pnt, "%s%u:%u", prefix,
-                        eas.as, eas.val );
-	  str_pnt += len;
-	  first = 0;
-	}
-      if (encode == ECOMMUNITY_ENCODE_AS)
-	{
-	  eas.as = (*pnt++ << 8);
-	  eas.as |= (*pnt++);
-
-	  eas.val = (*pnt++ << 24);
-	  eas.val |= (*pnt++ << 16);
-	  eas.val |= (*pnt++ << 8);
-	  eas.val |= (*pnt++);
-
-	  len = sprintf (str_buf + str_pnt, "%s%u:%u", prefix,
-			 eas.as, eas.val);
-	  str_pnt += len;
-	  first = 0;
-	}
-      else if (encode == ECOMMUNITY_ENCODE_IP)
-	{
-	  memcpy (&eip.ip, pnt, 4);
-	  pnt += 4;
-	  eip.val = (*pnt++ << 8);
-	  eip.val |= (*pnt++);
-
-	  len = sprintf (str_buf + str_pnt, "%s%s:%u", prefix,
-			 inet_ntoa (eip.ip), eip.val);
-	  str_pnt += len;
-	  first = 0;
-	}
+      str_size *= 2;
+      str_buf = realloc(str_buf, str_size);
     }
+
+    /* Space between each value.  */
+    if (!first)
+      str_buf[str_pnt++] = ' ';
+
+    pnt = ecom->val + (i * 8);
+
+    /* High-order octet of type. */
+    encode = *pnt++;
+
+    /* Low-order octet of type. */
+    type = *pnt++;
+
+    /* Per RFC 4360, the high-order octet contains flags (bit 0: IANA,
+       bit 1: transitive). Mask them out to get the encoding type so that
+       non-transitive variants (0x40, 0x41, 0x42) are handled consistently. */
+    encode_base = (encode & 0x3F);
+
+    /* Raw format: type:subtype:value1:value2 (type/subtype in decimal). */
+    if (format == ECOMMUNITY_FORMAT_RAW || config.bgp_comms_num)
+    {
+      len = sprintf(str_buf + str_pnt, "%u:%u:", encode, type);
+      str_pnt += len;
+
+      if (encode_base == ECOMMUNITY_ENCODE_AS4)
+      {
+        pnt = ecommunity_extract_as4(pnt, &eas);
+        len = sprintf(str_buf + str_pnt, "%u:%u", eas.as, eas.val);
+        str_pnt += len;
+      }
+      else if (encode_base == ECOMMUNITY_ENCODE_AS)
+      {
+        pnt = ecommunity_extract_as(pnt, &eas);
+        len = sprintf(str_buf + str_pnt, "%u:%u", eas.as, eas.val);
+        str_pnt += len;
+      }
+      else if (encode_base == ECOMMUNITY_ENCODE_IP)
+      {
+        pnt = ecommunity_extract_ip(pnt, &eip);
+        len = sprintf(str_buf + str_pnt, "%s:%u", inet_ntoa(eip.ip), eip.val);
+        str_pnt += len;
+      }
+      else
+      {
+        /* Unknown/opaque encoding: dump the 6-byte value as hex. */
+        len = sprintf(str_buf + str_pnt,
+                      "0x%02x%02x%02x%02x%02x%02x",
+                      pnt[0], pnt[1], pnt[2], pnt[3], pnt[4], pnt[5]);
+        str_pnt += len;
+      }
+
+      first = 0;
+      continue;
+    }
+
+    /* Standard processing for known types */
+    if (encode != ECOMMUNITY_ENCODE_AS && encode != ECOMMUNITY_ENCODE_IP && encode != ECOMMUNITY_ENCODE_AS4)
+    {
+      len = sprintf(str_buf + str_pnt, "?");
+      str_pnt += len;
+      first = 0;
+      continue;
+    }
+
+    if (type != ECOMMUNITY_ROUTE_TARGET && type != ECOMMUNITY_SITE_ORIGIN)
+    {
+      len = sprintf(str_buf + str_pnt, "?");
+      str_pnt += len;
+      first = 0;
+      continue;
+    }
+
+    switch (format)
+    {
+    case ECOMMUNITY_FORMAT_COMMUNITY_LIST:
+      prefix = (type == ECOMMUNITY_ROUTE_TARGET ? "rt " : "soo ");
+      break;
+    case ECOMMUNITY_FORMAT_DISPLAY:
+      prefix = (type == ECOMMUNITY_ROUTE_TARGET ? "RT:" : "SoO:");
+      break;
+    case ECOMMUNITY_FORMAT_ROUTE_MAP:
+      prefix = "";
+      break;
+    default:
+      prefix = "";
+      break;
+    }
+
+    /* Put string into buffer.  */
+    if (encode == ECOMMUNITY_ENCODE_AS4)
+    {
+      pnt = ecommunity_extract_as4(pnt, &eas);
+      len = sprintf(str_buf + str_pnt, "%s%u:%u", prefix,
+                    eas.as, eas.val);
+      str_pnt += len;
+      first = 0;
+    }
+    if (encode == ECOMMUNITY_ENCODE_AS)
+    {
+      pnt = ecommunity_extract_as(pnt, &eas);
+      len = sprintf(str_buf + str_pnt, "%s%u:%u", prefix,
+                    eas.as, eas.val);
+      str_pnt += len;
+      first = 0;
+    }
+    else if (encode == ECOMMUNITY_ENCODE_IP)
+    {
+      pnt = ecommunity_extract_ip(pnt, &eip);
+      len = sprintf(str_buf + str_pnt, "%s%s:%u", prefix,
+                    inet_ntoa(eip.ip), eip.val);
+      str_pnt += len;
+      first = 0;
+    }
+  }
+
   return str_buf;
 }
 
