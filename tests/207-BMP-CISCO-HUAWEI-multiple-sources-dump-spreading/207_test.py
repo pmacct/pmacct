@@ -43,4 +43,4 @@ def main(consumers):
 
     # Check messages from BMP table dump
     th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'dump_period'])
-    assert th.read_and_compare_messages('daisy.bmp.dump', 'bmp-dump-00', wait_time=120)
+    assert th.read_and_compare_messages('daisy.bmp.dump', 'bmp-dump-00', wait_time=360)

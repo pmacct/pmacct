@@ -315,7 +315,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   }
 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
-  bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_bgp_id(bph, &bdata.chars.bgp_id);
 
   bmp_peer_hdr_get_rd(bph, &bdata.chars.pd);
 
@@ -544,7 +544,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   }
 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
-  bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_bgp_id(bph, &bdata.chars.bgp_id);
 
   bmp_peer_hdr_get_rd(bph, &bdata.chars.pd);
 
@@ -719,7 +719,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   }
 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
-  bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_bgp_id(bph, &bdata.chars.bgp_id);
 
   bmp_peer_hdr_get_rd(bph, &bdata.chars.pd);
 
@@ -1002,7 +1002,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   }
 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
-  bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_bgp_id(bph, &bdata.chars.bgp_id);
 
   bmp_peer_hdr_get_rd(bph, &bdata.chars.pd);
 
@@ -1223,11 +1223,10 @@ void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_i
   }
 }
 
-void bmp_peer_hdr_get_bgp_id(struct bmp_peer_hdr *bph, struct host_addr *a)
+void bmp_peer_hdr_get_bgp_id(struct bmp_peer_hdr *bph, struct in_addr *a)
 {
   if (bph && a) {
-    a->family = AF_INET;
-    a->address.ipv4.s_addr = bph->bgp_id;
+    a->s_addr = bph->bgp_id;
   }
 }
 

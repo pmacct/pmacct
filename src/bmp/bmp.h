@@ -92,14 +92,14 @@ struct bmp_chars {
   rd_t pd;
 
   /* non-key */
-  cdada_list_t *tlvs;
+  struct in_addr bgp_id;
+  struct cdada_list_t *tlvs;
   cdada_map_t *groups;
 };
 
 struct bmp_data {
   u_int8_t family;
   struct host_addr peer_ip;
-  struct host_addr bgp_id;
   u_int32_t peer_asn;
   struct bmp_chars chars;
   struct timeval tstamp;
