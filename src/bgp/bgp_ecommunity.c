@@ -325,6 +325,42 @@ ecommunity_extract_ip(u_int8_t *pnt, struct ecommunity_ip *eip)
   return pnt;
 }
 
+static inline u_int8_t *
+ecommunity_format_value(u_int8_t *pnt, int encode, char *str_buf,
+                        int *str_pnt, const char *prefix, int dump_unknown)
+{
+  struct ecommunity_as eas;
+  struct ecommunity_ip eip;
+  int len = 0;
+
+  if (encode == ECOMMUNITY_ENCODE_AS4)
+  {
+    pnt = ecommunity_extract_as4(pnt, &eas);
+    len = sprintf(str_buf + *str_pnt, "%s%u:%u", prefix, eas.as, eas.val);
+  }
+  else if (encode == ECOMMUNITY_ENCODE_AS)
+  {
+    pnt = ecommunity_extract_as(pnt, &eas);
+    len = sprintf(str_buf + *str_pnt, "%s%u:%u", prefix, eas.as, eas.val);
+  }
+  else if (encode == ECOMMUNITY_ENCODE_IP)
+  {
+    pnt = ecommunity_extract_ip(pnt, &eip);
+    len = sprintf(str_buf + *str_pnt, "%s%s:%u", prefix,
+                  inet_ntoa(eip.ip), eip.val);
+  }
+  else if (dump_unknown)
+  {
+    /* Unknown/opaque encoding: dump the 6-byte value as hex. */
+    len = sprintf(str_buf + *str_pnt,
+                  "0x%02x%02x%02x%02x%02x%02x",
+                  pnt[0], pnt[1], pnt[2], pnt[3], pnt[4], pnt[5]);
+  }
+
+  *str_pnt += len;
+  return pnt;
+}
+
 char *
 ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 {
@@ -340,10 +376,6 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
   const char *prefix;
   int len = 0;
   int first = 1;
-
-  /* For parse Extended Community attribute tupple. */
-  struct ecommunity_as eas;
-  struct ecommunity_ip eip;
 
   if (!peer) return NULL;
 
@@ -405,39 +437,14 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
       len = sprintf(str_buf + str_pnt, "%u:%u:", encode, type);
       str_pnt += len;
 
-      if (encode_base == ECOMMUNITY_ENCODE_AS4)
-      {
-        pnt = ecommunity_extract_as4(pnt, &eas);
-        len = sprintf(str_buf + str_pnt, "%u:%u", eas.as, eas.val);
-        str_pnt += len;
-      }
-      else if (encode_base == ECOMMUNITY_ENCODE_AS)
-      {
-        pnt = ecommunity_extract_as(pnt, &eas);
-        len = sprintf(str_buf + str_pnt, "%u:%u", eas.as, eas.val);
-        str_pnt += len;
-      }
-      else if (encode_base == ECOMMUNITY_ENCODE_IP)
-      {
-        pnt = ecommunity_extract_ip(pnt, &eip);
-        len = sprintf(str_buf + str_pnt, "%s:%u", inet_ntoa(eip.ip), eip.val);
-        str_pnt += len;
-      }
-      else
-      {
-        /* Unknown/opaque encoding: dump the 6-byte value as hex. */
-        len = sprintf(str_buf + str_pnt,
-                      "0x%02x%02x%02x%02x%02x%02x",
-                      pnt[0], pnt[1], pnt[2], pnt[3], pnt[4], pnt[5]);
-        str_pnt += len;
-      }
+      pnt = ecommunity_format_value(pnt, encode_base, str_buf, &str_pnt, "", TRUE);
 
       first = 0;
       continue;
     }
 
     /* Standard processing for known types */
-    if (encode != ECOMMUNITY_ENCODE_AS && encode != ECOMMUNITY_ENCODE_IP && encode != ECOMMUNITY_ENCODE_AS4)
+    if (encode_base != ECOMMUNITY_ENCODE_AS && encode_base != ECOMMUNITY_ENCODE_IP && encode_base != ECOMMUNITY_ENCODE_AS4)
     {
       len = sprintf(str_buf + str_pnt, "?");
       str_pnt += len;
@@ -470,30 +477,8 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
     }
 
     /* Put string into buffer.  */
-    if (encode == ECOMMUNITY_ENCODE_AS4)
-    {
-      pnt = ecommunity_extract_as4(pnt, &eas);
-      len = sprintf(str_buf + str_pnt, "%s%u:%u", prefix,
-                    eas.as, eas.val);
-      str_pnt += len;
-      first = 0;
-    }
-    if (encode == ECOMMUNITY_ENCODE_AS)
-    {
-      pnt = ecommunity_extract_as(pnt, &eas);
-      len = sprintf(str_buf + str_pnt, "%s%u:%u", prefix,
-                    eas.as, eas.val);
-      str_pnt += len;
-      first = 0;
-    }
-    else if (encode == ECOMMUNITY_ENCODE_IP)
-    {
-      pnt = ecommunity_extract_ip(pnt, &eip);
-      len = sprintf(str_buf + str_pnt, "%s%s:%u", prefix,
-                    inet_ntoa(eip.ip), eip.val);
-      str_pnt += len;
-      first = 0;
-    }
+    pnt = ecommunity_format_value(pnt, encode_base, str_buf, &str_pnt, prefix, FALSE);
+    first = 0;
   }
 
   return str_buf;
