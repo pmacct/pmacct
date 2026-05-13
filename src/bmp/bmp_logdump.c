@@ -21,8 +21,6 @@
 
 /* includes */
 /* includes */
-#include <netinet/ip.h>
-
 #include "pmacct.h"
 #include "bgp/bgp.h"
 #include "bmp.h"

@@ -54,6 +54,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
 #include <net/if.h>
 #include <arpa/inet.h>
 #include <sys/types.h>

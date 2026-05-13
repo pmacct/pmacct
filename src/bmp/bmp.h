@@ -93,7 +93,7 @@ struct bmp_chars {
 
   /* non-key */
   struct in_addr bgp_id;
-  struct cdada_list_t *tlvs;
+  cdada_list_t *tlvs;
   cdada_map_t *groups;
 };
 
