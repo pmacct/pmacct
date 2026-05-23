@@ -66,6 +66,13 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
 
     peer->version = bch->version;
     bmp_common_hdr_get_len(bch, &msg_len);
+
+    if (msg_len < sizeof(struct bmp_common_hdr)) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: invalid BMP message length: %u\n",
+          config.name, bms->log_str, peer->addr_str, msg_len);
+      return FALSE;
+    }
+
     msg_len -= sizeof(struct bmp_common_hdr);
     orig_msg_len = msg_len;
 

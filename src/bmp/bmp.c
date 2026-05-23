@@ -990,8 +990,18 @@ int skinny_bmp_daemon()
 	    else {
 	      peer->buf.exp_len = ntohl(bhdr->len);
 
+	      if (peer->buf.exp_len < sizeof(struct bmp_common_hdr)) {
+	        Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: invalid BMP message length: %u\n",
+		    config.name, bmp_misc_db->log_str, peer->addr_str, peer->buf.exp_len);
+
+	        peer->msglen = 0;
+	        peer->buf.cur_len = 0;
+	        peer->buf.exp_len = 0;
+	        ret = ERR;
+	      }
+
 	      /* commit */
-	      if (peer->buf.cur_len == peer->buf.exp_len) {
+	      else if (peer->buf.cur_len == peer->buf.exp_len) {
 		peer->msglen = peer->buf.exp_len;
 		peer->buf.cur_len = 0;
 		peer->buf.exp_len = 0;
