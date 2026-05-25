@@ -22,6 +22,8 @@
 #ifndef _BGP_MSG_H_
 #define _BGP_MSG_H_
 
+struct bgp_msg_data;
+
 /* prototypes */
 extern int bgp_max_msglen_check(u_int32_t);
 extern int bgp_marker_check(struct bgp_header *, int);
@@ -32,7 +34,7 @@ extern int bgp_parse_notification_msg(struct bgp_msg_data *, char *, u_int8_t *,
 extern int bgp_write_keepalive_msg(char *);
 extern int bgp_write_open_msg(char *, char *, int, struct bgp_peer *, char *);
 extern int bgp_write_notification_msg(char *, int, u_int8_t, u_int8_t, char *);
-extern int bgp_attr_parse(struct bgp_peer *, struct bgp_attr *, struct bgp_attr_extra *, char *, int, struct bgp_nlri *, struct bgp_nlri *);
+extern int bgp_attr_parse(struct bgp_peer *, struct bgp_attr *, struct bgp_attr_extra *, char *, int, struct bgp_nlri *, struct bgp_nlri *, struct bgp_msg_data *);
 extern int bgp_attr_parse_community(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 extern int bgp_attr_parse_ecommunity(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 extern int bgp_attr_parse_lcommunity(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
@@ -47,6 +49,8 @@ extern int bgp_attr_parse_mp_unreach(struct bgp_peer *, u_int16_t, struct bgp_at
 extern int bgp_attr_parse_aigp(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
 extern int bgp_attr_parse_prefix_sid(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
 extern int bgp_attr_parse_otc(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
+extern int bgp_attr_parse_pmsi_tunnel(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
+extern int bgp_attr_parse_tunnel_encap(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
 extern int bgp_nlri_parse(struct bgp_msg_data *, void *, struct bgp_attr_extra *, struct bgp_nlri *, int);
 extern int bgp_process_update(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t, int);
 extern int bgp_process_withdraw(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t, int);

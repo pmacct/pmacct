@@ -96,6 +96,22 @@ BMP msglog format:
     <BGP NLRI, attributes, ..>
   }
 
+  For EVPN (afi=25, safi=70), additional fields may be present:
+  {
+    "evpn_route_type": <1..5>,
+    "evpn_rd": <RD>,
+    "evpn_esi": <ESI>,
+    "evpn_eth_tag": <ethernet tag>,
+    "evpn_mac_len": <mac bits>,
+    "evpn_mac": <MAC address>,
+    "evpn_ip_len": <IP bits>,
+    "evpn_ip": <IP address>,
+    "evpn_prefix": <prefix>,
+    "evpn_gw_ip": <gateway IP>,
+    "evpn_originator_ip": <originator IP>,
+    "evpn_label": <label>
+  }
+
 - log events message:
   {
     "seq": <seq>,
@@ -142,6 +158,9 @@ BMP dump format:
     "peer_ip": <IP address>,
     <BGP NLRI, attributes, ..>
   }
+
+  For EVPN (afi=25, safi=70), route-type dependent fields are the same as
+  listed for BMP msglog route messages above.
 
 - dump events message:
   {

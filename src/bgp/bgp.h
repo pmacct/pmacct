@@ -63,6 +63,8 @@
 #define BGP_ATTR_AS4_PATH                       17
 #define BGP_ATTR_AS4_AGGREGATOR                 18
 #define BGP_ATTR_AS_PATHLIMIT                   21
+#define BGP_ATTR_PMSI_TUNNEL                    22 /* RFC 6514 */
+#define BGP_ATTR_TUNNEL_ENCAPSULATION           23 /* RFC 9012 */
 #define BGP_ATTR_AIGP				26
 #define BGP_ATTR_BGP_LS				29
 #define BGP_ATTR_LARGE_COMMUNITIES		32
@@ -235,6 +237,7 @@ struct bgp_msg_data {
   struct bgp_msg_extra_data extra;
   int is_blackhole;
   int nlri_count;
+  void *unknown_path_attrs; /* json_t * array when bmp_daemon_msglog_evpn_raw_msg (WITH_JANSSON) */
 };
 
 typedef struct packet_ptrs bgp_tag_t;
@@ -357,8 +360,15 @@ struct bgp_attr {
   struct community *community;
   struct ecommunity *ecommunity;
   struct lcommunity *lcommunity;
+  char *tunnel_encap; /* RFC 9012 Tunnel Encapsulation attribute (formatted summary) */
+  char *pmsi_tunnel_id_raw; /* Hex fallback for non IPv4/IPv6 tunnel-id payloads */
   unsigned long refcnt;
   u_int8_t rpki_maxlen;
+  u_int8_t pmsi_flags;
+  u_int8_t pmsi_tunnel_type;
+  u_int8_t pmsi_tunnel_id_len;
+  u_char pmsi_label[3];
+  char pmsi_tunnel_id[INET6_ADDRSTRLEN];
   struct in_addr nexthop;
   struct host_addr mp_nexthop;
   u_int32_t med;

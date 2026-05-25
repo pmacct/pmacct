@@ -294,6 +294,7 @@ extern int cfg_key_pre_tag_label_filter(char *, char *, char *);
 extern int cfg_key_pre_tag_label_encode_as_map(char *, char *, char *);
 extern int cfg_key_tcpflags_encode_as_array(char *, char *, char *);
 extern int cfg_key_bgp_comms_encode_as_array(char *, char *, char *);
+extern int cfg_key_ecomms_list(char *, char *, char *);
 extern int cfg_key_bgp_comms_num(char *, char *, char *);
 extern int cfg_key_as_path_encode_as_array(char *, char *, char *);
 extern int cfg_key_fwd_status_encode_as_string(char *, char *, char *);
@@ -490,6 +491,7 @@ extern int cfg_key_bmp_daemon_msglog_kafka_partition_key(char *, char *, char *)
 extern int cfg_key_bmp_daemon_msglog_kafka_retry(char *, char *, char *);
 extern int cfg_key_bmp_daemon_msglog_kafka_config_file(char *, char *, char *);
 extern int cfg_key_bmp_daemon_msglog_kafka_avro_schema_registry(char *, char *, char *);
+extern int cfg_key_bmp_daemon_msglog_evpn_raw_msg(char *, char *, char *);
 extern int cfg_key_bmp_daemon_table_peer_buckets(char *, char *, char *);
 extern int cfg_key_bmp_daemon_table_per_peer_buckets(char *, char *, char *);
 extern int cfg_key_bmp_daemon_table_attr_hash_buckets(char *, char *, char *);

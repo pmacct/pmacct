@@ -373,7 +373,7 @@ char *bgp_lg_daemon_encode_reply_ip_lookup_data_json(struct bgp_lg_rep_ipl_data 
     memcpy(&dummy_node.p, rep_data->pref, sizeof(struct prefix)); 
 
     bgp_peer_log_msg(&dummy_node, rep_data->info, rep_data->afi, rep_data->safi, NULL,
-		     event_type, PRINT_OUTPUT_JSON, &data_str, BGP_LOG_TYPE_MISC);
+		     event_type, PRINT_OUTPUT_JSON, &data_str, BGP_LOG_TYPE_MISC, NULL);
   }
 
   return data_str;

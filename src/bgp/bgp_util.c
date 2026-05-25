@@ -356,6 +356,28 @@ struct bgp_attr_extra *bgp_attr_extra_process(struct bgp_peer *peer, struct bgp_
     }
   }
 
+  /* EVPN metadata */
+  if (safi == SAFI_EVPN && attr_extra->evpn_route_type) {
+    if (!rie) {
+      rie = bgp_attr_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->evpn_route_type = attr_extra->evpn_route_type;
+      strlcpy(rie->evpn_rd, attr_extra->evpn_rd, sizeof(rie->evpn_rd));
+      strlcpy(rie->evpn_esi, attr_extra->evpn_esi, sizeof(rie->evpn_esi));
+      rie->evpn_eth_tag = attr_extra->evpn_eth_tag;
+      rie->evpn_mac_len = attr_extra->evpn_mac_len;
+      strlcpy(rie->evpn_mac, attr_extra->evpn_mac, sizeof(rie->evpn_mac));
+      rie->evpn_ip_len = attr_extra->evpn_ip_len;
+      strlcpy(rie->evpn_ip, attr_extra->evpn_ip, sizeof(rie->evpn_ip));
+      strlcpy(rie->evpn_prefix, attr_extra->evpn_prefix, sizeof(rie->evpn_prefix));
+      strlcpy(rie->evpn_gw_ip, attr_extra->evpn_gw_ip, sizeof(rie->evpn_gw_ip));
+      strlcpy(rie->evpn_originator_ip, attr_extra->evpn_originator_ip, sizeof(rie->evpn_originator_ip));
+      strlcpy(rie->evpn_label, attr_extra->evpn_label, sizeof(rie->evpn_label));
+    }
+  }
+
   if (rie && !(attr_extra->bitmap & BGP_BMAP_ATTR_AIGP)) rie->bitmap &= ~BGP_BMAP_ATTR_AIGP;
 
   return rie;
@@ -452,6 +474,10 @@ unsigned int attrhash_key_make(void *p)
   key += attr->med;
   key += attr->local_pref;
   key += attr->bitmap;
+  key += attr->pmsi_flags;
+  key += attr->pmsi_tunnel_type;
+  key += attr->pmsi_tunnel_id_len;
+  key += attr->pmsi_label[0] + attr->pmsi_label[1] + attr->pmsi_label[2];
 
   if (attr->aspath)
     key += aspath_key_make(attr->aspath);
@@ -461,6 +487,22 @@ unsigned int attrhash_key_make(void *p)
     key += ecommunity_hash_make(attr->ecommunity);
   if (attr->lcommunity)
     key += lcommunity_hash_make(attr->lcommunity);
+
+  if (attr->tunnel_encap) {
+    const unsigned char *s = (const unsigned char *)attr->tunnel_encap;
+    while (*s)
+      key += *s++;
+  }
+  if (attr->pmsi_tunnel_id[0]) {
+    const unsigned char *s = (const unsigned char *)attr->pmsi_tunnel_id;
+    while (*s)
+      key += *s++;
+  }
+  if (attr->pmsi_tunnel_id_raw) {
+    const unsigned char *s = (const unsigned char *)attr->pmsi_tunnel_id_raw;
+    while (*s)
+      key += *s++;
+  }
 
   /* XXX: add mp_nexthop to key */
 
@@ -482,8 +524,21 @@ int attrhash_cmp(const void *p1, const void *p2)
       && attr1->lcommunity == attr2->lcommunity
       && attr1->med == attr2->med
       && attr1->local_pref == attr2->local_pref
-      && !host_addr_cmp2((struct host_addr *)&attr1->mp_nexthop, (struct host_addr *)&attr2->mp_nexthop))
-    return TRUE;
+      && attr1->pmsi_flags == attr2->pmsi_flags
+      && attr1->pmsi_tunnel_type == attr2->pmsi_tunnel_type
+      && attr1->pmsi_tunnel_id_len == attr2->pmsi_tunnel_id_len
+      && !memcmp(attr1->pmsi_label, attr2->pmsi_label, sizeof(attr1->pmsi_label))
+      && !host_addr_cmp2((struct host_addr *)&attr1->mp_nexthop, (struct host_addr *)&attr2->mp_nexthop)) {
+    const char *t1 = attr1->tunnel_encap ? attr1->tunnel_encap : "";
+    const char *t2 = attr2->tunnel_encap ? attr2->tunnel_encap : "";
+    const char *p1 = attr1->pmsi_tunnel_id[0] ? attr1->pmsi_tunnel_id : "";
+    const char *p2 = attr2->pmsi_tunnel_id[0] ? attr2->pmsi_tunnel_id : "";
+    const char *pr1 = attr1->pmsi_tunnel_id_raw ? attr1->pmsi_tunnel_id_raw : "";
+    const char *pr2 = attr2->pmsi_tunnel_id_raw ? attr2->pmsi_tunnel_id_raw : "";
+
+    if (!strcmp(t1, t2) && !strcmp(p1, p2) && !strcmp(pr1, pr2))
+      return TRUE;
+  }
 
   return FALSE;
 }
@@ -532,6 +587,16 @@ struct bgp_attr *bgp_attr_intern(struct bgp_peer *peer, struct bgp_attr *attr)
   }
  
   find = (struct bgp_attr *) hash_get(peer, inter_domain_routing_db->attrhash, attr, bgp_attr_hash_alloc);
+
+  if (find != attr && attr->tunnel_encap) {
+    free(attr->tunnel_encap);
+    attr->tunnel_encap = NULL;
+  }
+  if (find != attr && attr->pmsi_tunnel_id_raw) {
+    free(attr->pmsi_tunnel_id_raw);
+    attr->pmsi_tunnel_id_raw = NULL;
+  }
+
   find->refcnt++;
 
   return find;
@@ -567,6 +632,14 @@ void bgp_attr_unintern(struct bgp_peer *peer, struct bgp_attr *attr)
     ret = (struct bgp_attr *) hash_release(inter_domain_routing_db->attrhash, attr);
     // assert (ret != NULL);
     if (!ret) Log(LOG_INFO, "INFO ( %s/%s ): bgp_attr_unintern() hash lookup failed.\n", config.name, bms->log_str);
+    if (attr->tunnel_encap) {
+      free(attr->tunnel_encap);
+      attr->tunnel_encap = NULL;
+    }
+    if (attr->pmsi_tunnel_id_raw) {
+      free(attr->pmsi_tunnel_id_raw);
+      attr->pmsi_tunnel_id_raw = NULL;
+    }
     free(attr);
   }
 
@@ -923,7 +996,7 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
 	  if (bms->msglog_backend_methods) {
 	    char event_type[] = "log";
 
-	    bgp_peer_log_msg(node, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+	    bgp_peer_log_msg(node, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE, NULL);
 	  }
 
 	  ri_next = ri->next; /* let's save pointer to next before free up */

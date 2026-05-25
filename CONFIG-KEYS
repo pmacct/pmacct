@@ -1757,6 +1757,16 @@ DESC:           BGP communities are encoded by default as a string, including a 
 		backends not supporting complex types (i.e., SQL plugins).
 DEFAULT:        false
 
+KEY:            ecomms_list
+VALUES:         [ true | false ]
+DESC:           When true (default), BGP/BMP JSON msglog encodes extended communities as the structured
+                object field "ecomms_list" (singleton keys such as "evpn_router_mac"; array values for
+                repeatable keys such as "encapsulation_tunnel_type", "rt"; "soo" is emitted as singleton)
+                and does not emit the
+                flat "ecomms" string or token array. When false, "ecomms" follows bgp_comms_encode_as_array
+                and "ecomms_list" is omitted. Apache Avro output is unchanged.
+DEFAULT:        true
+
 KEY:		bgp_comms_num
 DESC:		Defines whether known Standard (ie. "internet") and Extended Communities (ie. "RT")
 		shdould be presented in string or numerical format. By default communities are looked up
@@ -2847,6 +2857,14 @@ VALUES:         [ json | avro | avro_json ]
 DESC:		Defines output format for the streamed logging of BGP messages and BMP messages and
 		events. JSON, binary-encoded Avro and JSON-encoded Avro formats are supported.
 DEFAULT:	json
+
+KEY:		bmp_daemon_msglog_evpn_raw_msg [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		When true, BMP daemon JSON msglog for EVPN (AFI L2VPN / SAFI EVPN) includes an
+		"unknown-tlv" array for BGP path attributes that are not decoded by pmacct: each
+		element has "tlv" (BGP attribute type code) and "hex_dump_tlv_data" (attribute value
+		as a hexadecimal string, prefixed with "0x"; payload longer than 4096 octets is
+		truncated for logging). Default: false.
 
 KEY:		bgp_daemon_add_path_ignore [GLOBAL]
 VALUES:		[ true | false ]

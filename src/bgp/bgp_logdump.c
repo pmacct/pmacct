@@ -45,7 +45,7 @@
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
          bgp_tag_t *tag, char *event_type, int output, char **output_data,
-         int log_type)
+         int log_type, struct bgp_msg_data *bmd)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -171,11 +171,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "ip_prefix", json_string(prefix_str));
     }
 
-    if ((afi == AFI_IP || afi == AFI_IP6) &&
-	(safi == SAFI_UNICAST || safi == SAFI_MULTICAST)) {
-      if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
-        json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
-      }
+    if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra && ri->attr_extra->path_id) {
+      json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
     }
 
     if (attr) {
@@ -210,12 +207,67 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
           cdada_list_destroy(std_comm_ll);
         }
         else {
+	        json_object_set_new_nocheck(obj, "comms", json_string(attr->community->str));
+        }
+      }
+
+      if (attr->ecommunity) {
+        if (config.ecomms_list) {
+          json_t *ecomms_list = ecommunity_ecom2json_list(peer, attr->ecommunity);
+
+          if (ecomms_list) json_object_set_new_nocheck(obj, "ecomms_list", ecomms_list);
+        }
+        else if (config.bgp_comms_encode_as_array) {
+          cdada_list_t *std_ecomm_ll = generic_delim_str_to_linked_list(attr->ecommunity->str, NULL);
+          size_t ll_size = cdada_list_size(std_ecomm_ll);
+          json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_ecomm_ll, ll_size);
+
+          json_object_set_new_nocheck(obj, "ecomms", root_l1);
+
+          cdada_list_destroy(std_ecomm_ll);
+        }
+        else {
+	        json_object_set_new_nocheck(obj, "ecomms", json_string(attr->ecommunity->str));
+        }
+      }
+
+      if (attr->lcommunity) {
+        if (config.bgp_comms_encode_as_array) {
+          cdada_list_t *std_lcomm_ll = generic_delim_str_to_linked_list(attr->lcommunity->str, NULL);
+          size_t ll_size = cdada_list_size(std_lcomm_ll);
+          json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_lcomm_ll, ll_size);
+
+          json_object_set_new_nocheck(obj, "lcomms", root_l1);
+
+          cdada_list_destroy(std_lcomm_ll);
+        }
+        else {
+	         json_object_set_new_nocheck(obj, "lcomms", json_string(attr->lcommunity->str));
+        }
+      }
+
+      if (attr->community) {
+        if (config.bgp_comms_encode_as_array) {
+          cdada_list_t *std_comm_ll = generic_delim_str_to_linked_list(attr->community->str, NULL);
+          size_t ll_size = cdada_list_size(std_comm_ll);
+          json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_comm_ll, ll_size);
+
+          json_object_set_new_nocheck(obj, "comms", root_l1);
+
+          cdada_list_destroy(std_comm_ll);
+        }
+        else {
           json_object_set_new_nocheck(obj, "comms", json_string(attr->community->str));
         }
       }
 
       if (attr->ecommunity) {
-        if (config.bgp_comms_encode_as_array) {
+        if (config.ecomms_list) {
+          json_t *ecomms_list = ecommunity_ecom2json_list(peer, attr->ecommunity);
+
+          if (ecomms_list) json_object_set_new_nocheck(obj, "ecomms_list", ecomms_list);
+        }
+        else if (config.bgp_comms_encode_as_array) {
           cdada_list_t *std_ecomm_ll = generic_delim_str_to_linked_list(attr->ecommunity->str, NULL);
           size_t ll_size = cdada_list_size(std_ecomm_ll);
           json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_ecomm_ll, ll_size);
@@ -241,6 +293,74 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
         }
         else {
            json_object_set_new_nocheck(obj, "lcomms", json_string(attr->lcommunity->str));
+        }
+      }
+
+      if (attr->community) {
+        if (config.bgp_comms_encode_as_array) {
+          cdada_list_t *std_comm_ll = generic_delim_str_to_linked_list(attr->community->str, NULL);
+          size_t ll_size = cdada_list_size(std_comm_ll);
+          json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_comm_ll, ll_size);
+
+          json_object_set_new_nocheck(obj, "comms", root_l1);
+
+          cdada_list_destroy(std_comm_ll);
+        }
+        else {
+          json_object_set_new_nocheck(obj, "comms", json_string(attr->community->str));
+        }
+      }
+
+      if (attr->ecommunity) {
+        if (config.ecomms_list) {
+          json_t *ecomms_list = ecommunity_ecom2json_list(peer, attr->ecommunity);
+
+          if (ecomms_list) json_object_set_new_nocheck(obj, "ecomms_list", ecomms_list);
+        }
+        else if (config.bgp_comms_encode_as_array) {
+          cdada_list_t *std_ecomm_ll = generic_delim_str_to_linked_list(attr->ecommunity->str, NULL);
+          size_t ll_size = cdada_list_size(std_ecomm_ll);
+          json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_ecomm_ll, ll_size);
+
+          json_object_set_new_nocheck(obj, "ecomms", root_l1);
+
+          cdada_list_destroy(std_ecomm_ll);
+        }
+        else {
+          json_object_set_new_nocheck(obj, "ecomms", json_string(attr->ecommunity->str));
+        }
+      }
+
+      if (attr->lcommunity) {
+        if (config.bgp_comms_encode_as_array) {
+          cdada_list_t *std_lcomm_ll = generic_delim_str_to_linked_list(attr->lcommunity->str, NULL);
+          size_t ll_size = cdada_list_size(std_lcomm_ll);
+          json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_lcomm_ll, ll_size);
+
+          json_object_set_new_nocheck(obj, "lcomms", root_l1);
+
+          cdada_list_destroy(std_lcomm_ll);
+        }
+        else {
+           json_object_set_new_nocheck(obj, "lcomms", json_string(attr->lcommunity->str));
+        }
+      }
+
+      if (attr->tunnel_encap)
+        json_object_set_new_nocheck(obj, "tunnel_encap", json_string(attr->tunnel_encap));
+
+      if (attr->pmsi_tunnel_type || attr->pmsi_flags || attr->pmsi_tunnel_id_len) {
+        char pmsi_label_str[SHORTSHORTBUFLEN];
+
+        json_object_set_new_nocheck(obj, "pmsi_flags", json_integer((json_int_t)attr->pmsi_flags));
+        json_object_set_new_nocheck(obj, "pmsi_tunnel_type", json_integer((json_int_t)attr->pmsi_tunnel_type));
+        bgp_label2str(pmsi_label_str, attr->pmsi_label);
+        json_object_set_new_nocheck(obj, "pmsi_label", json_string(pmsi_label_str));
+        if (attr->pmsi_tunnel_id[0]) {
+          json_object_set_new_nocheck(obj, "pmsi_tunnel_id", json_string(attr->pmsi_tunnel_id));
+        }
+        else if (attr->pmsi_tunnel_id_raw) {
+          json_object_set_new_nocheck(obj, "pmsi_tunnel_id_raw", json_string(attr->pmsi_tunnel_id_raw));
         }
       }
 
@@ -296,6 +416,59 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
       bgp_label2str(label_str, ri->attr_extra->label);
       json_object_set_new_nocheck(obj, "mpls_label", json_string(label_str));
+    }
+
+    if (safi == SAFI_EVPN && ri && ri->attr_extra && ri->attr_extra->evpn_route_type) {
+      json_object_set_new_nocheck(obj, "evpn_route_type", json_integer((json_int_t)ri->attr_extra->evpn_route_type));
+
+      if (ri->attr_extra->evpn_rd[0]) {
+        json_object_set_new_nocheck(obj, "evpn_rd", json_string(ri->attr_extra->evpn_rd));
+      }
+
+      if (ri->attr_extra->evpn_esi[0]) {
+        json_object_set_new_nocheck(obj, "evpn_esi", json_string(ri->attr_extra->evpn_esi));
+      }
+
+      if (ri->attr_extra->evpn_eth_tag) {
+        json_object_set_new_nocheck(obj, "evpn_eth_tag", json_integer((json_int_t)ri->attr_extra->evpn_eth_tag));
+      }
+
+      if (ri->attr_extra->evpn_mac_len) {
+        json_object_set_new_nocheck(obj, "evpn_mac_len", json_integer((json_int_t)ri->attr_extra->evpn_mac_len));
+      }
+
+      if (ri->attr_extra->evpn_mac[0]) {
+        json_object_set_new_nocheck(obj, "evpn_mac", json_string(ri->attr_extra->evpn_mac));
+      }
+
+      if (ri->attr_extra->evpn_ip_len) {
+        json_object_set_new_nocheck(obj, "evpn_ip_len", json_integer((json_int_t)ri->attr_extra->evpn_ip_len));
+      }
+
+      if (ri->attr_extra->evpn_ip[0]) {
+        json_object_set_new_nocheck(obj, "evpn_ip", json_string(ri->attr_extra->evpn_ip));
+      }
+
+      if (ri->attr_extra->evpn_prefix[0]) {
+        json_object_set_new_nocheck(obj, "evpn_prefix", json_string(ri->attr_extra->evpn_prefix));
+      }
+
+      if (ri->attr_extra->evpn_gw_ip[0]) {
+        json_object_set_new_nocheck(obj, "evpn_gw_ip", json_string(ri->attr_extra->evpn_gw_ip));
+      }
+
+      if (ri->attr_extra->evpn_originator_ip[0]) {
+        json_object_set_new_nocheck(obj, "evpn_originator_ip", json_string(ri->attr_extra->evpn_originator_ip));
+      }
+
+      if (ri->attr_extra->evpn_label[0]) {
+        json_object_set_new_nocheck(obj, "evpn_label", json_string(ri->attr_extra->evpn_label));
+      }
+    }
+
+    if (config.bmp_daemon_msglog_evpn_raw_msg && bmd && bmd->unknown_path_attrs &&
+	afi == AFI_L2VPN && safi == SAFI_EVPN) {
+      json_object_set_new_nocheck(obj, "unknown-tlv", json_incref((json_t *)bmd->unknown_path_attrs));
     }
 
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, obj);
@@ -2205,7 +2378,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 	        if (ri->peer == peer) {
             
-		  bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
+		  bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC, NULL);
 		  dump_elems++;
 		  bds.entries++;
 		}

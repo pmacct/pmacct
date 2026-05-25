@@ -141,6 +141,18 @@ Title | Description
 `as_path_id` | BGP ADD-Path attribute (https://tools.ietf.org/html/rfc7911#section-3)
 `aigp` | BGP AIGP attribute (https://tools.ietf.org/html/rfc7311#section-3)
 `psid_li` | BGP Prefix-SID Label Index attribute (https://tools.ietf.org/html/rfc8669#section-3.1)
+`evpn_route_type` | EVPN route type (for AFI=25, SAFI=70)
+`evpn_rd` | EVPN Route Distinguisher encoded in NLRI
+`evpn_esi` | EVPN Ethernet Segment Identifier
+`evpn_eth_tag` | EVPN Ethernet Tag ID
+`evpn_mac_len` | EVPN MAC address length (bits)
+`evpn_mac` | EVPN MAC address
+`evpn_ip_len` | EVPN IP address length (bits)
+`evpn_ip` | EVPN IP address
+`evpn_prefix` | EVPN RT5 IP prefix
+`evpn_gw_ip` | EVPN RT5 gateway IP
+`evpn_originator_ip` | EVPN originator/router IP (route-type dependent)
+`evpn_label` | EVPN label value
 
 ~~~~
 {
@@ -179,6 +191,16 @@ Title | Description
   "writer_id": "ietfint_nfacctd-bmp01_c/1958020"
 }
 ~~~~
+
+### EVPN route-monitoring notes
+
+For BMP route-monitoring metrics with `afi=25` and `safi=70`, EVPN fields are exported when available:
+
+* **RT1 (Ethernet A-D route):** `evpn_route_type`, `evpn_rd`, `evpn_esi`, `evpn_eth_tag`, `evpn_ip_len`, `evpn_originator_ip`
+* **RT2 (MAC/IP advertisement):** `evpn_route_type`, `evpn_rd`, `evpn_esi`, `evpn_eth_tag`, `evpn_mac_len`, `evpn_mac`, `evpn_ip_len`, `evpn_ip`, `evpn_label`
+* **RT3 (Inclusive multicast):** `evpn_route_type`, `evpn_rd`, `evpn_eth_tag`, `evpn_ip_len`, `evpn_originator_ip`
+* **RT4 (Ethernet segment):** `evpn_route_type`, `evpn_rd`, `evpn_esi`, `evpn_ip_len`, `evpn_originator_ip`
+* **RT5 (IP prefix):** `evpn_route_type`, `evpn_rd`, `evpn_esi`, `evpn_eth_tag`, `evpn_prefix`, `evpn_gw_ip`, `evpn_label`
 
 ### BMP message type 1, statistics report
 Title | Description

@@ -1941,6 +1941,8 @@ void set_default_preferences(struct configuration *cfg)
   if (!cfg->bgp_daemon_src_as_path_type) cfg->bgp_daemon_src_as_path_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->bgp_daemon_src_local_pref_type) cfg->bgp_daemon_src_local_pref_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->bgp_daemon_src_med_type) cfg->bgp_daemon_src_med_type = BGP_SRC_PRIMITIVES_KEEP;
+  if (!cfg->ecomms_list_user)
+    cfg->ecomms_list = TRUE;
 }
 
 void set_shadow_status(struct packet_ptrs *pptrs)

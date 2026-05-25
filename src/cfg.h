@@ -484,6 +484,7 @@ struct configuration {
   int bmp_daemon_msglog_kafka_retry;
   char *bmp_daemon_msglog_kafka_config_file;
   char *bmp_daemon_msglog_kafka_avro_schema_registry;
+  int bmp_daemon_msglog_evpn_raw_msg;
   int bmp_table_peer_buckets;
   int bmp_table_per_peer_buckets;
   int bmp_table_attr_hash_buckets;
@@ -562,6 +563,8 @@ struct configuration {
   int pretag_label_encode_as_map;
   int tcpflags_encode_as_array;
   int bgp_comms_encode_as_array;
+  int ecomms_list;
+  int ecomms_list_user;
   int bgp_comms_num;
   int as_path_encode_as_array;
   int mpls_label_stack_encode_as_array;

@@ -21,9 +21,84 @@
 
 /* includes */
 #include "pmacct.h"
+#include <stdarg.h>
 #include "bgp.h"
 #include "bgp_blackhole.h"
 #include "bgp_ls.h"
+
+static int evpn_parse_rd_to_str(const u_char *rd_ptr, char *rd_str, size_t rd_str_len)
+{
+  rd_t rd;
+  u_int32_t tmp32;
+  u_int16_t tmp16;
+  struct rd_ip *rdi;
+  struct rd_as *rda;
+  struct rd_as4 *rda4;
+
+  if (!rd_ptr || !rd_str || !rd_str_len) return ERR;
+
+  memset(&rd, 0, sizeof(rd));
+  memcpy(&rd.type, rd_ptr, 2);
+  rd.type = ntohs(rd.type);
+
+  switch (rd.type) {
+  case RD_TYPE_AS:
+    rda = (struct rd_as *) &rd;
+    memcpy(&tmp16, rd_ptr + 2, 2);
+    memcpy(&tmp32, rd_ptr + 4, 4);
+    rda->as = ntohs(tmp16);
+    rda->val = ntohl(tmp32);
+    break;
+  case RD_TYPE_IP:
+    rdi = (struct rd_ip *) &rd;
+    memcpy(&rdi->ip.s_addr, rd_ptr + 2, 4);
+    memcpy(&tmp16, rd_ptr + 6, 2);
+    rdi->val = ntohs(tmp16);
+    break;
+  case RD_TYPE_AS4:
+    rda4 = (struct rd_as4 *) &rd;
+    memcpy(&tmp32, rd_ptr + 2, 4);
+    memcpy(&tmp16, rd_ptr + 6, 2);
+    rda4->as = ntohl(tmp32);
+    rda4->val = ntohs(tmp16);
+    break;
+  default:
+    return ERR;
+  }
+
+  bgp_rd_origin_set(&rd, RD_ORIGIN_BGP);
+  bgp_rd2str(rd_str, &rd);
+  return SUCCESS;
+}
+
+static void evpn_esi_to_str(const u_char *esi_ptr, char *esi_str, size_t esi_str_len)
+{
+  if (!esi_ptr || !esi_str || esi_str_len < 30) return;
+
+  snprintf(esi_str, esi_str_len, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+           esi_ptr[0], esi_ptr[1], esi_ptr[2], esi_ptr[3], esi_ptr[4],
+           esi_ptr[5], esi_ptr[6], esi_ptr[7], esi_ptr[8], esi_ptr[9]);
+}
+
+static int evpn_addr_to_str(const u_char *addr_ptr, u_int8_t addr_len_bits, char *dst, size_t dst_len)
+{
+  if (!addr_ptr || !dst || !dst_len) return ERR;
+
+  if (addr_len_bits == 32) {
+    struct in_addr ip4;
+    memcpy(&ip4, addr_ptr, sizeof(ip4));
+    if (!inet_ntop(AF_INET, &ip4, dst, dst_len)) return ERR;
+    return SUCCESS;
+  }
+  else if (addr_len_bits == 128) {
+    struct in6_addr ip6;
+    memcpy(&ip6, addr_ptr, sizeof(ip6));
+    if (!inet_ntop(AF_INET6, &ip6, dst, dst_len)) return ERR;
+    return SUCCESS;
+  }
+
+  return ERR;
+}
 
 int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 {
@@ -720,12 +795,28 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   }
 
   if (attribute_len > 0) {
-    ret = bgp_attr_parse(peer, &attr, &attr_extra, pkt, attribute_len, &mp_update, &mp_withdraw);
+    ret = bgp_attr_parse(peer, &attr, &attr_extra, pkt, attribute_len, &mp_update, &mp_withdraw, bmd);
     if (ret < 0) {
+#if defined(WITH_JANSSON)
+      if (bmd->unknown_path_attrs) {
+	json_decref((json_t *)bmd->unknown_path_attrs);
+	bmd->unknown_path_attrs = NULL;
+      }
+#endif
       return ret;
     }
     pkt += attribute_len;
   }
+
+#if defined(WITH_JANSSON)
+  if (config.bmp_daemon_msglog_evpn_raw_msg && bmd->unknown_path_attrs) {
+    int evpn_mp = (mp_update.length && mp_update.afi == AFI_L2VPN && mp_update.safi == SAFI_EVPN);
+    if (!evpn_mp) {
+      json_decref((json_t *)bmd->unknown_path_attrs);
+      bmd->unknown_path_attrs = NULL;
+    }
+  }
+#endif
 
   update_len = end; end = 0;
 
@@ -793,6 +884,20 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
     parsed = TRUE;
   }
 
+  if (mp_update.length
+          && mp_update.afi == AFI_L2VPN
+          && mp_update.safi == SAFI_EVPN) {
+    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    parsed = TRUE;
+  }
+
+  if (mp_withdraw.length
+          && mp_withdraw.afi == AFI_L2VPN
+          && mp_withdraw.safi == SAFI_EVPN) {
+    ret = bgp_nlri_parse(bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
+    parsed = TRUE;
+  }
+
   /* Checking receipt of End-of-RIB */
   if (!update_len && !withdraw_len) {
     int eor = FALSE;
@@ -823,7 +928,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
       memset(&ri, 0, sizeof(ri));
       ri.peer = peer;
       ri.bmed = bmd->extra;
-      bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR);
+      bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR, NULL);
 
       if (afi < AFI_MAX && safi < SAFI_MAX) {
 	peer->eor[afi][safi] = TRUE;
@@ -838,6 +943,13 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	mp_update.length ? mp_update.afi : mp_withdraw.afi,
 	mp_update.length ? mp_update.safi : mp_withdraw.safi);
   }
+
+#if defined(WITH_JANSSON)
+  if (bmd->unknown_path_attrs) {
+    json_decref((json_t *)bmd->unknown_path_attrs);
+    bmd->unknown_path_attrs = NULL;
+  }
+#endif
 
   /* Everything is done.  We unintern temporary structures which
 	 interned in bgp_attr_parse(). */
@@ -855,9 +967,337 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   return ret;
 }
 
+/* RFC 6514 PMSI Tunnel attribute (optional transitive, type 22) */
+int
+bgp_attr_parse_pmsi_tunnel(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
+{
+  u_char *p = (u_char *) ptr;
+  u_int16_t id_len;
+  size_t i;
+
+  (void) peer;
+  (void) flag;
+
+  if (len < 5)
+    return ERR;
+
+  if (attr->pmsi_tunnel_id_raw) {
+    free(attr->pmsi_tunnel_id_raw);
+    attr->pmsi_tunnel_id_raw = NULL;
+  }
+
+  memset(attr->pmsi_tunnel_id, 0, sizeof(attr->pmsi_tunnel_id));
+  memset(attr->pmsi_label, 0, sizeof(attr->pmsi_label));
+  attr->pmsi_flags = p[0];
+  attr->pmsi_tunnel_type = p[1];
+  memcpy(attr->pmsi_label, p + 2, 3);
+
+  id_len = (u_int16_t) (len - 5);
+  attr->pmsi_tunnel_id_len = (id_len > 255 ? 255 : (u_int8_t) id_len);
+
+  if (id_len == 4 || id_len == 16) {
+    int af = (id_len == 4 ? AF_INET : AF_INET6);
+
+    if (!inet_ntop(af, p + 5, attr->pmsi_tunnel_id, sizeof(attr->pmsi_tunnel_id))) {
+      memset(attr->pmsi_tunnel_id, 0, sizeof(attr->pmsi_tunnel_id));
+    }
+  }
+  else if (id_len > 0) {
+    size_t cap = id_len;
+    size_t off = 0;
+
+    if (cap > 4096)
+      cap = 4096;
+
+    attr->pmsi_tunnel_id_raw = malloc(3 + (cap * 2) + 1);
+    if (!attr->pmsi_tunnel_id_raw)
+      return SUCCESS;
+
+    memcpy(attr->pmsi_tunnel_id_raw, "0x", 2);
+    off = 2;
+    for (i = 0; i < cap; i++) {
+      snprintf(attr->pmsi_tunnel_id_raw + off, 3, "%02x", p[5 + i]);
+      off += 2;
+    }
+    attr->pmsi_tunnel_id_raw[off] = '\0';
+  }
+
+  return SUCCESS;
+}
+
+/* RFC 9012 BGP Tunnel Encapsulation attribute (optional transitive, type 23) */
+#define BGP_TUNNEL_ENCAP_SUB_EGRESS	6
+#define BGP_TUNNEL_ENCAP_SUB_ENCAP	1
+
+#define BGP_TUNNEL_BUF_SZ		4096
+
+static const char *
+bgp_tunnel_type_name(u_int16_t t)
+{
+  switch (t) {
+  case 1: return "L2TPv3";
+  case 2: return "GRE";
+  case 3: return "Transmit";
+  case 8: return "VXLAN";
+  case 9: return "NVGRE";
+  case 11: return "MPLS-in-GRE";
+  default: return "tunnel";
+  }
+}
+
+static void
+bgp_tunnel_encap_append(char *buf, size_t buf_sz, size_t *pos, const char *fmt, ...)
+{
+  va_list ap;
+  int n;
+
+  if (*pos >= buf_sz - 1)
+    return;
+
+  va_start(ap, fmt);
+  n = vsnprintf(buf + *pos, buf_sz - *pos, fmt, ap);
+  va_end(ap);
+
+  if (n > 0 && (size_t) n < buf_sz - *pos)
+    *pos += (size_t) n;
+}
+
+static void
+bgp_tunnel_encap_append_hex(char *buf, size_t buf_sz, size_t *pos, const u_char *p, u_int16_t plen)
+{
+  u_int16_t i;
+
+  for (i = 0; i < plen && *pos + 3 < buf_sz; i++) {
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "%02x", p[i]);
+  }
+}
+
+static void
+bgp_tunnel_encap_vxlan_nvgre(char *buf, size_t buf_sz, size_t *pos, const u_char *sp, u_int16_t slen)
+{
+  u_int8_t fl;
+  unsigned V, M;
+  u_int32_t vni;
+
+  if (slen < 12) {
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "encap=0x");
+    bgp_tunnel_encap_append_hex(buf, buf_sz, pos, sp, slen);
+    return;
+  }
+
+  fl = sp[0];
+  V = (fl >> 7) & 1;
+  M = (fl >> 6) & 1;
+  vni = ((u_int32_t) sp[1] << 16) | ((u_int32_t) sp[2] << 8) | (u_int32_t) sp[3];
+
+  bgp_tunnel_encap_append(buf, buf_sz, pos, "encap(");
+  if (V)
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "vni=%u", vni);
+  if (M) {
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "%sdmac=%02x:%02x:%02x:%02x:%02x:%02x",
+			    V ? "," : "",
+			    sp[4], sp[5], sp[6], sp[7], sp[8], sp[9]);
+  }
+  bgp_tunnel_encap_append(buf, buf_sz, pos, ")");
+}
+
+static void
+bgp_tunnel_encap_egress(char *buf, size_t buf_sz, size_t *pos, const u_char *sp, u_int16_t slen)
+{
+  char addr[INET6_ADDRSTRLEN];
+  u_int16_t afi;
+
+  if (slen == 6) {
+    bgp_tunnel_encap_append(buf, buf_sz, pos, "egress=nexthop");
+    return;
+  }
+
+  if (slen < 10) goto hex_dump;
+
+  afi = ntohs(*(u_int16_t *) (sp + 4));
+
+  if (afi == 1 && slen >= 10) {
+    struct in_addr a;
+
+    memcpy(&a.s_addr, sp + 6, sizeof(a.s_addr));
+    if (inet_ntop(AF_INET, &a, addr, sizeof(addr)))
+      bgp_tunnel_encap_append(buf, buf_sz, pos, "egress=%s", addr);
+    return;
+  }
+
+  if (afi == 2 && slen >= 22) {
+    struct in6_addr a6;
+
+    memcpy(&a6, sp + 6, 16);
+    if (inet_ntop(AF_INET6, &a6, addr, sizeof(addr)))
+      bgp_tunnel_encap_append(buf, buf_sz, pos, "egress=%s", addr);
+    return;
+  }
+
+hex_dump:
+  bgp_tunnel_encap_append(buf, buf_sz, pos, "egress=0x");
+  bgp_tunnel_encap_append_hex(buf, buf_sz, pos, sp, slen);
+}
+
+int
+bgp_attr_parse_tunnel_encap(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
+{
+  u_char *p = (u_char *) ptr;
+  u_int16_t rem = len;
+  char buf[BGP_TUNNEL_BUF_SZ];
+  size_t pos = 0;
+  int first_tlv = 1;
+
+  (void) peer;
+  (void) flag;
+
+  if (attr->tunnel_encap) {
+    free(attr->tunnel_encap);
+    attr->tunnel_encap = NULL;
+  }
+
+  buf[0] = '\0';
+
+  while (rem >= 4) {
+    u_int16_t tunnel_type = ntohs(*(u_int16_t *) p);
+    u_int16_t tlv_len;
+    u_char *val;
+    u_int16_t srem;
+    u_char *sp;
+
+    p += 2;
+    rem -= 2;
+    tlv_len = ntohs(*(u_int16_t *) p);
+    p += 2;
+    rem -= 2;
+
+    if (tlv_len > rem)
+      break;
+
+    val = p;
+
+    if (!first_tlv && pos < BGP_TUNNEL_BUF_SZ - 2)
+      bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, " ");
+    first_tlv = 0;
+
+    bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "TLV%u(%s)", tunnel_type, bgp_tunnel_type_name(tunnel_type));
+
+    /* Sub-TLVs (RFC 9012 §2) */
+    sp = val;
+    srem = tlv_len;
+
+    while (srem >= 2) {
+      u_int8_t stype = sp[0];
+      u_int16_t slen;
+      u_int16_t hdr;
+      u_char *sub_val;
+
+      if (stype <= 127) {
+	if (srem < 2)
+	  break;
+	slen = sp[1];
+	hdr = 2;
+      }
+      else {
+	if (srem < 3)
+	  break;
+	slen = ((u_int16_t) sp[1] << 8) | sp[2];
+	hdr = 3;
+      }
+
+      if ((u_int32_t) hdr + (u_int32_t) slen > srem)
+	break;
+
+      sub_val = sp + hdr;
+
+      bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "{");
+
+      if (stype == BGP_TUNNEL_ENCAP_SUB_EGRESS)
+	bgp_tunnel_encap_egress(buf, BGP_TUNNEL_BUF_SZ, &pos, sub_val, slen);
+      else if (stype == BGP_TUNNEL_ENCAP_SUB_ENCAP) {
+	if (tunnel_type == 8 || tunnel_type == 9)
+	  bgp_tunnel_encap_vxlan_nvgre(buf, BGP_TUNNEL_BUF_SZ, &pos, sub_val, slen);
+	else {
+	  bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "encap=0x");
+	  bgp_tunnel_encap_append_hex(buf, BGP_TUNNEL_BUF_SZ, &pos, sub_val, slen);
+	}
+      }
+      else {
+	bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "sub%u=0x", stype);
+	bgp_tunnel_encap_append_hex(buf, BGP_TUNNEL_BUF_SZ, &pos, sub_val, slen);
+      }
+
+      bgp_tunnel_encap_append(buf, BGP_TUNNEL_BUF_SZ, &pos, "}");
+
+      srem -= hdr + slen;
+      sp += hdr + slen;
+    }
+
+    p += tlv_len;
+    rem -= tlv_len;
+  }
+
+  if (pos > 0)
+    attr->tunnel_encap = strdup(buf);
+
+  return SUCCESS;
+}
+
+#if defined(WITH_JANSSON)
+static void
+bgp_unknown_path_attr_append(struct bgp_msg_data *bmd, u_int8_t attr_type,
+			     const u_char *data, u_int16_t attr_len)
+{
+  json_t *arr, *obj;
+  char *hex;
+  size_t cap, i, off;
+
+  if (!bmd || !config.bmp_daemon_msglog_evpn_raw_msg)
+    return;
+
+  cap = attr_len;
+  if (cap > 4096)
+    cap = 4096;
+
+  hex = malloc(3 + (size_t)cap * 2 + 1);
+  if (!hex)
+    return;
+
+  memcpy(hex, "0x", 2);
+  off = 2;
+  for (i = 0; i < cap; i++) {
+    snprintf(hex + off, 3, "%02x", data[i]);
+    off += 2;
+  }
+  hex[off] = '\0';
+
+  arr = (json_t *) bmd->unknown_path_attrs;
+  if (!arr) {
+    arr = json_array();
+    if (!arr) {
+      free(hex);
+      return;
+    }
+    bmd->unknown_path_attrs = arr;
+  }
+
+  obj = json_object();
+  if (!obj) {
+    free(hex);
+    return;
+  }
+  json_object_set_new_nocheck(obj, "tlv", json_integer(attr_type));
+  json_object_set_new_nocheck(obj, "hex_dump_tlv_data", json_string(hex));
+  free(hex);
+
+  json_array_append_new(arr, obj);
+}
+#endif
+
 /* BGP UPDATE Attribute parsing */
 int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra,
-		   char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
+		   char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw,
+		   struct bgp_msg_data *bmd)
 {
   struct bgp_misc_structs *bms;
   char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -943,9 +1383,20 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     case BGP_ATTR_OTC:
       ret = bgp_attr_parse_otc(peer, attr_len, attr_extra, ptr, flag);
       break;
+    case BGP_ATTR_PMSI_TUNNEL:
+      ret = bgp_attr_parse_pmsi_tunnel(peer, attr_len, attr, ptr, flag);
+      break;
     case BGP_ATTR_BGP_LS:
       ret = bgp_attr_parse_ls(peer, attr_len, attr_extra, (u_char *)ptr, flag);
+      break;
+    case BGP_ATTR_TUNNEL_ENCAPSULATION:
+      ret = bgp_attr_parse_tunnel_encap(peer, attr_len, attr, ptr, flag);
+      break;
     default:
+#if defined(WITH_JANSSON)
+      if (bmd && peer->type == FUNC_TYPE_BMP && config.bmp_daemon_msglog_evpn_raw_msg)
+	bgp_unknown_path_attr_append(bmd, type, (u_char *)ptr, attr_len);
+#endif
       ret = 0;
       break;
     }
@@ -1206,6 +1657,270 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
   end = info->length;
 
   for (idx = 0; pnt < lim; pnt += psize, idx++) {
+    /* NLRI-scoped extras: clear before parsing each NLRI element. */
+    attr_extra->path_id = 0;
+    attr_extra->evpn_route_type = 0;
+    memset(attr_extra->evpn_rd, 0, sizeof(attr_extra->evpn_rd));
+    memset(attr_extra->evpn_esi, 0, sizeof(attr_extra->evpn_esi));
+    attr_extra->evpn_eth_tag = 0;
+    attr_extra->evpn_mac_len = 0;
+    memset(attr_extra->evpn_mac, 0, sizeof(attr_extra->evpn_mac));
+    attr_extra->evpn_ip_len = 0;
+    memset(attr_extra->evpn_ip, 0, sizeof(attr_extra->evpn_ip));
+    memset(attr_extra->evpn_prefix, 0, sizeof(attr_extra->evpn_prefix));
+    memset(attr_extra->evpn_gw_ip, 0, sizeof(attr_extra->evpn_gw_ip));
+    memset(attr_extra->evpn_originator_ip, 0, sizeof(attr_extra->evpn_originator_ip));
+    memset(attr_extra->evpn_label, 0, sizeof(attr_extra->evpn_label));
+
+    if (info->afi == AFI_L2VPN && info->safi == SAFI_EVPN) {
+      u_int8_t route_type = 0, route_len = 0;
+      u_int8_t *route_ptr = NULL;
+      int route_bytes = 0;
+      int evpn_has_path_id = FALSE;
+
+      if (end < 2) goto exit_fail_lane;
+
+      /*
+         EVPN may carry ADD-PATH IDs. Some peers/sessions can expose
+         capability-state mismatches in BMP contexts, so first parse
+         without path-id and then fall back to with path-id if needed.
+      */
+      route_type = pnt[0];
+      route_len = pnt[1];
+      /* EVPN route_len is encoded in octets (not bits). */
+      route_bytes = route_len;
+
+      if ((route_type < 1 || route_type > 5 || route_bytes > (end - 2)) && end >= 6) {
+        u_int8_t rt2 = pnt[4];
+        u_int8_t rl2 = pnt[5];
+        int rb2 = rl2;
+
+        if (rt2 >= 1 && rt2 <= 5 && rb2 <= (end - 6)) {
+          evpn_has_path_id = TRUE;
+          memcpy(&attr_extra->path_id, pnt, 4);
+          attr_extra->path_id = ntohl(attr_extra->path_id);
+          pnt += 4;
+          end -= 4;
+
+          route_type = pnt[0];
+          route_len = pnt[1];
+          route_bytes = route_len;
+        }
+      }
+      else if (peer->cap_add_paths.cap[info->afi][info->safi] && end >= 6) {
+        /*
+           Capability says ADD-PATH; consume path-id when route header
+           still validates afterwards.
+        */
+        u_int8_t rt2 = pnt[4];
+        u_int8_t rl2 = pnt[5];
+        int rb2 = rl2;
+
+        if (rt2 >= 1 && rt2 <= 5 && rb2 <= (end - 6)) {
+          evpn_has_path_id = TRUE;
+          memcpy(&attr_extra->path_id, pnt, 4);
+          attr_extra->path_id = ntohl(attr_extra->path_id);
+          pnt += 4;
+          end -= 4;
+
+          route_type = pnt[0];
+          route_len = pnt[1];
+          route_bytes = route_len;
+        }
+      }
+
+      if (route_bytes > (end - 2)) goto exit_fail_lane;
+      route_ptr = pnt + 2;
+      psize = route_bytes + 2; /* route_type + route_len + route payload */
+      attr_extra->evpn_route_type = route_type;
+      /* Initial EVPN support: parse route-type specific fields for BMP JSON output. */
+      if (route_bytes >= 8) {
+        (void) evpn_parse_rd_to_str(route_ptr, attr_extra->evpn_rd, sizeof(attr_extra->evpn_rd));
+      }
+
+      if (route_type == 1) { /* Ethernet Auto-Discovery Route */
+        if (route_bytes >= 8 + 10 + 4 + 1) {
+          u_int8_t ip_len = route_ptr[22];
+          int ip_bytes = ip_len / 8;
+
+          evpn_esi_to_str(route_ptr + 8, attr_extra->evpn_esi, sizeof(attr_extra->evpn_esi));
+          memcpy(&tmp32, route_ptr + 18, 4);
+          attr_extra->evpn_eth_tag = ntohl(tmp32);
+
+          if (((ip_len == 32) || (ip_len == 128)) && ip_len % 8 == 0 &&
+              (23 + ip_bytes) <= route_bytes) {
+            attr_extra->evpn_ip_len = ip_len;
+            (void) evpn_addr_to_str(route_ptr + 23, ip_len, attr_extra->evpn_originator_ip,
+                                    sizeof(attr_extra->evpn_originator_ip));
+          }
+
+        }
+      }
+      else if (route_type == 2) { /* MAC/IP Advertisement Route */
+        if (route_bytes >= 8 + 10 + 4 + 1 + 1) {
+          int off = 8 + 10 + 4; /* RD + ESI + Ethernet Tag */
+          u_int8_t mac_len = route_ptr[off];
+          int mac_bytes = mac_len / 8;
+          u_int8_t ip_len = 0;
+          int ip_bytes = 0;
+          int labels_off = 0;
+
+          evpn_esi_to_str(route_ptr + 8, attr_extra->evpn_esi, sizeof(attr_extra->evpn_esi));
+          memcpy(&tmp32, route_ptr + 18, 4);
+          attr_extra->evpn_eth_tag = ntohl(tmp32);
+          attr_extra->evpn_mac_len = mac_len;
+
+          if ((mac_len % 8) == 0 && mac_bytes > 0 && mac_bytes <= 6 &&
+              (off + 1 + mac_bytes + 1) <= route_bytes) {
+            u_int8_t *mac_ptr = route_ptr + off + 1;
+            ip_len = route_ptr[off + 1 + mac_bytes];
+            ip_bytes = ip_len / 8;
+            attr_extra->evpn_ip_len = ip_len;
+
+            snprintf(attr_extra->evpn_mac, sizeof(attr_extra->evpn_mac),
+                     "%02x:%02x:%02x:%02x:%02x:%02x",
+                     mac_ptr[0], mac_ptr[1], mac_ptr[2], mac_ptr[3], mac_ptr[4], mac_ptr[5]);
+
+            if (((ip_len == 32) || (ip_len == 128)) && ip_len % 8 == 0 &&
+                (off + 1 + mac_bytes + 1 + ip_bytes) <= route_bytes) {
+              (void) evpn_addr_to_str(route_ptr + off + 1 + mac_bytes + 1, ip_len, attr_extra->evpn_ip,
+                                      sizeof(attr_extra->evpn_ip));
+            }
+
+            labels_off = off + 1 + mac_bytes + 1 + ip_bytes;
+            if ((labels_off + 3) <= route_bytes) {
+              bgp_label2str(attr_extra->evpn_label, route_ptr + labels_off);
+            }
+          }
+        }
+      }
+      else if (route_type == 3) { /* Inclusive Multicast Ethernet Tag Route */
+        if (route_bytes >= 8 + 4 + 1) {
+          u_int8_t ip_len = route_ptr[12];
+          int ip_bytes = ip_len / 8;
+          memcpy(&tmp32, route_ptr + 8, 4);
+          attr_extra->evpn_eth_tag = ntohl(tmp32);
+          attr_extra->evpn_ip_len = ip_len;
+
+          if (((ip_len == 32) || (ip_len == 128)) && ip_len % 8 == 0 &&
+              (13 + ip_bytes) <= route_bytes) {
+            (void) evpn_addr_to_str(route_ptr + 13, ip_len, attr_extra->evpn_originator_ip,
+                                    sizeof(attr_extra->evpn_originator_ip));
+          }
+        }
+      }
+      else if (route_type == 4) { /* Ethernet Segment Route */
+        if (route_bytes >= 8 + 10 + 1) {
+          u_int8_t ip_len = route_ptr[18];
+          int ip_bytes = ip_len / 8;
+          evpn_esi_to_str(route_ptr + 8, attr_extra->evpn_esi, sizeof(attr_extra->evpn_esi));
+          attr_extra->evpn_ip_len = ip_len;
+
+          if (((ip_len == 32) || (ip_len == 128)) && ip_len % 8 == 0 &&
+              (19 + ip_bytes) <= route_bytes) {
+            (void) evpn_addr_to_str(route_ptr + 19, ip_len, attr_extra->evpn_originator_ip,
+                                    sizeof(attr_extra->evpn_originator_ip));
+          }
+        }
+      }
+      else if (route_type == 5) { /* IP Prefix Route */
+        if (route_bytes >= 8 + 10 + 4 + 1) {
+          int off = 8 + 10 + 4;
+          u_int8_t prefix_len = route_ptr[off];
+          int prefix_bytes = (prefix_len + 7) / 8;
+          int rem = route_bytes - (off + 1);
+          int gw_bytes = 0, family = AF_INET;
+
+          evpn_esi_to_str(route_ptr + 8, attr_extra->evpn_esi, sizeof(attr_extra->evpn_esi));
+          memcpy(&tmp32, route_ptr + 18, 4);
+          attr_extra->evpn_eth_tag = ntohl(tmp32);
+
+          if (prefix_len > 32) family = AF_INET6;
+          if (prefix_bytes <= rem && rem >= (prefix_bytes + 3)) {
+            u_char prefix_buf[16];
+            char prefix_ip[INET6_ADDRSTRLEN];
+
+            memset(prefix_buf, 0, sizeof(prefix_buf));
+            memset(prefix_ip, 0, sizeof(prefix_ip));
+            memcpy(prefix_buf, route_ptr + off + 1, prefix_bytes);
+
+            if (family == AF_INET) {
+              struct in_addr ip4;
+              memcpy(&ip4, prefix_buf, sizeof(ip4));
+              inet_ntop(AF_INET, &ip4, prefix_ip, sizeof(prefix_ip));
+            }
+            else {
+              struct in6_addr ip6;
+              memcpy(&ip6, prefix_buf, sizeof(ip6));
+              inet_ntop(AF_INET6, &ip6, prefix_ip, sizeof(prefix_ip));
+            }
+
+            snprintf(attr_extra->evpn_prefix, sizeof(attr_extra->evpn_prefix), "%s/%u",
+                     prefix_ip, prefix_len);
+
+            gw_bytes = rem - prefix_bytes - 3;
+            if (gw_bytes == 4 || gw_bytes == 16) {
+              (void) evpn_addr_to_str(route_ptr + off + 1 + prefix_bytes, (gw_bytes == 4 ? 32 : 128),
+                                      attr_extra->evpn_gw_ip, sizeof(attr_extra->evpn_gw_ip));
+            }
+
+            if ((off + 1 + prefix_bytes + gw_bytes + 3) <= route_bytes) {
+              bgp_label2str(attr_extra->evpn_label, route_ptr + off + 1 + prefix_bytes + gw_bytes);
+            }
+          }
+        }
+      }
+
+      if (config.debug) {
+        bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+        Log(LOG_DEBUG,
+            "DEBUG ( %s/%s ): [%s] parsed EVPN NLRI route_type=%u route_len_bits=%u%s%s%s%s\n",
+            config.name, bms->log_str, bgp_peer_str, route_type, route_len,
+            attr_extra->evpn_mac[0] ? " mac=" : "", attr_extra->evpn_mac[0] ? attr_extra->evpn_mac : "",
+            attr_extra->evpn_ip[0] ? " ip=" : "", attr_extra->evpn_ip[0] ? attr_extra->evpn_ip : "");
+        if (evpn_has_path_id) {
+          Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] EVPN ADD-PATH path_id=%u\n",
+              config.name, bms->log_str, bgp_peer_str, attr_extra->path_id);
+        }
+      }
+
+      /*
+         Avoid unsupported AFI indexing paths until EVPN RIB storage is implemented.
+         For now, emit EVPN records via msglog only.
+      */
+      if (bms->msglog_backend_methods) {
+        struct bgp_info ri_local;
+        char event_type[] = "log";
+
+        memset(&ri_local, 0, sizeof(struct bgp_info));
+        ri_local.peer = peer;
+
+        if (attr) {
+          ri_local.attr = bgp_attr_intern(peer, attr);
+        }
+
+        ri_local.attr_extra = bgp_attr_extra_new(&ri_local);
+        if (ri_local.attr_extra) {
+          memcpy(ri_local.attr_extra, attr_extra, sizeof(struct bgp_attr_extra));
+        }
+
+        bgp_peer_log_msg(NULL, &ri_local, info->afi, info->safi, bms->tag, event_type,
+                         bms->msglog_output, NULL,
+                         (attr ? BGP_LOG_TYPE_UPDATE : BGP_LOG_TYPE_WITHDRAW), bmd);
+
+        if (ri_local.attr_extra) {
+          bgp_attr_extra_free(peer, &ri_local.attr_extra);
+        }
+
+        if (ri_local.attr) {
+          bgp_attr_unintern(peer, ri_local.attr);
+        }
+      }
+
+      if (bmd->nlri_count >= 0) bmd->nlri_count++;
+      continue;
+    }
+
     /* handle path identifier */
     if ((info->afi == AFI_IP || info->afi == AFI_IP6) &&
         (info->safi == SAFI_UNICAST || info->safi == SAFI_MULTICAST)) {
@@ -1583,7 +2298,7 @@ log_update:
   {
     char event_type[] = "log";
 
-    bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_UPDATE);
+    bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_UPDATE, bmd);
   }
 
   if (bms->skip_rib) {
@@ -1657,7 +2372,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
   if (ri && bms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_WITHDRAW);
+    bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_WITHDRAW, bmd);
   }
 
   if (!bms->skip_rib) {
