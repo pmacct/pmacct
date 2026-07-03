@@ -40,6 +40,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #define ECOMMUNITY_FORMAT_ROUTE_MAP            0
 #define ECOMMUNITY_FORMAT_COMMUNITY_LIST       1
 #define ECOMMUNITY_FORMAT_DISPLAY              2
+#define ECOMMUNITY_FORMAT_RAW                  3
 
 /* Extended Communities value is eight octet long.  */
 #define ECOMMUNITY_SIZE                        8

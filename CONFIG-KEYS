@@ -1759,7 +1759,7 @@ DEFAULT:        false
 
 KEY:		bgp_comms_num
 DESC:		Defines whether known Standard (ie. "internet") and Extended Communities (ie. "RT")
-		shdould be presented in string or numerical format. By default communities are looked up
+		should be presented in string or numerical format. By default communities are looked up
 		for their name; setting this knob to true disables the feature.
 VALUES:         [ true | false ]
 DEFAULT:        false
