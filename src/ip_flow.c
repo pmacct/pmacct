@@ -44,13 +44,13 @@ u_int32_t flt6_total_nodes;
 time_t flt6_prune_deadline;
 time_t flt6_emergency_prune;
 
-void init_ip_flow_handler()
+void init_ip_flow_handler(void)
 {
   init_ip4_flow_handler();
   init_ip6_flow_handler();
 }
 
-void init_ip4_flow_handler()
+void init_ip4_flow_handler(void)
 {
   int size;
 
@@ -387,7 +387,7 @@ unsigned int is_expired_uni(struct timeval *now, struct ip_flow_common *fp, unsi
   return FALSE;
 }
 
-void init_ip6_flow_handler()
+void init_ip6_flow_handler(void)
 {
   int size;
 

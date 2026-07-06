@@ -33,7 +33,7 @@ struct bgp_misc_structs *rpki_misc_db;
 struct bgp_peer rpki_peer;
 
 /* Functions */
-void rpki_daemon_wrapper()
+void rpki_daemon_wrapper(void)
 {
   /* initialize threads pool */
   rpki_pool = allocate_thread_pool(1);
@@ -46,7 +46,7 @@ void rpki_daemon_wrapper()
   send_to_pool(rpki_pool, rpki_daemon, NULL);
 }
 
-void rpki_prepare_thread()
+void rpki_prepare_thread(void)
 {
   rpki_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_RPKI];
   memset(rpki_misc_db, 0, sizeof(struct bgp_misc_structs));
@@ -56,7 +56,7 @@ void rpki_prepare_thread()
   strcpy(rpki_misc_db->log_str, "core/RPKI");
 }
 
-int rpki_daemon()
+int rpki_daemon(void)
 {
   struct bgp_misc_structs *m_data = rpki_misc_db;
   afi_t afi;
@@ -170,7 +170,7 @@ int rpki_daemon()
   return SUCCESS;
 }
 
-void rpki_roas_file_reload()
+void rpki_roas_file_reload(void)
 {
   struct bgp_table *saved_rib_v4, *saved_rib_v6;
   struct bgp_table *new_rib_v4, *new_rib_v6;

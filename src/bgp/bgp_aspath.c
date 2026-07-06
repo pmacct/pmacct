@@ -236,7 +236,7 @@ assegment_normalise (struct assegment *head)
 }
 
 static struct aspath *
-aspath_new ()
+aspath_new (void)
 {
   struct aspath *aspath;
 
@@ -478,7 +478,7 @@ aspath_count_numas (struct aspath *aspath)
   return num;
 }
 
-char *aspath_make_empty()
+char *aspath_make_empty(void)
 {
   char *str_buf;
 

@@ -70,7 +70,7 @@ struct largebuf_s envbuf;
 time_t now; /* PostgreSQL */
 
 /* Functions */
-void sql_set_signals()
+void sql_set_signals(void)
 {
   signal(SIGINT, sql_exit_gracefully);
   signal(SIGHUP, reload); /* handles reopening of syslog channel */
@@ -80,7 +80,7 @@ void sql_set_signals()
   signal(SIGCHLD, ignore_falling_child);
 }
 
-void sql_set_insert_func()
+void sql_set_insert_func(void)
 {
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
     sql_insert_func = sql_sum_host_insert;
@@ -113,7 +113,7 @@ void sql_init_maps(struct extra_primitives *extras, struct primitives_ptrs *prim
   if (config.tos_file) load_tos(config.tos_file, tost);
 }
 
-void sql_init_global_buffers()
+void sql_init_global_buffers(void)
 {
   memset(sql_data, 0, sizeof(sql_data));
   memset(lock_clause, 0, sizeof(lock_clause));
@@ -3838,7 +3838,7 @@ int sql_select_locking_style(char *lock)
   return PM_LOCK_EXCLUSIVE;
 }
 
-int sql_compose_static_set_event()
+int sql_compose_static_set_event(void)
 {
   int set_primitives=0;
 

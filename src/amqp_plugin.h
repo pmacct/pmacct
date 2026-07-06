@@ -38,7 +38,6 @@
 /* structures */
 
 /* prototypes */
-extern void p_amqp_get_version();
 extern void amqp_plugin(int, struct configuration *, void *);
 extern void amqp_cache_purge(struct chained_cache *[], int, int);
 #ifdef WITH_AVRO

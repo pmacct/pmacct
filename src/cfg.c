@@ -1115,7 +1115,7 @@ int parse_plugin_names(char *filename, int rows, int ignore_names)
 
 /* rough and dirty function to assign default values to
    configuration file of each plugin */
-void set_default_values()
+void set_default_values(void)
 {
   struct plugins_list_entry *list = plugins_list;
 

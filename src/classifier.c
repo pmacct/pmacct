@@ -30,7 +30,7 @@
 struct pkt_classifier *class;
 u_int32_t class_trivial_hash_rnd = 140281;
 
-void init_classifiers()
+void init_classifiers(void)
 {
   int max = pmct_get_num_entries(); 
 
@@ -87,7 +87,7 @@ void pmct_unregister(pm_class_t id)
     memset(&class[id-1], 0, sizeof(struct pkt_classifier)); 
 }
 
-pm_class_t pmct_find_first_free()
+pm_class_t pmct_find_first_free(void)
 {
   int ret, idx = 0, num = pmct_get_num_entries(); 
 
@@ -108,7 +108,7 @@ pm_class_t pmct_find_first_free()
   return 0;
 }
 
-pm_class_t pmct_find_last_free()
+pm_class_t pmct_find_last_free(void)
 {
   int ret, idx = pmct_get_num_entries(); 
 
@@ -152,7 +152,7 @@ int pmct_get(pm_class_t id, struct pkt_classifier *css)
   }
 }
 
-int pmct_get_num_entries()
+int pmct_get_num_entries(void)
 {
   if (config.classifier_table_num) return config.classifier_table_num;
   else return MAX_CLASSIFIERS;

@@ -42,7 +42,7 @@ u_int32_t ipft6_total_nodes;
 time_t prune_deadline6;
 time_t emergency_prune6;
 
-void enable_ip_fragment_handler()
+void enable_ip_fragment_handler(void)
 {
   if (!config.handle_fragments) {
     config.handle_fragments = TRUE;
@@ -50,13 +50,13 @@ void enable_ip_fragment_handler()
   }
 }
 
-void init_ip_fragment_handler()
+void init_ip_fragment_handler(void)
 {
   init_ip4_fragment_handler();
   init_ip6_fragment_handler();
 }
 
-void init_ip4_fragment_handler()
+void init_ip4_fragment_handler(void)
 {
   if (config.frag_bufsz) ipft_total_nodes = config.frag_bufsz / sizeof(struct ip_fragment);
   else ipft_total_nodes = DEFAULT_FRAG_BUFFER_SIZE / sizeof(struct ip_fragment); 
@@ -299,7 +299,7 @@ void notify_orphan_fragment(struct ip_fragment *frag)
 		  config.name, src_host, dst_host, frag->ip_p, id);
 }
 
-void init_ip6_fragment_handler()
+void init_ip6_fragment_handler(void)
 {
   if (config.frag_bufsz) ipft6_total_nodes = config.frag_bufsz / sizeof(struct ip6_fragment);
   else ipft6_total_nodes = DEFAULT_FRAG_BUFFER_SIZE / sizeof(struct ip6_fragment);

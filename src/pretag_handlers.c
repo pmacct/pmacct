@@ -3739,7 +3739,7 @@ int custom_primitives_map_semantics_handler(char *filename, struct id_entry *e, 
   return FALSE;
 }
 
-void custom_primitives_map_initialize()
+void custom_primitives_map_initialize(void)
 {
   custom_primitives_type = (COUNT_INDEX_CP | 0x1);
 }

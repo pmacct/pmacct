@@ -590,7 +590,7 @@ int SQLI_evaluate_history(int primitive)
   return primitive;
 }
 
-int SQLI_compose_static_queries()
+int SQLI_compose_static_queries(void)
 {
   int primitives=0, set_primitives=0, set_event_primitives=0, have_flows=0;
 
@@ -786,7 +786,7 @@ void SQLI_init_default_values(struct insert_data *idata)
   if (config.sql_locking_style) idata->locks = sql_select_locking_style(config.sql_locking_style);
 }
 
-void SQLI_sqlite3_get_version()
+void SQLI_sqlite3_get_version(void)
 {
   printf("sqlite3 %s\n", sqlite3_libversion());
 }

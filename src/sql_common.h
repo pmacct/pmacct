@@ -337,12 +337,12 @@ extern void count_noop_setclause_handler(const struct db_cache *, struct insert_
 extern void count_noop_setclause_event_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 
 /* Toward a common SQL layer */
-extern void sql_set_signals();
-extern void sql_set_insert_func();
+extern void sql_set_signals(void);
+extern void sql_set_insert_func(void);
 extern void sql_init_maps(struct extra_primitives *, struct primitives_ptrs *,
 			  struct networks_table *, struct networks_cache *,
 			  struct ports_table *, struct protos_table *, struct protos_table *);
-extern void sql_init_global_buffers();
+extern void sql_init_global_buffers(void);
 extern void sql_init_default_values(struct extra_primitives *);
 extern void sql_init_historical_acct(time_t, struct insert_data *);
 extern void sql_init_triggers(time_t, struct insert_data *);
@@ -367,7 +367,7 @@ extern void sql_create_table(struct DBdesc *, time_t *, struct primitives_ptrs *
 extern void sql_invalidate_shadow_entries(struct db_cache *[], int *);
 extern int sql_select_locking_style(char *);
 extern int sql_compose_static_set(int); 
-extern int sql_compose_static_set_event(); 
+extern int sql_compose_static_set_event(void);
 extern void primptrs_set_all_from_db_cache(struct primitives_ptrs *, struct db_cache *);
 extern void sql_set_stitch(struct db_cache *, struct pkt_data *, struct insert_data *);
 extern void sql_update_stitch(struct db_cache *, struct pkt_data *, struct insert_data *);

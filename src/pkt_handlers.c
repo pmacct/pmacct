@@ -114,7 +114,7 @@ void warn_unsupported_packet_handler(u_int64_t primitive, u_int64_t tool)
   }
 }
 
-void evaluate_packet_handlers()
+void evaluate_packet_handlers(void)
 {
   int primitives = 0, index = 0;
 
@@ -6733,7 +6733,7 @@ void SF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 }
 
 #if defined WITH_GEOIPV2
-void pm_geoipv2_init()
+void pm_geoipv2_init(void)
 {
   int status;
 
@@ -6751,7 +6751,7 @@ void pm_geoipv2_init()
   }
 }
 
-void pm_geoipv2_close()
+void pm_geoipv2_close(void)
 {
   if (config.geoipv2_file) MMDB_close(&config.geoipv2_db);
 }

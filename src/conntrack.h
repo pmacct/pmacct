@@ -63,7 +63,7 @@ struct conntrack_ipv6 {
   struct conntrack_ipv6 *next;
 };
 
-extern void init_conntrack_table();
+extern void init_conntrack_table(void);
 extern void conntrack_ftp_helper(time_t, struct packet_ptrs *);
 extern void conntrack_sip_helper(time_t, struct packet_ptrs *);
 extern void conntrack_rtsp_helper(time_t, struct packet_ptrs *);

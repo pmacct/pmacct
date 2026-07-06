@@ -644,7 +644,7 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
 }
 
 #if defined WITH_RABBITMQ
-void telemetry_daemon_msglog_init_amqp_host()
+void telemetry_daemon_msglog_init_amqp_host(void)
 {
   p_amqp_init_host(&telemetry_daemon_msglog_amqp_host);
 
@@ -671,7 +671,7 @@ void telemetry_daemon_msglog_init_amqp_host()
   P_broker_timers_set_retry_interval(&telemetry_daemon_msglog_amqp_host.btimers, config.telemetry_msglog_amqp_retry);
 }
 #else
-void telemetry_daemon_msglog_init_amqp_host()
+void telemetry_daemon_msglog_init_amqp_host(void)
 {
 }
 #endif
@@ -710,7 +710,7 @@ void telemetry_dump_init_amqp_host(void *tdkh)
 #endif
 
 #if defined WITH_KAFKA
-int telemetry_daemon_msglog_init_kafka_host()
+int telemetry_daemon_msglog_init_kafka_host(void)
 {
   int ret;
 
@@ -731,7 +731,7 @@ int telemetry_daemon_msglog_init_kafka_host()
   return ret;
 }
 #else
-int telemetry_daemon_msglog_init_kafka_host()
+int telemetry_daemon_msglog_init_kafka_host(void)
 {
   return ERR;
 }

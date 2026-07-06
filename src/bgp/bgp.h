@@ -414,12 +414,12 @@ struct bgp_lg_rep_gp_data {
 #include "bgp_ls.h"
 
 /* prototypes */
-extern void bgp_daemon_wrapper();
-extern int skinny_bgp_daemon();
-extern void skinny_bgp_daemon_online();
-extern void bgp_prepare_thread();
-extern void bgp_prepare_daemon();
-extern void bgp_daemon_msglog_prepare_sd_schemas();
+extern void bgp_daemon_wrapper(void);
+extern int skinny_bgp_daemon(void);
+extern void skinny_bgp_daemon_online(void);
+extern void bgp_prepare_thread(void);
+extern void bgp_prepare_daemon(void);
+extern void bgp_daemon_msglog_prepare_sd_schemas(void);
 extern void bgp_tag_clear(bgp_tag_t *);
 extern void bgp_tag_init_find(struct bgp_peer *, struct sockaddr *, struct bgp_info *, bgp_tag_t *, int);
 extern int bgp_tag_find(struct id_table *, bgp_tag_t *, pm_id_t *, pm_id_t *);

@@ -34,7 +34,7 @@ thread_pool_t *bgp_lg_pool;
 char bgp_lg_default_ip[] = "127.0.0.1";
 
 #if defined WITH_ZMQ
-void bgp_lg_wrapper()
+void bgp_lg_wrapper(void)
 {
   /* initialize variables */
   if (!config.bgp_lg_ip) config.bgp_lg_ip = bgp_lg_default_ip;
@@ -50,7 +50,7 @@ void bgp_lg_wrapper()
   send_to_pool(bgp_lg_pool, bgp_lg_daemon, NULL);
 }
 
-int bgp_lg_daemon()
+int bgp_lg_daemon(void)
 {
   char inproc_str[] = "inproc://lg_host_backend", log_id[SHORTBUFLEN];
   struct p_zmq_host lg_host;

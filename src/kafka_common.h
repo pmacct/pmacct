@@ -85,7 +85,7 @@ extern int p_kafka_get_content_type(struct p_kafka_host *);
 extern int p_kafka_get_partition(struct p_kafka_host *);
 extern void p_kafka_set_dynamic_partitioner(struct p_kafka_host *);
 extern char *p_kafka_get_key(struct p_kafka_host *);
-extern void p_kafka_get_version();
+extern void p_kafka_get_version(void);
 
 extern void p_kafka_unset_topic(struct p_kafka_host *);
 

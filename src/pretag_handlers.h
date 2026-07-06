@@ -154,7 +154,7 @@ extern int custom_primitives_map_packet_ptr_handler(char *, struct id_entry *, c
 extern int custom_primitives_map_field_type_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 extern int custom_primitives_map_len_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 extern int custom_primitives_map_semantics_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-extern void custom_primitives_map_initialize();
+extern void custom_primitives_map_initialize(void);
 extern void custom_primitives_map_validate(char *, struct plugin_requests *);
 
 extern int pretag_dummy_ip_handler(struct packet_ptrs *, void *, void *);

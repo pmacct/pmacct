@@ -82,9 +82,9 @@ extern struct ip6_fragment *ipft6[IPFT_HASHSZ];
 extern struct lru_l6 lru_list6;
 
 /* prototypes */
-extern void enable_ip_fragment_handler();
-extern void init_ip_fragment_handler(); /* wrapper */ 
-extern void init_ip4_fragment_handler(); 
+extern void enable_ip_fragment_handler(void);
+extern void init_ip_fragment_handler(void); /* wrapper */
+extern void init_ip4_fragment_handler(void);
 extern int ip_fragment_handler(struct packet_ptrs *); 
 extern int find_fragment(u_int32_t, struct packet_ptrs *); 
 extern int create_fragment(u_int32_t, struct ip_fragment *, u_int8_t, unsigned int, struct packet_ptrs *); 
@@ -92,7 +92,7 @@ extern unsigned int hash_fragment(u_int16_t, u_int32_t, u_int32_t, u_int8_t);
 extern void prune_old_fragments(u_int32_t, u_int32_t); 
 extern void notify_orphan_fragment(struct ip_fragment *);
 
-extern void init_ip6_fragment_handler();
+extern void init_ip6_fragment_handler(void);
 extern int ip6_fragment_handler(struct packet_ptrs *, struct ip6_frag *);
 extern unsigned int hash_fragment6(u_int32_t, struct in6_addr *, struct in6_addr *);
 extern int find_fragment6(u_int32_t, struct packet_ptrs *, struct ip6_frag *);

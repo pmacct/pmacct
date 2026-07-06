@@ -81,7 +81,7 @@ int bmp_ha_msglog_init_kafka_host(void)
   return ret;
 }
 
-int bgp_ha_msglog_init_kafka_host()
+int bgp_ha_msglog_init_kafka_host(void)
 {
   int ret;
 
@@ -289,7 +289,7 @@ bool bmp_bgp_ha_redis_check_daemon_state(struct p_redis_host *redis_host)
 }
 
 /* Update timestamp with current time */
-void updateLocalTimestamp() {
+void updateLocalTimestamp(void) {
     struct timeval current_time;
     gettimeofday(&current_time, NULL);
     snprintf(timestamp_local, sizeof(timestamp_local), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec);

@@ -35,7 +35,7 @@ extern "C" {
 
 int plugin_init(const char *configFile);
 
-int plugin_destroy();
+int plugin_destroy(void);
 
 int output_init(const char *date, int append);
 
@@ -48,11 +48,11 @@ int print(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
 	  u_int32_t tcp_flags, struct timeval *basetime,
 	  struct pkt_stitching *stitch);
 
-int output_flush();
+int output_flush(void);
 
-int output_close();
+int output_close(void);
 
-char *get_error_text();
+char *get_error_text(void);
 
 #ifdef __cplusplus
 }

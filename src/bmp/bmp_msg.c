@@ -1374,7 +1374,7 @@ void bmp_stats_cnt_get_afi_safi_data64(char **bmp_packet, u_int32_t *pkt_size, a
   }
 }
 
-cdada_map_t *bmp_groups_create()
+cdada_map_t *bmp_groups_create(void)
 {
   return cdada_map_create(uint16_t);
 }

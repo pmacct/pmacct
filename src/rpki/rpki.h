@@ -194,10 +194,10 @@ struct rpki_rtr_handle {
 #include "rpki_util.h"
 
 /* prototypes */
-extern void rpki_daemon_wrapper();
-extern void rpki_prepare_thread();
-extern int rpki_daemon();
-extern void rpki_roas_file_reload();
+extern void rpki_daemon_wrapper(void);
+extern void rpki_prepare_thread(void);
+extern int rpki_daemon(void);
+extern void rpki_roas_file_reload(void);
 
 /* global variables */
 extern struct bgp_rt_structs *rpki_roa_db;

@@ -49,7 +49,7 @@ bgp_tag_t bmp_logdump_tag;
 struct sockaddr_storage bmp_logdump_tag_peer;
 
 /* Functions */
-void bmp_daemon_wrapper()
+void bmp_daemon_wrapper(void)
 {
   /* initialize variables */
   if (!config.bmp_daemon_port) config.bmp_daemon_port = BMP_TCP_PORT;
@@ -64,7 +64,7 @@ void bmp_daemon_wrapper()
   send_to_pool(bmp_pool, skinny_bmp_daemon, NULL);
 }
 
-int skinny_bmp_daemon()
+int skinny_bmp_daemon(void)
 {
   int ret, rc, peers_idx, allowed, yes=1, do_term;
   int peers_idx_rr = 0, max_peers_idx = 0;
@@ -1074,7 +1074,7 @@ int skinny_bmp_daemon()
   return SUCCESS;
 }
 
-void bmp_prepare_thread()
+void bmp_prepare_thread(void)
 {
   bmp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BMP];
   memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
@@ -1092,7 +1092,7 @@ void bmp_prepare_thread()
   strcpy(bmp_misc_db->log_str, "core/BMP");
 }
 
-void bmp_prepare_daemon()
+void bmp_prepare_daemon(void)
 {
   bmp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BMP];
   memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
@@ -1110,7 +1110,7 @@ void bmp_prepare_daemon()
   strcpy(bmp_misc_db->log_str, "core");
 }
 
-void bmp_daemon_msglog_prepare_sd_schemas()
+void bmp_daemon_msglog_prepare_sd_schemas(void)
 {
 #ifdef WITH_SERDES
   time_t last_fail = P_broker_timers_get_last_fail(&bmp_daemon_msglog_kafka_host.sd_schema_timers);

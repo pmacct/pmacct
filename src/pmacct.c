@@ -35,10 +35,10 @@ extern char *strptime(const char *s, const char *format, struct tm *tm);
 
 /* prototypes */
 int Recv(int, unsigned char **);
-void print_ex_options_error();
-void write_status_header_formatted();
-void write_status_header_csv();
-void write_class_table_header();
+void print_ex_options_error(void);
+void write_status_header_formatted(void);
+void write_status_header_csv(void);
+void write_class_table_header(void);
 char *write_sep(char *, int *);
 int CHECK_Q_TYPE(int);
 int check_data_sizes(struct query_header *, struct pkt_data *);
@@ -158,7 +158,7 @@ void pmc_trim_all_spaces(char *buf)
   }
 }
 
-void print_ex_options_error()
+void print_ex_options_error(void)
 {
   printf("ERROR: -s, -t, -N, -M and -C options are each mutually exclusive.\n\n");
   exit(1);
@@ -622,13 +622,13 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
   }
 }
 
-void write_status_header()
+void write_status_header(void)
 {
   printf("* = element\n\n"); 
   printf("BUCKET\tCHAIN_STATUS\n");
 }
 
-void write_class_table_header()
+void write_class_table_header(void)
 {
   printf("CLASS_ID\tCLASS_NAME\n");
 }

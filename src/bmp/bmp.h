@@ -388,11 +388,11 @@ static const char __attribute__((unused)) *bmp_rib_types[] = {
 #include "bmp_tlv.h"
 
 /* prototypes */
-extern void bmp_daemon_wrapper();
-extern int skinny_bmp_daemon();
-extern void bmp_prepare_thread();
-extern void bmp_prepare_daemon();
-extern void bmp_daemon_msglog_prepare_sd_schemas();
+extern void bmp_daemon_wrapper(void);
+extern int skinny_bmp_daemon(void);
+extern void bmp_prepare_thread(void);
+extern void bmp_prepare_daemon(void);
+extern void bmp_daemon_msglog_prepare_sd_schemas(void);
 
 /* global variables */
 extern struct bmp_peer *bmp_peers;

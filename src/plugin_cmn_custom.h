@@ -27,7 +27,7 @@ struct pm_custom_output {
 	void *lib_handle;
 
 	int (*plugin_init)(const char *);
-	int (*plugin_destroy)();
+	int (*plugin_destroy)(void);
 	int (*output_init)(const char *, int);
 	int (*print)(u_int64_t,
 				 u_int64_t,
@@ -46,9 +46,9 @@ struct pm_custom_output {
 				 u_int8_t,
 				 struct timeval *,
 				 struct pkt_stitching *);
-	int (*output_flush)();
-	int (*output_close)();
-	char* (*get_error_text)();
+	int (*output_flush)(void);
+	int (*output_close)(void);
+	char* (*get_error_text)(void);
 };
 
 /* prototypes */

@@ -64,7 +64,7 @@ extern void bmp_stats_cnt_get_data32(char **, u_int32_t *, u_int32_t *);
 extern void bmp_stats_cnt_get_data64(char **, u_int32_t *, u_int64_t *);
 extern void bmp_stats_cnt_get_afi_safi_data64(char **, u_int32_t *, afi_t *, safi_t *, u_int64_t *);
 
-extern cdada_map_t *bmp_groups_create();
+extern cdada_map_t *bmp_groups_create(void);
 extern void bmp_groups_destroy(cdada_map_t *);
 extern void bmp_group_destroy(const cdada_map_t *, const void *, void *, void *);
 extern int bmp_parse_group_tlv(struct bgp_peer *, cdada_list_t *, const char *, u_int16_t, u_int16_t);

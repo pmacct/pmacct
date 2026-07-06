@@ -544,7 +544,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
   return schema;
 }
 
-avro_schema_t p_avro_schema_build_acct_init()
+avro_schema_t p_avro_schema_build_acct_init(void)
 {
   avro_schema_t schema = avro_schema_record("acct_init", NULL);
 
@@ -556,7 +556,7 @@ avro_schema_t p_avro_schema_build_acct_init()
   return schema;
 }
 
-avro_schema_t p_avro_schema_build_acct_close()
+avro_schema_t p_avro_schema_build_acct_close(void)
 {
   avro_schema_t schema = avro_schema_record("acct_close", NULL);
 

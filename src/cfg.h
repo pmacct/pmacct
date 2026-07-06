@@ -667,7 +667,7 @@ extern int delete_plugin_by_id(int);
 extern struct plugins_list_entry *search_plugin_by_pipe(int);
 extern struct plugins_list_entry *search_plugin_by_pid(pid_t);
 extern void sanitize_cfg(int, char *);
-extern void set_default_values();
+extern void set_default_values(void);
 
 /* global vars */
 extern char *cfg[LARGEBUFLEN], *cfg_cmdline[SRVBUFLEN];

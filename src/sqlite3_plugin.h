@@ -29,7 +29,7 @@ void sqlite3_plugin(int, struct configuration *, void *);
 int SQLI_cache_dbop(struct DBdesc *, struct db_cache *, struct insert_data *);
 void SQLI_cache_purge(struct db_cache *[], int, struct insert_data *);
 int SQLI_evaluate_history(int);
-int SQLI_compose_static_queries();
+int SQLI_compose_static_queries(void);
 void SQLI_Lock(struct DBdesc *);
 void SQLI_Unlock(struct BE_descs *);
 void SQLI_DB_Connect(struct DBdesc *, char *);
@@ -39,7 +39,7 @@ void SQLI_get_errmsg(struct DBdesc *);
 void SQLI_create_backend(struct DBdesc *);
 void SQLI_set_callbacks(struct sqlfunc_cb_registry *);
 void SQLI_init_default_values(struct insert_data *);
-void SQLI_sqlite3_get_version();
+void SQLI_sqlite3_get_version(void);
 
 /* variables */
 extern char sqlite3_db[];

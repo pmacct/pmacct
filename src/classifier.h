@@ -46,15 +46,15 @@ struct pkt_classifier {
    and sfacctd */
 
 /* prototypes */
-extern void init_classifiers();
+extern void init_classifiers(void);
 extern pm_class_t pmct_register(struct pkt_classifier *);
 extern pm_class_t pmct_ndpi_register(struct pkt_classifier *);
 extern void pmct_unregister(pm_class_t);
-extern pm_class_t pmct_find_first_free();
-extern pm_class_t pmct_find_last_free();
+extern pm_class_t pmct_find_first_free(void);
+extern pm_class_t pmct_find_last_free(void);
 extern int pmct_isfree(pm_class_t);
 extern int pmct_get(pm_class_t, struct pkt_classifier *);
-extern int pmct_get_num_entries();
+extern int pmct_get_num_entries(void);
 
 extern struct pkt_classifier *class;
 

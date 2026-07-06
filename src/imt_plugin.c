@@ -571,7 +571,7 @@ void sum_mac_insert(struct primitives_ptrs *prim_ptrs)
 }
 #endif
 
-void free_extra_allocs()
+void free_extra_allocs(void)
 {
   struct acc *acc_elem = NULL;
   unsigned char *elem;
