@@ -2353,10 +2353,16 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	      memset(vrf_name, 0, MAX_VRF_NAME_STR_LEN);
 	      memcpy(vrf_name, (const char *)pkt + tpl->fld[NF9_VRF_NAME].off[0], MIN(tpl->fld[NF9_VRF_NAME].len[0], (MAX_VRF_NAME - 1)));
 
-	      ret = cdada_map_insert(entry->vrf_name_map, &ingress_vrfid, vrf_name);
-              if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS) {
-                Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->vrf_name_map. Exiting.\n", config.name);
+              char *old_vrf_name = NULL;
+              /* Insert or replace the vrf_id -> vrf_name mapping, freeing any
+                 previously stored name for this vrf_id */
+              ret = cdada_map_insert_replace(entry->vrf_name_map, &ingress_vrfid, vrf_name, (void **) &old_vrf_name);
+              if (ret != CDADA_SUCCESS) {
+                Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert/replace in entry->vrf_name_map. Exiting.\n", config.name);
                 exit_gracefully(1);
+              }
+              else {
+                if (old_vrf_name) free(old_vrf_name);
               }
 
               Log(LOG_DEBUG, "DEBUG ( %s/core ): Mapped ingress vrf id %d, to vrf_name %s\n", config.name, ingress_vrfid, vrf_name);
