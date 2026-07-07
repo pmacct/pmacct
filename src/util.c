@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -3164,7 +3164,7 @@ int vlen_prims_delete(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc /*, o
 
 int delete_line_from_file(int index, char *path)
 {
-  int len = strlen(path) + 5;
+  int len = strlen(path) + strlen(".copy") + 1 /* Null */;
   int line_idx;
   char tmpbuf[LARGEBUFLEN];
   char *copy_path;
