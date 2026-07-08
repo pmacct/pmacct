@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -3642,6 +3642,10 @@ void NF_evaluate_flow_type(struct flow_chars *flow_type, struct template_cache_e
                tpl->fld[NF9_IPV6_SRC_PREFIX].count || tpl->fld[NF9_IPV6_DST_PREFIX].count) {
 	ret += PM_FTYPE_IPV6;
 	have_ip_proto = TRUE;
+      }
+      else if (tpl->fld[NF9_IN_SRC_MAC].count || tpl->fld[NF9_IN_DST_MAC].count ||
+               tpl->fld[NF9_OUT_SRC_MAC].count || tpl->fld[NF9_OUT_DST_MAC].count) {
+        ret += PM_FTYPE_L2;
       }
     }
 
