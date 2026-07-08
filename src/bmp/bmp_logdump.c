@@ -908,6 +908,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
     json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
     json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
+    json_object_set_new_nocheck(obj, "local_as", json_integer((json_int_t)blpu->loc_as));
 
     if (!inet_ntop(AF_INET, &bdata->chars.bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
       bgp_id_str = "0.0.0.0";
@@ -1013,6 +1014,9 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_long(&p_avro_field, bdata->peer_asn));
+
+    pm_avro_check(avro_value_get_by_name(obj, "local_as", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_long(&p_avro_field, blpu->loc_as));
 
     if (!inet_ntop(AF_INET, &bdata->chars.bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
       bgp_id_str = "0.0.0.0";
@@ -2440,6 +2444,7 @@ avro_schema_t p_avro_schema_build_bmp_peer_up(char *schema_name)
 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_asn", avro_schema_long());
+  avro_schema_record_field_append(schema, "local_as", avro_schema_long());
   avro_schema_record_field_append(schema, "bgp_id", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
   avro_schema_record_field_append(schema, "peer_type_str", optstr_s);
