@@ -86,7 +86,7 @@ struct bmp_dump_se_ll {
 };
 
 /* prototypes */
-extern void bmp_daemon_msglog_init_amqp_host();
+extern void bmp_daemon_msglog_init_amqp_host(void *);
 extern void bmp_dump_init_peer(struct bgp_peer *);
 extern void bmp_dump_close_peer(struct bgp_peer *);
 
