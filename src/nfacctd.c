@@ -2267,7 +2267,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (entry) {
 	    u_int32_t ingress_vrfid, egress_vrfid;
-	    rd_t *mpls_vpn_rd;
+	    rd_t mpls_vpn_rd;
 
 	    if (!entry->in_rd_map) {
 	      entry->in_rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
@@ -2294,25 +2294,35 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    egress_vrfid = ntohl(egress_vrfid);
 
 	    if (ingress_vrfid || egress_vrfid) {
-	      mpls_vpn_rd = malloc(sizeof(rd_t));
-
-              memcpy(mpls_vpn_rd, pkt+tpl->fld[NF9_MPLS_VPN_RD].off[0],
+	      memcpy(&mpls_vpn_rd, pkt+tpl->fld[NF9_MPLS_VPN_RD].off[0],
                      tpl->fld[NF9_MPLS_VPN_RD].len[0]);
-	      bgp_rd_ntoh(mpls_vpn_rd);
+	      bgp_rd_ntoh(&mpls_vpn_rd);
 
 	      if (ingress_vrfid) {
-	        ret = cdada_map_insert(entry->in_rd_map, &ingress_vrfid, mpls_vpn_rd);
-		if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS){
-		  Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->in_rd_map. Exiting.\n", config.name);
+	        rd_t *in_mpls_vpn_rd = malloc(sizeof(rd_t));
+	        memcpy(in_mpls_vpn_rd, &mpls_vpn_rd, sizeof(rd_t));
+	        rd_t *old_in_rd = NULL;
+	        ret = cdada_map_insert_replace(entry->in_rd_map, &ingress_vrfid, in_mpls_vpn_rd, (void **) &old_in_rd);
+		if (ret != CDADA_SUCCESS) {
+		  Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert/replace in entry->in_rd_map. Exiting.\n", config.name);
 		  exit_gracefully(1);
+		}
+		else {
+		  if (old_in_rd) free(old_in_rd);
 		}
 	      }
 
 	      if (egress_vrfid) {
-	        ret = cdada_map_insert(entry->out_rd_map, &egress_vrfid, mpls_vpn_rd);
-		if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS){
-		  Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->out_rd_map. Exiting.\n", config.name);
+	        rd_t *out_mpls_vpn_rd = malloc(sizeof(rd_t));
+	        memcpy(out_mpls_vpn_rd, &mpls_vpn_rd, sizeof(rd_t));
+	        rd_t *old_out_rd = NULL;
+	        ret = cdada_map_insert_replace(entry->out_rd_map, &egress_vrfid, out_mpls_vpn_rd, (void **) &old_out_rd);
+		if (ret != CDADA_SUCCESS) {
+		  Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert/replace in entry->out_rd_map. Exiting.\n", config.name);
 		  exit_gracefully(1);
+		}
+		else {
+		  if (old_out_rd) free(old_out_rd);
 		}
 	      }
 	    }
@@ -2404,10 +2414,14 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	      memset(iface_name, 0, MAX_IFACE_NAME_STR_LEN);
 	      memcpy(iface_name, (const char *)pkt + tpl->fld[NF9_IFACE_NAME].off[0], MIN(tpl->fld[NF9_IFACE_NAME].len[0], (MAX_IFACE_NAME - 1)));
 
-	      ret = cdada_map_insert(entry->iface_name_map, &iface_id, iface_name);
-              if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS) {
-                Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->iface_name_map. Exiting.\n", config.name);
+              char *old_iface_name = NULL;
+              ret = cdada_map_insert_replace(entry->iface_name_map, &iface_id, iface_name, (void **) &old_iface_name);
+              if (ret != CDADA_SUCCESS) {
+                Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert/replace in entry->iface_name_map. Exiting.\n", config.name);
                 exit_gracefully(1);
+              }
+              else {
+                if (old_iface_name) free(old_iface_name);
               }
 
               Log(LOG_DEBUG, "DEBUG ( %s/core ): Mapped Interface ID '%d', to Interface Name '%s'\n", config.name, iface_id, iface_name);
