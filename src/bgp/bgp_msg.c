@@ -722,6 +722,14 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   if (attribute_len > 0) {
     ret = bgp_attr_parse(peer, &attr, &attr_extra, pkt, attribute_len, &mp_update, &mp_withdraw);
     if (ret < 0) {
+      if (attr.aspath)
+        aspath_unintern(peer, attr.aspath);
+      if (attr.community)
+        community_unintern(peer, attr.community);
+      if (attr.ecommunity)
+        ecommunity_unintern(peer, attr.ecommunity);
+      if (attr.lcommunity)
+        lcommunity_unintern(peer, attr.lcommunity);
       return ret;
     }
     pkt += attribute_len;
@@ -876,7 +884,8 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     if (to_the_end < BGP_ATTR_MIN_LEN) {
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: to_the_end < BGP_ATTR_MIN_LEN\n", config.name, bms->log_str, bgp_peer_str);
-      return ERR;
+      ret = ERR;
+      goto attr_parse_end;
     }
 
     tmp = (u_int8_t *) ptr++; to_the_end--; flag = *tmp;
@@ -888,7 +897,8 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
       if (attr_len > to_the_end) {
 	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
 	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: attr_len > to_the_end (1)\n", config.name, bms->log_str, bgp_peer_str);
-        return ERR;
+        ret = ERR;
+        goto attr_parse_end;
       }
     }
     else {
@@ -896,7 +906,8 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
       if (attr_len > to_the_end) {
 	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
 	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: attr_len > to_the_end (2)\n", config.name, bms->log_str, bgp_peer_str);
-	return ERR;
+	ret = ERR;
+	goto attr_parse_end;
       }
     }
 
@@ -953,7 +964,7 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     if (ret < 0) {
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: type=%d\n", config.name, bms->log_str, bgp_peer_str, type);
-      return ret; 
+      goto attr_parse_end;
     }
 
     ptr += attr_len;
@@ -967,11 +978,16 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     /* AS_PATH and AS4_PATH info are now fully merged;
        hence we can free up temporary structures. */
     aspath_unintern(peer, as4_path);
-  
+
     if (ret < 0) return ret;
   }
 
   return SUCCESS;
+
+attr_parse_end:
+  if (as4_path)
+    aspath_unintern(peer, as4_path);
+  return ret;
 }
 
 int bgp_attr_parse_aspath(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
