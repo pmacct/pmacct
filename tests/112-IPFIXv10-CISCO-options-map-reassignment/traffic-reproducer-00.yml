@@ -1,0 +1,28 @@
+pcap: traffic-00.pcap
+
+time_factor: 1
+keep_open: false
+no_sync: false
+
+optimize:
+  threading: false
+  preload: false
+  network:
+    so_sndbuf: null
+    so_rcvbuf: null
+
+network:
+  map:
+    - src_ip:    2001:db8:90::1
+      repro_ip:  cafe::1
+
+  interface: null
+
+ipfix:
+  select:
+    udp:
+      dport:
+      - 9991
+  collector:
+    ip: cafe::100
+    port: 9991
