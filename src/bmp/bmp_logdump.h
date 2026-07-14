@@ -56,6 +56,7 @@ struct bmp_log_peer_up {
   struct host_addr local_ip;
   u_int16_t loc_port;
   u_int16_t rem_port;
+  as_t loc_as;
 };
 
 struct bmp_log_peer_down {

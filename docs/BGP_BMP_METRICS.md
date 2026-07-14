@@ -278,6 +278,7 @@ Title | Description
 `bmp_msg_type` | "peer_up" for BMP message type 3
 `peer_ip` | BGP peer IP address where BGP metrics are received from
 `peer_asn` | BGP peer BGP AS number
+`local_as` | Local BGP AS number
 `peer_type` | Type of BGP peer (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-types)
 `peer_type_str` | type of BGP peer description
 `rd` | BGP peer Route Distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
@@ -300,6 +301,7 @@ Title | Description
   "bmp_msg_type": "peer_up",
   "peer_ip": "203.0.113.2",
   "peer_asn": 64496,
+  "local_as": 64500,
   "peer_type": 0,
   "peer_type_str": "Global Instance Peer",
   "rd": "0:64499:2",

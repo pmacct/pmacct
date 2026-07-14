@@ -352,6 +352,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   bmp_peer_up_hdr_get_loc_port(bpuh, &blpu.loc_port);
   bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
   bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
+  blpu.loc_as = 0;
 
   bgp_peer_loc.type = FUNC_TYPE_BMP;
   bmd.peer = &bgp_peer_loc;
@@ -397,6 +398,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   }
 
   bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
+  blpu.loc_as = bgp_peer_loc.as;
   memcpy(&bmpp->self.id, &bgp_peer_loc.id, sizeof(struct host_addr));
   memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
 
