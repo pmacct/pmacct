@@ -51,6 +51,10 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
 
+  struct insert_data idata;
+  time_t counters_refresh_deadline;
+  int counters_refresh_timeout;
+
 #ifdef WITH_ZMQ
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
 #else
@@ -157,20 +161,37 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit(0);
   }
 
+  if (config.tee_counters_refresh_time == 0) {
+    config.tee_counters_refresh_time = DEFAULT_TEE_COUNTERS_REFRESH_TIME;
+  }
+
+  memset(&idata, 0, sizeof(idata));
+  idata.now = time(NULL);
+
+  counters_refresh_deadline = idata.now;
+  P_init_refresh_deadline(&counters_refresh_deadline, config.tee_counters_refresh_time, 0, NULL);
+
   /* plugin main loop */
   for (;;) {
     poll_again:
     status->wakeup = TRUE;
     poll_bypass = FALSE;
+    calc_refresh_timeout(counters_refresh_deadline, idata.now, &counters_refresh_timeout);
 
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
 
-    ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), refresh_timeout);
+    ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), MIN(refresh_timeout, counters_refresh_timeout));
 
     if (ret < 0) goto poll_again;
 
     poll_ops:
+    P_update_time_reference(&idata);
+    if (idata.now > counters_refresh_deadline) {
+      Tee_report_counters();
+      counters_refresh_deadline += config.tee_counters_refresh_time;
+    }
+
     if (reload_map) {
       if (config.tee_receivers) {
         int recvs_allocated = FALSE;
@@ -272,6 +293,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	      for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
 	        target = &receivers.pools[pool_idx].receivers[recv_idx];
 	        Tee_send(msg, (struct sockaddr *) &target->dest, target->fd, config.tee_transparent);
+	        target->tee_sent++;
 	      }
 
 #ifdef WITH_KAFKA
@@ -291,6 +313,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	    else {
 	      target = receivers.pools[pool_idx].balance.func(&receivers.pools[pool_idx], msg);
 	      Tee_send(msg, (struct sockaddr *) &target->dest, target->fd, config.tee_transparent);
+	      target->tee_sent++;
 	    }
 	  }
 	}
@@ -975,4 +998,27 @@ void Tee_select_templates(unsigned char *pkt, int pkt_len, int nfv, unsigned cha
 
     (*tpl_pkt_len) = tmp_len;
   }
+}
+
+void Tee_report_counters()
+{
+  if (!config.tee_counters_path) return;
+
+  FILE *file = fopen(config.tee_counters_path, "w");
+  fprintf(file, "POOL_ID,RECEIVER_IP,RECEIVER_PORT,TEE_SENT\n");
+  for (int pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
+    for (int recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
+      struct tee_receiver *receiver = &receivers.pools[pool_idx].receivers[recv_idx];
+
+      char dest_str[INET6_ADDRSTRLEN];
+      int dest_port;
+
+      sa_to_str(dest_str, sizeof(dest_str), (struct sockaddr *) &receiver->dest, FALSE);
+      sa_to_port(&dest_port, (struct sockaddr *) &receiver->dest);
+
+      fprintf(file, "%d,%s,%d,%" PRIu64 "\n", pool_idx, dest_str, dest_port, receiver->tee_sent);
+      receiver->tee_sent = 0;
+    }
+  }
+  fclose(file);
 }
