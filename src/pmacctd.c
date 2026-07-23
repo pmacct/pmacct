@@ -306,9 +306,11 @@ int main(int argc,char **argv, char **envp)
   struct pm_pcap_device *dev_ptr;
   struct pm_pcap_callback_data cb_data;
 
-  /* select() stuff */
-  fd_set read_descs, bkp_read_descs;
-  int select_fd, bkp_select_fd;
+  /* poll() stuff */
+  struct pollfd pcap_poll_fds[PCAP_MAX_INTERFACES];
+  int pcap_poll_idx[PCAP_MAX_INTERFACES];
+  u_char pcap_ready_fds[PCAP_MAX_INTERFACES];
+  nfds_t pcap_poll_num, pcap_poll_iter;
 
   /* getopt() stuff */
   extern char *optarg;
@@ -958,8 +960,7 @@ int main(int argc,char **argv, char **envp)
     exit_gracefully(1);
   }
 
-  bkp_select_fd = 0;
-  FD_ZERO(&bkp_read_descs);
+  pcap_poll_num = 0;
 
   if (config.pcap_if) {
     ret = pm_pcap_add_interface(&devices.list[0], config.pcap_if, NULL, psize);
@@ -983,12 +984,6 @@ int main(int argc,char **argv, char **envp)
       pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_idx(&pm_pcap_if_map, (pm_pcap_if_idx - 1));
       ret = pm_pcap_add_interface(&devices.list[devices.num], ifname, pm_pcap_if_entry, psize);
       if (!ret) {
-	if (bkp_select_fd <= devices.list[devices.num].fd) {
-	  bkp_select_fd = devices.list[devices.num].fd;
-	  bkp_select_fd++;
-	}
-
-	if (devices.list[devices.num].fd) FD_SET(devices.list[devices.num].fd, &bkp_read_descs);
 	devices.num++;
       }
     }
@@ -1300,10 +1295,29 @@ int main(int argc,char **argv, char **envp)
   }
   else {
     for (;;) {
-      select_fd = bkp_select_fd;
-      memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+      pcap_poll_num = 0;
+      memset(pcap_ready_fds, 0, sizeof(pcap_ready_fds));
+      for (index = 0; index < devices.num; index++) {
+        if (devices.list[index].fd > 0) {
+          pcap_poll_fds[pcap_poll_num].fd = devices.list[index].fd;
+          pcap_poll_fds[pcap_poll_num].events = POLLIN;
+          pcap_poll_fds[pcap_poll_num].revents = 0;
+          pcap_poll_idx[pcap_poll_num] = index;
+          pcap_poll_num++;
+        }
+      }
 
-      select(select_fd, &read_descs, NULL, NULL, NULL);
+      if (!pcap_poll_num) {
+        sleep(1);
+        continue;
+      }
+
+      if (poll(pcap_poll_fds, pcap_poll_num, -1) < 0) continue;
+      for (pcap_poll_iter = 0; pcap_poll_iter < pcap_poll_num; pcap_poll_iter++) {
+        if (pcap_poll_fds[pcap_poll_iter].revents & (POLLIN|POLLERR|POLLHUP)) {
+          pcap_ready_fds[pcap_poll_idx[pcap_poll_iter]] = TRUE;
+        }
+      }
 
       if (reload_map_pmacctd) {
 	struct pm_pcap_interface *pm_pcap_if_entry;
@@ -1326,15 +1340,6 @@ int main(int argc,char **argv, char **envp)
 	    else {
 	      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_idx(&pm_pcap_if_map, (pm_pcap_if_idx - 1));
 	      if (!pm_pcap_add_interface(&devices.list[devices.num], ifname, pm_pcap_if_entry, psize)) {
-		if (bkp_select_fd <= devices.list[devices.num].fd) {
-		  bkp_select_fd = devices.list[devices.num].fd;
-		  bkp_select_fd++;
-		}
-
-		if (devices.list[devices.num].fd && !FD_ISSET(devices.list[devices.num].fd, &bkp_read_descs)) {
-		  FD_SET(devices.list[devices.num].fd, &bkp_read_descs);
-		}
-	
 		devices.num++;
 	      }
 	    }
@@ -1363,7 +1368,6 @@ int main(int argc,char **argv, char **envp)
 	    device_idx = pm_pcap_device_getindex_by_ifname_direction(&bkp_devices, ifname, direction);
 	    if (device_idx >= 0) {
 	      Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] removed.\n", config.name, bkp_devices.list[device_idx].str, bkp_devices.list[device_idx].id);
-	      FD_CLR(bkp_devices.list[device_idx].fd, &bkp_read_descs);
 	      pcap_close(bkp_devices.list[device_idx].dev_desc);
             }
 	    else Log(LOG_WARNING, "WARN ( %s/core ): Mayday. Interface '%s' went lost (2).\n", config.name, ifname);
@@ -1380,7 +1384,7 @@ int main(int argc,char **argv, char **envp)
       for (dev_ptr = NULL, index = 0; index < devices.num; index++) {
         int loc_idx = (index + index_rr) % devices.num;
 
-	if (devices.list[loc_idx].fd && FD_ISSET(devices.list[loc_idx].fd, &read_descs)) {
+	if (devices.list[loc_idx].fd && pcap_ready_fds[loc_idx]) {
 	  dev_ptr = &devices.list[loc_idx];
           index_rr = (index_rr + 1) % devices.num;
           break;
