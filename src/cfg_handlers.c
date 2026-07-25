@@ -143,6 +143,25 @@ int cfg_key_syslog(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_syslog_ident(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.syslog_ident = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.syslog_ident = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_logfile(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

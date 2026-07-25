@@ -435,7 +435,7 @@ int main(int argc,char **argv, char **envp)
       config.syslog = NULL;
       printf("WARN ( %s/core ): specified syslog facility is not supported. Logging to standard error (stderr).\n", config.name);
     }
-    else openlog(NULL, LOG_PID, logf);
+    else openlog(config.syslog_ident, LOG_PID, logf);
     Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
   }
 

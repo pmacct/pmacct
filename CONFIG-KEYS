@@ -589,7 +589,14 @@ VALUES:		[ auth | mail | daemon | kern | user | local[0-7] ]
 DESC:		Enables syslog logging, using the specified facility.
 DEFAULT:	none (logging to stderr)
 
-KEY:		logfile [GLOBAL] 
+KEY:		syslog_ident [GLOBAL]
+DESC:		Defines the identity string (openlog()'s ident argument) prepended to every syslog
+		message. Only relevant when syslog is enabled. When unspecified, NULL is given to the ident
+		argument. For some implementations of openlog, e.g., musl's, if ident is NULL, an empty
+		string is used; different than glibc's where the program name is used.
+DEFAULT:	none (NULL ident given to openlog())
+
+KEY:		logfile [GLOBAL]
 DESC:           Enables logging to a file (bypassing syslog); expected value is a pathname. The target
 		file can be re-opened by sending a SIGHUP to the daemon so that, for example, logs can
 		be rotated. 

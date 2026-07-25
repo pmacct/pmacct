@@ -583,6 +583,7 @@ struct configuration {
   int sampling_rate;
   char *sampling_map;
   char *syslog;
+  char *syslog_ident;
   int debug;
   int debug_internal_msg;
   int dry_run;
