@@ -327,7 +327,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
       compose_tcpflags_avro_schema(schema);
     }
     else {
-      avro_schema_record_field_append(schema, "tcp_flags", avro_schema_string());
+      avro_schema_record_field_append(schema, "tcp_flags", avro_schema_long());
     }
   }
 
@@ -1068,14 +1068,12 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
-    sprintf(misc_str, "%u", tcp_flags);
-
     if (config.tcpflags_encode_as_array) {
       compose_tcpflags_avro_data(tcp_flags, value);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
-      pm_avro_check(avro_value_set_string(&field, misc_str));
+      pm_avro_check(avro_value_set_long(&field, tcp_flags));
     }
   }
 
