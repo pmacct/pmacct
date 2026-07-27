@@ -1137,10 +1137,7 @@ void compose_json_dst_host_coords(json_t *obj, struct chained_cache *cc)
 
 void compose_json_tcp_flags(json_t *obj, struct chained_cache *cc)
 {
-  char misc_str[VERYSHORTBUFLEN];
-
-  sprintf(misc_str, "%u", cc->tcp_flags);
-  json_object_set_new_nocheck(obj, "tcp_flags", json_string(misc_str));
+  json_object_set_new_nocheck(obj, "tcp_flags", json_integer((json_int_t)cc->tcp_flags));
 }
 
 void compose_json_fwd_status(json_t *obj, struct chained_cache *cc)
