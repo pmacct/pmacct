@@ -6,6 +6,15 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.8.1
+FROM: 	<= 1.8.0
+TOPIC:	tcp_flags and JSON/Avro encoding
+DESC:	tcp_flags has been encoded as string rather than int in JSON and
+	Avro encodings (contrary to encoding it as int in formatted and
+	CSV outputs). Consistency has been restored with PR #937 on GitHub
+	and now in all encodings tcp_flags is represented as int. This may
+	break existing JSON/Avro consumers expecting a string.
+
 TO:	>= 1.8.0
 FROM:	<= 1.7.9
 TOPIC:  timestamps_rfc3339, timestamps_rfc9557 and pmacct IMT client
