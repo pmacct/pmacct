@@ -30,6 +30,7 @@ static const struct _dictionary_line dictionary[] = {
   {"debug_internal_msg", cfg_key_debug_internal_msg},
   {"dry_run", cfg_key_dry_run},
   {"syslog", cfg_key_syslog},
+  {"syslog_ident", cfg_key_syslog_ident},
   {"logfile", cfg_key_logfile},
   {"log_stderr_tstamp", cfg_key_log_stderr_tstamp},
   {"pidfile", cfg_key_pidfile},
