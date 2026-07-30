@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -38,6 +38,7 @@ int blp_map_allocated;
 int bmed_map_allocated;
 int biss_map_allocated;
 int bta_map_allocated;
+int bpdi_map_allocated;
 int bitr_map_allocated;
 int sampling_map_allocated;
 int custom_primitives_allocated;
@@ -70,9 +71,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
       acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_TO_XFLOW_AGENT ||
       acct_type == MAP_BGP_SRC_LOCAL_PREF || acct_type == MAP_BGP_SRC_MED ||
-      acct_type == MAP_FLOW_TO_RD || acct_type == MAP_SAMPLING ||
-      acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP ||
-      acct_type == ACCT_PMTELE) {
+      acct_type == MAP_FLOW_TO_RD || acct_type == MAP_BGP_PEER_DST_IP ||
+      acct_type == MAP_SAMPLING || acct_type == ACCT_PMBGP ||
+      acct_type == ACCT_PMBMP || acct_type == ACCT_PMTELE) {
     req->key_value_table = (void *) &tmp;
   }
 
@@ -235,6 +236,22 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   for (dindex = 0; strcmp(bta_map_dictionary[dindex].key, ""); dindex++) {
                     if (!strcmp(bta_map_dictionary[dindex].key, key)) {
                       err = (*bta_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
+                      break;
+                    }
+                    else err = E_NOTFOUND; /* key not found */
+                  }
+                  if (err) {
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored because of unknown key '%s'.\n",
+						config.name, config.type, filename, tot_lines, key);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    break;
+                  }
+                  key = NULL; value = NULL;
+		}
+		else if (acct_type == MAP_BGP_PEER_DST_IP) {
+                  for (dindex = 0; strcmp(bpdi_map_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(bpdi_map_dictionary[dindex].key, key)) {
+                      err = (*bpdi_map_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
                       break;
                     }
                     else err = E_NOTFOUND; /* key not found */
@@ -529,6 +546,17 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n",
                         config.name, config.type, filename, tot_lines);
               }
+              else if (acct_type == MAP_BGP_PEER_DST_IP) {
+                if (!err && tmp.e[tmp.num].key.bgp_nexthop.a.family) {
+                  int j;
+
+                  for (j = 0; tmp.e[tmp.num].func[j]; j++);
+                  tmp.e[tmp.num].func[j] = pretag_id_handler;
+                  if (tmp.e[tmp.num].key.bgp_nexthop.a.family == AF_INET) v4_num++;
+                  else if (tmp.e[tmp.num].key.bgp_nexthop.a.family == AF_INET6) v6_num++;
+                  tmp.num++;
+                }
+	      }
               else if (acct_type == MAP_FLOW_TO_RD) {
                 if (!err && tmp.e[tmp.num].key.agent_ip.a.family) {
                   int j;

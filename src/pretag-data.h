@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -81,6 +81,7 @@ const struct _map_index_internal_dictionary_line tag_map_index_entries_dictionar
   {PRETAG_IN_IFACE, PT_map_index_entries_input_handler},
   {PRETAG_OUT_IFACE, PT_map_index_entries_output_handler},
   {PRETAG_BGP_NEXTHOP, PT_map_index_entries_bgp_nexthop_handler},
+  {PRETAG_BPDI_BGP_NEXTHOP, PT_map_index_entries_bgp_nexthop_handler},
   {PRETAG_SRC_AS, PT_map_index_entries_src_as_handler},
   {PRETAG_DST_AS, PT_map_index_entries_dst_as_handler},
   {PRETAG_PEER_SRC_AS, PT_map_index_entries_peer_src_as_handler},
@@ -112,6 +113,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_IN_IFACE, PT_map_index_fdata_input_handler},
   {PRETAG_OUT_IFACE, PT_map_index_fdata_output_handler},
   {PRETAG_BGP_NEXTHOP, PT_map_index_fdata_bgp_nexthop_handler},
+  {PRETAG_BPDI_BGP_NEXTHOP, PT_map_index_fdata_BPDI_bgp_nexthop_handler},
   {PRETAG_SRC_AS, PT_map_index_fdata_src_as_handler},
   {PRETAG_DST_AS, PT_map_index_fdata_dst_as_handler},
   {PRETAG_PEER_SRC_AS, PT_map_index_fdata_peer_src_as_handler},
@@ -235,6 +237,12 @@ const struct _map_dictionary_line bta_map_dictionary[] = {
   {"in", PT_map_input_handler},
   {"out", PT_map_output_handler},
   {"filter", PT_map_filter_handler},
+  {"", NULL}
+};
+
+const struct _map_dictionary_line bpdi_map_dictionary[] = {
+  {"id", PT_map_id_handler},
+  {"bgp_nexthop", BPDI_map_bgp_nexthop_handler},
   {"", NULL}
 };
 

@@ -404,6 +404,7 @@ extern int cfg_key_bgp_daemon_peer_src_as_map(char *, char *, char *);
 extern int cfg_key_bgp_daemon_src_local_pref_map(char *, char *, char *);
 extern int cfg_key_bgp_daemon_src_med_map(char *, char *, char *);
 extern int cfg_key_bgp_daemon_to_xflow_agent_map(char *, char *, char *);
+extern int cfg_key_bgp_daemon_peer_dst_ip_map(char *, char *, char *);
 extern int cfg_key_bgp_daemon_follow_default(char *, char *, char *);
 extern int cfg_key_bgp_daemon_follow_nexthop(char *, char *, char *);
 extern int cfg_key_bgp_daemon_follow_nexthop_external(char *, char *, char *);

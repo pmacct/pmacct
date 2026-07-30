@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -85,6 +85,7 @@
 #define PRETAG_MPLS_VPN_ID_IN		0x0001000000000000ULL
 #define PRETAG_MPLS_VPN_ID_OUT		0x0002000000000000ULL
 #define PRETAG_TCP_FLAGS		0x0004000000000000ULL
+#define PRETAG_BPDI_BGP_NEXTHOP		0x0008000000000000ULL
 /* ... */
 #define PRETAG_NULL			0x8000000000000000ULL
 
@@ -92,6 +93,7 @@
 #define PRETAG_MAP_RCODE_ID2		0x00000200
 #define PRETAG_MAP_RCODE_SET_TOS	0x00000400
 #define PRETAG_MAP_RCODE_JEQ		0x00000800
+#define BPDI_MAP_RCODE_ID_ID2		0x00001000
 #define BTA_MAP_RCODE_ID_ID2		0x00001000
 #define BTA_MAP_RCODE_LOOKUP_BGP_PORT	0x00002000
 #define BPAS_MAP_RCODE_BGP		0x00004000
@@ -346,6 +348,7 @@ extern int blp_map_allocated;
 extern int bmed_map_allocated;
 extern int biss_map_allocated;
 extern int bta_map_allocated;
+extern int bpdi_map_allocated;
 extern int bitr_map_allocated;
 extern int sampling_map_allocated;
 extern int custom_primitives_allocated;

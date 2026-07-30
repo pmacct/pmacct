@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -346,6 +346,7 @@ struct packet_ptrs {
   u_char *bmed_table; /* ptr to bgp_src_med table map */
   u_char *bta_table; /* ptr to bgp_to_agent table map */
   u_char *bitr_table; /* ptr to flow_to_rd table map */
+  u_char *bpdi_table; /* ptr to bgp_peer_dst_ip table map */
   u_char *sampling_table; /* ptr to sampling_map table map */
   u_char *packet_ptr; /* ptr to the whole packet */
   u_char *mac_ptr; /* ptr to mac addresses */
@@ -365,6 +366,9 @@ struct packet_ptrs {
   u_int16_t bta_af; /* bgp_to_agent address family */
   pm_id_t bta; /* bgp_to_agent */
   pm_id_t bta2; /* bgp_to_agent (cont.d: 64bits more for IPv6 addresses) */
+  u_int16_t bpdi_af; /* bgp_peer_dst_ip address family */
+  pm_id_t bpdi; /* bgp_peer_dst_ip */
+  pm_id_t bpdi2; /* bgp_peer_dst_ip (cont.d: 64bits more for IPv6 addresses) */
   pm_id_t bitr; /* flow_to_rd */
   pm_id_t st; /* sampling_map */
   s_uint8_t set_tos; /* pretag map: set_tos feature */

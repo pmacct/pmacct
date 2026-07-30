@@ -120,6 +120,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bmed_table;
   struct id_table biss_table;
   struct id_table bta_table;
+  struct id_table bpdi_table;
   struct id_table bitr_table;
   struct id_table sampling_table;
   u_int32_t idx;
@@ -194,6 +195,7 @@ int main(int argc,char **argv, char **envp)
   bmed_map_allocated = FALSE;
   biss_map_allocated = FALSE;
   bta_map_allocated = FALSE;
+  bpdi_map_allocated = FALSE;
   bitr_map_allocated = FALSE;
   custom_primitives_allocated = FALSE;
   bta_map_caching = TRUE;
@@ -225,6 +227,7 @@ int main(int argc,char **argv, char **envp)
   memset(&bmed_table, 0, sizeof(bmed_table));
   memset(&biss_table, 0, sizeof(biss_table));
   memset(&bta_table, 0, sizeof(bta_table));
+  memset(&bpdi_table, 0, sizeof(bpdi_table));
   memset(&bitr_table, 0, sizeof(bitr_table));
   memset(&sampling_table, 0, sizeof(sampling_table));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
@@ -1086,6 +1089,12 @@ int main(int argc,char **argv, char **envp)
     }
     else pptrs.v4.bta_table = NULL;
 
+    if (config.bgp_daemon_peer_dst_ip_map) {
+      load_id_file(MAP_BGP_PEER_DST_IP, config.bgp_daemon_peer_dst_ip_map, &bpdi_table, &req, &bpdi_map_allocated);
+      pptrs.v4.bpdi_table = (u_char *) &bpdi_table;
+    }
+    else pptrs.v4.bpdi_table = NULL;
+
     bgp_daemon_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
@@ -1590,6 +1599,8 @@ int main(int argc,char **argv, char **envp)
         load_id_file(MAP_BGP_SRC_MED, config.bgp_daemon_src_med_map, &bmed_table, &req, &bmed_map_allocated); 
       if (config.bgp_daemon && config.bgp_daemon_to_xflow_agent_map)
         load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      if (config.bgp_daemon && config.bgp_daemon_peer_dst_ip_map)
+        load_id_file(MAP_BGP_PEER_DST_IP, config.bgp_daemon_peer_dst_ip_map, &bpdi_table, &req, &bpdi_map_allocated);
       if (config.nfacctd_flow_to_rd_map)
         load_id_file(MAP_FLOW_TO_RD, config.nfacctd_flow_to_rd_map, &bitr_table, &req, &bitr_map_allocated);
       if (config.sampling_map) {

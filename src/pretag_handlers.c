@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -71,7 +71,8 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
 
   /* If we parse a bgp_agent_map and spot a '.' within the string let's
      check if we are given a valid IPv4 address */
-  if (acct_type == MAP_BGP_TO_XFLOW_AGENT && strchr(value, '.')) {
+  if ((acct_type == MAP_BGP_TO_XFLOW_AGENT || acct_type == MAP_BGP_PEER_DST_IP) &&
+      strchr(value, '.')) {
     memset(&a, 0, sizeof(a));
     str_to_addr(value, &a);
     if (a.family == AF_INET) j = a.address.ipv4.s_addr;
@@ -82,7 +83,8 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   }
   /* If we parse a bgp_agent_map and spot a ':' within the string let's
      check if we are given a valid IPv6 address */
-  else if (acct_type == MAP_BGP_TO_XFLOW_AGENT && strchr(value, ':')) {
+  else if ((acct_type == MAP_BGP_TO_XFLOW_AGENT || acct_type == MAP_BGP_PEER_DST_IP) &&
+	   strchr(value, ':')) {
     memset(&a, 0, sizeof(a));
     str_to_addr(value, &a);
     if (a.family == AF_INET6) {
@@ -453,6 +455,27 @@ int BPAS_map_bgp_peer_dst_as_handler(char *filename, struct id_entry *e, char *v
   if (config.bgp_daemon) {
     e->func[x] = BPAS_bgp_peer_dst_as_handler;
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
+  }
+  else return E_NOTFOUND;
+
+  return FALSE;
+}
+
+int BPDI_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  e->key.bgp_nexthop.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  if (!str_to_addr(value, &e->key.bgp_nexthop.a)) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad BGP nexthop address '%s'.\n", config.name, config.type, filename, value);
+    return TRUE;
+  }
+
+  for (x = 0; e->func[x]; x++);
+  if (config.nfacctd_net & NF_NET_BGP) {
+    e->func[x] = BPDI_bgp_nexthop_handler;
+    e->func_type[x] = PRETAG_BPDI_BGP_NEXTHOP;
   }
   else return E_NOTFOUND;
 
@@ -3335,6 +3358,35 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
   else return (TRUE ^ entry->key.peer_dst_as.neg);
 }
 
+int BPDI_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_info *info;
+
+  if (dst_ret) {
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
+    if (info && info->attr) {
+      if (entry->key.bgp_nexthop.a.family == AF_INET) {
+        if (info->attr->mp_nexthop.family == AF_INET) {
+          if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4))
+            return (FALSE | entry->key.bgp_nexthop.neg);
+        }
+        else {
+          if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, &info->attr->nexthop, 4))
+            return (FALSE | entry->key.bgp_nexthop.neg);
+        }
+      }
+      else if (entry->key.nexthop.a.family == AF_INET6) {
+        if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16))
+          return (FALSE | entry->key.bgp_nexthop.neg);
+      }
+    }
+  }
+
+  return (TRUE ^ entry->key.bgp_nexthop.neg);
+}
+
 int BITR_mpls_label_bottom_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -4292,6 +4344,38 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_table_index *idx, int idx_h
       }
     }
     else return TRUE;
+  }
+
+  hash_serial_append(hash_serializer, (char *)&e->key.bgp_nexthop.a, sizeof(struct host_addr), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_BPDI_bgp_nexthop_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_info *info;
+
+  if (dst_ret) {
+    if (pptrs->bgp_nexthop_info) info = (struct bgp_info *) pptrs->bgp_nexthop_info;
+    else info = (struct bgp_info *) pptrs->bgp_dst_info;
+
+    if (info && info->attr) {
+      if (info->attr->mp_nexthop.family == AF_INET) {
+        memcpy(&e->key.bgp_nexthop.a, &info->attr->mp_nexthop, HostAddrSz);
+      }
+      else if (info->attr->mp_nexthop.family == AF_INET6) {
+        memcpy(&e->key.bgp_nexthop.a, &info->attr->mp_nexthop, HostAddrSz);
+      }
+      else {
+        e->key.bgp_nexthop.a.address.ipv4.s_addr = info->attr->nexthop.s_addr;
+        e->key.bgp_nexthop.a.family = AF_INET;
+      }
+    }
+  }
+  else {
+    return TRUE;
   }
 
   hash_serial_append(hash_serializer, (char *)&e->key.bgp_nexthop.a, sizeof(struct host_addr), FALSE);

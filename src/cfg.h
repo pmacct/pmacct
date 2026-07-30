@@ -396,6 +396,7 @@ struct configuration {
   char *bgp_daemon_src_local_pref_map;
   char *bgp_daemon_src_med_map;
   char *bgp_daemon_to_xflow_agent_map;
+  char *bgp_daemon_peer_dst_ip_map;
   char *nfacctd_flow_to_rd_map;
   int bgp_daemon_follow_default;
   struct prefix bgp_daemon_follow_nexthop[FOLLOW_BGP_NH_ENTRIES];

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -107,6 +107,7 @@ extern int PT_map_index_fdata_ip_af_handler(struct id_table_index *, int, int, s
 extern int PT_map_index_fdata_input_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_output_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_bgp_nexthop_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
+extern int PT_map_index_fdata_BPDI_bgp_nexthop_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_src_as_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_dst_as_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_peer_src_as_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
@@ -133,6 +134,9 @@ extern int PT_map_index_fdata_fwd_status_handler(struct id_table_index *, int, i
 /* BPAS_*: bgp_peer_as_src map specific handlers */
 extern int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 extern int BPAS_map_bgp_peer_dst_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+
+/* BPDI_*: bgp_peer_dst_ip map specific handlers */
+extern int BPDI_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
 /* BTA_*: bgp_agent_map specific handlers */
 extern int BTA_map_lookup_bgp_port_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -231,6 +235,8 @@ extern int PM_pretag_direction_handler(struct packet_ptrs *, void *, void *);
 
 extern int BPAS_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 extern int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *, void *, void *);
+
+extern int BPDI_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 
 extern int BTA_lookup_bgp_port_handler(struct packet_ptrs *, void *, void *);
 
