@@ -547,13 +547,13 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                         config.name, config.type, filename, tot_lines);
               }
               else if (acct_type == MAP_BGP_PEER_DST_IP) {
-                if (!err && tmp.e[tmp.num].key.agent_ip.a.family && tmp.e[tmp.num].key.bgp_nexthop.a.family) {
+                if (!err && tmp.e[tmp.num].key.bgp_nexthop.a.family) {
                   int j;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
                   tmp.e[tmp.num].func[j] = pretag_id_handler;
-                  if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
-                  else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
+		  tmp.e[tmp.num].key.agent_ip.a.family = AF_INET; /* we emulate a dummy '0.0.0.0' IPv4 address */
+		  v4_num++;
                   tmp.num++;
                 }
 	      }
@@ -746,7 +746,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       if (config.maps_index &&
 	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
 	   acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_FLOW_TO_RD ||
-	   acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP || acct_type == ACCT_PMTELE)) {
+           acct_type == MAP_BGP_PEER_DST_IP || acct_type == ACCT_PMBGP ||
+	   acct_type == ACCT_PMBMP || acct_type == ACCT_PMTELE)) {
 	pt_bitmap_t idx_bmap;
 	
 	t->index_num = MAX_ID_TABLE_INDEXES;

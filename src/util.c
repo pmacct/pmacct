@@ -2102,6 +2102,34 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
   return ret;
 }
 
+int BPDI_find_id(struct id_table *t, struct packet_ptrs *pptrs, struct host_addr *bpdi_peer_dst_ip)
+{
+  int ret = 0;
+
+  pptrs->bpdi_af = 0;
+  pptrs->bpdi = 0;
+  pptrs->bpdi2 = 0;
+
+  if (find_id_func) {
+    ret = find_id_func(t, pptrs, &pptrs->bpdi, &pptrs->bpdi2);
+  }
+
+  if (ret & PRETAG_MAP_RCODE_ID) pptrs->bpdi_af = ETHERTYPE_IP;
+  else if (ret & BTA_MAP_RCODE_ID_ID2) pptrs->bpdi_af = ETHERTYPE_IPV6;
+
+  if (pptrs->bpdi_af == ETHERTYPE_IP) {
+    bpdi_peer_dst_ip->family = AF_INET;
+    bpdi_peer_dst_ip->address.ipv4.s_addr = pptrs->bpdi;
+  }
+  else if (pptrs->bpdi_af == ETHERTYPE_IPV6) {
+    bpdi_peer_dst_ip->family = AF_INET6;
+    ip6_addr_32bit_cpy(&bpdi_peer_dst_ip->address.ipv6, &pptrs->bpdi, 0, 0, 1);
+    ip6_addr_32bit_cpy(&bpdi_peer_dst_ip->address.ipv6, &pptrs->bpdi2, 2, 0, 1);
+  }
+
+  return ret;
+}
+
 void calc_refresh_timeout(time_t deadline, time_t now, int *timeout)
 {
   if (deadline >= now) *timeout = ((deadline-now)+1)*1000;

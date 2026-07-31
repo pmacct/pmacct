@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /* 
@@ -98,7 +98,10 @@ struct node_match_cmp_term2 {
   afi_t afi;
   safi_t safi;
   rd_t *rd;
+
+  /* mainly used for ADD-PATH purposes */
   struct host_addr *peer_dst_ip;
+  u_char *bpdi_table;
 
   /* mainly used for RPKI purposes */
   struct prefix *p;

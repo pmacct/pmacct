@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -56,4 +56,7 @@ extern void bgp_lg_rep_init(struct bgp_lg_rep *);
 extern struct bgp_lg_rep_data *bgp_lg_rep_data_add(struct bgp_lg_rep *);
 extern void bgp_lg_rep_ipl_data_add(struct bgp_lg_rep *, afi_t, safi_t, struct prefix *, struct bgp_info *);
 extern void bgp_lg_rep_gp_data_add(struct bgp_lg_rep *, struct bgp_peer *);
+
+/* global variables */
+extern struct packet_ptrs bpdi_pptrs;
 #endif 

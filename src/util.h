@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -121,6 +121,7 @@ extern void *pm_malloc(size_t);
 extern void load_allow_file(char *, struct hosts_table *);
 extern int check_allow(struct hosts_table *, struct sockaddr *);
 extern int BTA_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
+extern int BPDI_find_id(struct id_table *, struct packet_ptrs *, struct host_addr *);
 extern void calc_refresh_timeout(time_t, time_t, int *);
 extern void calc_refresh_timeout_sec(time_t, time_t, int *);
 extern int load_tags(char *, struct pretag_filter *, char *);

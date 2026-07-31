@@ -3361,12 +3361,10 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
 int BPDI_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_info *info;
+  struct bgp_info *info = (struct bgp_info *) pptrs->bgp_dst_info;
 
-  if (dst_ret) {
-    info = (struct bgp_info *) pptrs->bgp_dst_info;
-    if (info && info->attr) {
+  if (info) {
+    if (info->attr) {
       if (entry->key.bgp_nexthop.a.family == AF_INET) {
         if (info->attr->mp_nexthop.family == AF_INET) {
           if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4))
