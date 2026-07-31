@@ -242,6 +242,7 @@ const struct _map_dictionary_line bta_map_dictionary[] = {
 
 const struct _map_dictionary_line bpdi_map_dictionary[] = {
   {"id", PT_map_id_handler},
+  {"ip", PT_map_ip_handler},
   {"bgp_nexthop", BPDI_map_bgp_nexthop_handler},
   {"", NULL}
 };

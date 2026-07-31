@@ -524,6 +524,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_src_med_type", cfg_key_bgp_daemon_src_med_type},
   {"bgp_src_roa_type", cfg_key_bgp_daemon_src_roa_type},
   {"bgp_agent_map", cfg_key_bgp_daemon_to_xflow_agent_map},
+  {"bgp_peer_dst_ip_map", cfg_key_bgp_daemon_peer_dst_ip_map},
   {"bgp_follow_default", cfg_key_bgp_daemon_follow_default},
   {"bgp_follow_nexthop", cfg_key_bgp_daemon_follow_nexthop},
   {"bgp_follow_nexthop_external", cfg_key_bgp_daemon_follow_nexthop_external},

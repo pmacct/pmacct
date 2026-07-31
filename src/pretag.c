@@ -547,13 +547,13 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                         config.name, config.type, filename, tot_lines);
               }
               else if (acct_type == MAP_BGP_PEER_DST_IP) {
-                if (!err && tmp.e[tmp.num].key.bgp_nexthop.a.family) {
+                if (!err && tmp.e[tmp.num].key.agent_ip.a.family && tmp.e[tmp.num].key.bgp_nexthop.a.family) {
                   int j;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
                   tmp.e[tmp.num].func[j] = pretag_id_handler;
-                  if (tmp.e[tmp.num].key.bgp_nexthop.a.family == AF_INET) v4_num++;
-                  else if (tmp.e[tmp.num].key.bgp_nexthop.a.family == AF_INET6) v6_num++;
+                  if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
+                  else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
                   tmp.num++;
                 }
 	      }
