@@ -4352,24 +4352,21 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_table_index *idx, int idx_h
 int PT_map_index_fdata_BPDI_bgp_nexthop_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_info *info;
 
-  if (dst_ret) {
-    if (pptrs->bgp_nexthop_info) info = (struct bgp_info *) pptrs->bgp_nexthop_info;
-    else info = (struct bgp_info *) pptrs->bgp_dst_info;
+  if (pptrs->bgp_nexthop_info) info = (struct bgp_info *) pptrs->bgp_nexthop_info;
+  else info = (struct bgp_info *) pptrs->bgp_dst_info;
 
-    if (info && info->attr) {
-      if (info->attr->mp_nexthop.family == AF_INET) {
-        memcpy(&e->key.bgp_nexthop.a, &info->attr->mp_nexthop, HostAddrSz);
-      }
-      else if (info->attr->mp_nexthop.family == AF_INET6) {
-        memcpy(&e->key.bgp_nexthop.a, &info->attr->mp_nexthop, HostAddrSz);
-      }
-      else {
-        e->key.bgp_nexthop.a.address.ipv4.s_addr = info->attr->nexthop.s_addr;
-        e->key.bgp_nexthop.a.family = AF_INET;
-      }
+  if (info && info->attr) {
+    if (info->attr->mp_nexthop.family == AF_INET) {
+      memcpy(&e->key.bgp_nexthop.a, &info->attr->mp_nexthop, HostAddrSz);
+    }
+    else if (info->attr->mp_nexthop.family == AF_INET6) {
+      memcpy(&e->key.bgp_nexthop.a, &info->attr->mp_nexthop, HostAddrSz);
+    }
+    else {
+      e->key.bgp_nexthop.a.address.ipv4.s_addr = info->attr->nexthop.s_addr;
+      e->key.bgp_nexthop.a.family = AF_INET;
     }
   }
   else {

@@ -731,11 +731,9 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
 	  }
           else if (nmct2->bpdi_table) {
 	    struct host_addr bpdi_peer_dst_ip = { 0 };
-
 	    bpdi_pptrs.bgp_dst_info = (char *) info;
-
 	    if (BPDI_find_id((struct id_table *)nmct2->bpdi_table, &bpdi_pptrs, &bpdi_peer_dst_ip)) { 
-	      if (!host_addr_cmp(&info->attr->mp_nexthop, &bpdi_peer_dst_ip)) {
+	      if (!host_addr_cmp(&bpdi_peer_dst_ip, nmct2->peer_dst_ip)) {
 		no_match--;
 	      }
 	    }
@@ -747,12 +745,10 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
 	  }
           else if (nmct2->bpdi_table) {
 	    struct host_addr bpdi_peer_dst_ip = { 0 };
-
 	    bpdi_pptrs.bgp_dst_info = (char *) info;
-
 	    if (BPDI_find_id((struct id_table *)nmct2->bpdi_table, &bpdi_pptrs, &bpdi_peer_dst_ip)) { 
 	      if (bpdi_peer_dst_ip.family == AF_INET) {
-		if (info->attr->nexthop.s_addr == bpdi_peer_dst_ip.address.ipv4.s_addr) {
+		if (bpdi_peer_dst_ip.address.ipv4.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) {
 		  no_match--;
 		}
 	      }

@@ -2104,11 +2104,14 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
 
 int BPDI_find_id(struct id_table *t, struct packet_ptrs *pptrs, struct host_addr *bpdi_peer_dst_ip)
 {
+  struct sockaddr bpdi_f_agent = { 0 };
   int ret = 0;
 
   pptrs->bpdi_af = 0;
   pptrs->bpdi = 0;
   pptrs->bpdi2 = 0;
+  bpdi_f_agent.sa_family = AF_INET;
+  pptrs->f_agent = (char *) &bpdi_f_agent;
 
   if (find_id_func) {
     ret = find_id_func(t, pptrs, &pptrs->bpdi, &pptrs->bpdi2);
@@ -2128,6 +2131,19 @@ int BPDI_find_id(struct id_table *t, struct packet_ptrs *pptrs, struct host_addr
   }
 
   return ret;
+}
+
+void pptrs_set_bpdi_table(struct packet_ptrs_vector *pptrsv, void *t)
+{
+  pptrsv->l2.bpdi_table = (u_char *)t;
+  pptrsv->v4.bpdi_table = (u_char *)t;
+  pptrsv->vlan4.bpdi_table = (u_char *)t;
+  pptrsv->mpls4.bpdi_table = (u_char *)t;
+  pptrsv->vlanmpls4.bpdi_table = (u_char *)t;
+  pptrsv->v6.bpdi_table = (u_char *)t;
+  pptrsv->vlan6.bpdi_table = (u_char *)t;
+  pptrsv->mpls6.bpdi_table = (u_char *)t;
+  pptrsv->vlanmpls6.bpdi_table = (u_char *)t;
 }
 
 void calc_refresh_timeout(time_t deadline, time_t now, int *timeout)

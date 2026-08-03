@@ -1091,7 +1091,7 @@ int main(int argc,char **argv, char **envp)
 
     if (config.bgp_daemon_peer_dst_ip_map) {
       load_id_file(MAP_BGP_PEER_DST_IP, config.bgp_daemon_peer_dst_ip_map, &bpdi_table, &req, &bpdi_map_allocated);
-      pptrs.v4.bpdi_table = (u_char *) &bpdi_table;
+      pptrs_set_bpdi_table(&pptrs, &bpdi_table);
     }
     else pptrs.v4.bpdi_table = NULL;
 
@@ -3753,7 +3753,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   if (!t) return 0;
 
   /* if NF9_EXPORTER_IPV[46]_ADDRESS from NetFlow v9/IPFIX options, use it */
-  if (entry && entry->exp_sa.sa_family) {
+  if (!(config.nfacctd_ignore_exporter_address && t->type == MAP_BGP_PEER_DST_IP) && entry && entry->exp_sa.sa_family) {
     saved_f_agent = pptrs->f_agent;
     pptrs->f_agent = (u_char *) &entry->exp_sa;
   }
