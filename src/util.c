@@ -2111,7 +2111,7 @@ int BPDI_find_id(struct id_table *t, struct packet_ptrs *pptrs, struct host_addr
   pptrs->bpdi = 0;
   pptrs->bpdi2 = 0;
   bpdi_f_agent.sa_family = AF_INET;
-  pptrs->f_agent = (char *) &bpdi_f_agent;
+  pptrs->f_agent = (u_char *) &bpdi_f_agent;
 
   if (find_id_func) {
     ret = find_id_func(t, pptrs, &pptrs->bpdi, &pptrs->bpdi2);
