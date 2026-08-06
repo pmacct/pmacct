@@ -24,6 +24,7 @@
 
 #define IPFIX_TPL_EBIT                  0x8000 /* IPFIX telmplate enterprise bit */
 #define IPFIX_VARIABLE_LENGTH           65535
+#define NF9_MAX_FIXED_FIELD_LEN         128    /* max sane fixed field length; prevents stack overflow in dummy_packet consumers */
 
 /* PENs */
 #define HUAWEI_PEN                      2011

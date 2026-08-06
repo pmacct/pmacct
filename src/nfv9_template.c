@@ -923,6 +923,11 @@ static struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr
       }
       else {
         tpl->fld[type].len[tpl->fld[type].count-1] = tpl->fld[type].tpl_len[tpl->fld[type].count-1];
+        if (tpl->fld[type].len[tpl->fld[type].count-1] > NF9_MAX_FIXED_FIELD_LEN) {
+          Log(LOG_WARNING, "WARN ( %s/core ): NF9 template field type=%u declared length %u exceeds max %u, capping.\n",
+              config.name, type, tpl->fld[type].len[tpl->fld[type].count-1], NF9_MAX_FIXED_FIELD_LEN);
+          tpl->fld[type].len[tpl->fld[type].count-1] = NF9_MAX_FIXED_FIELD_LEN;
+        }
         if (!tpl->vlen)
           tpl->len += tpl->fld[type].len[tpl->fld[type].count-1];
       }
@@ -1093,6 +1098,11 @@ static struct template_cache_entry *compose_opt_template(void *hdr, struct socka
       else {
         tpl->fld[type].off[tpl->fld[type].count-1] = tpl->len;
         tpl->fld[type].len[tpl->fld[type].count-1] = ntohs(field->len);
+        if (tpl->fld[type].len[tpl->fld[type].count-1] > NF9_MAX_FIXED_FIELD_LEN) {
+          Log(LOG_WARNING, "WARN ( %s/core ): IPFIX template field type=%u declared length %u exceeds max %u, capping.\n",
+              config.name, type, tpl->fld[type].len[tpl->fld[type].count-1], NF9_MAX_FIXED_FIELD_LEN);
+          tpl->fld[type].len[tpl->fld[type].count-1] = NF9_MAX_FIXED_FIELD_LEN;
+        }
 	if (!tpl->vlen) {
 	  tpl->len += tpl->fld[type].len[tpl->fld[type].count-1];
 	}
