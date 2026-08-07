@@ -3858,13 +3858,11 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
       pnat->timestamp_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((int32_t)(ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
     }
-    else if (tpl->fld[NF9_FIRST_SWITCHED].count && hdr->version == 10) {
-      if (OTPL_LAST_LEN(NF9_SYS_UPTIME_MSEC) == 8) {
-        OTPL_CP_LAST(&fstime, NF9_FIRST_SWITCHED);
-        OTPL_CP_LAST(&t64, NF9_SYS_UPTIME_MSEC);
-	t32 = pm_ntohll(t64)/1000;
-        pnat->timestamp_start.tv_sec = t32+(ntohl(fstime)/1000);
-      }
+    else if (tpl->fld[NF9_FIRST_SWITCHED].count && hdr->version == 10 && OTPL_LAST_LEN(NF9_SYS_UPTIME_MSEC) == 8) {
+      OTPL_CP_LAST(&fstime, NF9_FIRST_SWITCHED);
+      OTPL_CP_LAST(&t64, NF9_SYS_UPTIME_MSEC);
+      t32 = pm_ntohll(t64)/1000;
+      pnat->timestamp_start.tv_sec = t32+(ntohl(fstime)/1000);
     }
     else if (tpl->fld[NF9_FIRST_SWITCHED_MSEC].count) {
       OTPL_CP_LAST(&t64, NF9_FIRST_SWITCHED_MSEC);
@@ -3957,13 +3955,11 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
       pnat->timestamp_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((int32_t)(ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
     }
-    else if (tpl->fld[NF9_LAST_SWITCHED].count && hdr->version == 10) {
-      if (OTPL_LAST_LEN(NF9_SYS_UPTIME_MSEC) == 8) {
-        OTPL_CP_LAST(&fstime, NF9_LAST_SWITCHED);
-        OTPL_CP_LAST(&t64, NF9_SYS_UPTIME_MSEC);
-        t32 = pm_ntohll(t64)/1000;
-        pnat->timestamp_end.tv_sec = t32+(ntohl(fstime)/1000);
-      }
+    else if (tpl->fld[NF9_LAST_SWITCHED].count && hdr->version == 10 && OTPL_LAST_LEN(NF9_SYS_UPTIME_MSEC) == 8) {
+      OTPL_CP_LAST(&fstime, NF9_LAST_SWITCHED);
+      OTPL_CP_LAST(&t64, NF9_SYS_UPTIME_MSEC);
+      t32 = pm_ntohll(t64)/1000;
+      pnat->timestamp_end.tv_sec = t32+(ntohl(fstime)/1000);
     }
     else if (tpl->fld[NF9_LAST_SWITCHED_MSEC].count) {
       OTPL_CP_LAST(&t64, NF9_LAST_SWITCHED_MSEC);
