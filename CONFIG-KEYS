@@ -3008,6 +3008,17 @@ DESC:		Full pathname to a file to map flows (typically, a) router or b) ingress 
 		"killall -USR2 nfacctd").
 DEFAULT:	none
 
+KEY:		bgp_peer_dst_ip_map [GLOBAL, MAP]
+DESC:		Full pathname to a file to map BGP next-hops to other IP addresses. This is typically
+		useful when RSVP-TE tunnels are defined in a network. As such flow data could report
+		as BGP next-hop the tail end of the tunnel and not any of the next-hops contained in
+		the BGP table. By mapping the next-hops in the BGP table to the tail-ends of RSVP-TE
+		tunnels, it is possible to enrich flow data with BGP data also in scenarios where
+		ADD-PATH is enabled. Number of map entries (by default 384) can be modified via
+		maps_entries. Content can be reloaded at runtime by sending the daemon a SIGUSR2
+		signal (ie. "killall -USR2 nfacctd").
+DEFAULT:	none
+
 KEY:		bgp_follow_default [GLOBAL]
 DESC:		Expects positive number value which instructs how many times a default route, if any, can
 		be followed in order to successfully resolve source and destination IP prefixes. This is
