@@ -77,6 +77,7 @@
 #define BGP_LS_ATTR_V6_RID_LOCAL	1029
 #define BGP_LS_ATTR_V4_RID_REMOTE	1030
 #define BGP_LS_ATTR_V6_RID_REMOTE	1031
+#define BGP_LS_ATTR_SR_CAPABILITIES	1034
 #define BGP_LS_ATTR_ADMIN_GROUP		1088
 #define BGP_LS_ATTR_MAX_BW		1089
 #define BGP_LS_ATTR_MAX_RESV_BW		1090
@@ -231,6 +232,7 @@ extern int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, saf
 extern void bgp_ls_log_node_desc(void *, struct bgp_ls_node_desc *, u_int8_t, char *, int);
 extern void bgp_ls_isis_sysid_print(char *, char *);
 extern void bgp_ls_isis_areaid_print(char *, char *, int);
+extern void bgp_ls_mt_id_print(void *, char *, struct bgp_ls_mt_id *, int);
 extern int bgp_ls_attr_tlv_string_print(u_char *, u_int16_t, char *, u_int8_t, int, void *); 
 extern int bgp_ls_attr_tlv_ip_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_int8_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
@@ -239,7 +241,7 @@ extern int bgp_ls_attr_tlv_msd_print(u_char *, u_int16_t, char *, u_int8_t, int,
 extern int bgp_ls_attr_tlv_isis_areaid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_igp_metric_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_mt_id_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
-extern void bgp_ls_mt_id_print(void *, char *, struct bgp_ls_mt_id *, int);
+extern int bgp_ls_attr_tlv_sr_capabilities_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 
 extern int bgp_lookup_node_match_cmp_bgp_ls(struct bgp_info *, struct node_match_cmp_term2 *);
 extern void bgp_ls_srcdst_lookup(struct packet_ptrs *, int);
