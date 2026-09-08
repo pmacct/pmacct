@@ -49,6 +49,7 @@ const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
   {BGP_LS_ATTR_ISIS_AREA_ID, "attr_isis_area_id", 0, bgp_ls_attr_tlv_isis_areaid_print}, 
   {BGP_LS_MULTI_TOPO_ID, "attr_multi_topology_id", 0, bgp_ls_attr_tlv_mt_id_print},
   {BGP_LS_ATTR_SR_CAPABILITIES, "attr_sr_capabilities", 0, bgp_ls_attr_tlv_sr_capabilities_print},
+  {BGP_LS_ATTR_SRV6_CAPABILITIES, "attr_srv6_capabilities", 0, bgp_ls_attr_tlv_srv6_capabilities_print},
   {BGP_LS_ATTR_V4_RID_LOCAL, "attr_v4_rid_local", 0, bgp_ls_attr_tlv_ip_print},
   {BGP_LS_ATTR_V6_RID_LOCAL, "attr_v6_rid_local", 0, bgp_ls_attr_tlv_ip_print},
   {BGP_LS_ATTR_V4_RID_REMOTE, "attr_v4_rid_remote", 0, bgp_ls_attr_tlv_ip_print},

@@ -1224,6 +1224,33 @@ int bgp_ls_attr_tlv_sr_capabilities_print(u_char *pnt, u_int16_t len, char *key,
   return SUCCESS;
 }
 
+int bgp_ls_attr_tlv_srv6_capabilities_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *voidobj)
+{
+  if (!pnt || !key || !voidobj || len != 4) {
+    return ERR;
+  }
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = voidobj;
+    u_int16_t cap_flags = ntohs(*(u_int16_t *)pnt);
+    char flags_hex[8];
+
+    snprintf(flags_hex, sizeof(flags_hex), "0x%04x", cap_flags);
+
+    json_object_set_new_nocheck(obj, "srv6_cap_flags", json_string(flags_hex));
+
+    /* Individual flag bits can be decoded here as RFC 9514 defines them */
+    /* Bit 0: SRv6 SID Structure TLV support */
+    if (cap_flags & 0x8000) {
+      json_object_set_new_nocheck(obj, "srv6_sid_structure_support", json_true());
+    }
+#endif
+  }
+
+  return SUCCESS;
+}
+
 int bgp_ls_attr_tlv_ip_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {
