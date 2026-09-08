@@ -112,7 +112,7 @@ void skinny_bgp_daemon_online()
   time_t now, dump_refresh_deadline = {0};
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
-  struct timeval dump_refresh_timeout, *drt_ptr;
+  struct timeval dump_refresh_timeout;
   struct bgp_peer_batch bp_batch;
   socklen_t slen, clen = sizeof(client);
 
@@ -121,9 +121,15 @@ void skinny_bgp_daemon_online()
 
   sigset_t signal_set;
 
-  /* select() stuff */
-  fd_set read_descs, bkp_read_descs; 
-  int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
+  /* poll() stuff */
+  struct pollfd *poll_fds = NULL;
+  int *poll_peer_idx = NULL;
+  u_char *poll_is_xconnect = NULL;
+  u_char *peer_ready = NULL;
+  u_char *xconnect_ready = NULL;
+  nfds_t poll_fds_num = 0, poll_idx = 0, poll_capacity = 0;
+  int fd, recalc_fds, poll_num, poll_timeout;
+  u_char server_ready = FALSE;
   int recv_fd, send_fd;
 
   /* initial cleanups */
@@ -398,9 +404,16 @@ void skinny_bgp_daemon_online()
 #endif
 
   /* Preparing for syncronous I/O multiplexing */
-  select_fd = 0;
-  FD_ZERO(&bkp_read_descs);
-  FD_SET(config.bgp_sock, &bkp_read_descs);
+  poll_capacity = (1 + (config.bgp_daemon_max_peers * 2));
+  poll_fds = malloc(sizeof(struct pollfd) * poll_capacity);
+  poll_peer_idx = malloc(sizeof(int) * poll_capacity);
+  poll_is_xconnect = malloc(sizeof(u_char) * poll_capacity);
+  peer_ready = malloc(config.bgp_daemon_max_peers * sizeof(u_char));
+  xconnect_ready = malloc(config.bgp_daemon_max_peers * sizeof(u_char));
+  if (!poll_fds || !poll_peer_idx || !poll_is_xconnect || !peer_ready || !xconnect_ready) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() poll support structures. Terminating thread.\n", config.name, bgp_misc_db->log_str);
+    exit_gracefully(1);
+  }
 
   {
     char srv_string[INET6_ADDRSTRLEN];
@@ -602,7 +615,6 @@ void skinny_bgp_daemon_online()
 
   dynname_tokens_prepare(config.writer_id_string, &bgp_misc_db->writer_id_tokens, DYN_STR_WRITER_ID);
 
-  select_fd = bkp_select_fd = (config.bgp_sock + 1);
   recalc_fds = FALSE;
 
   bgp_link_misc_structs(bgp_misc_db);
@@ -662,28 +674,46 @@ void skinny_bgp_daemon_online()
     }
 
     if (recalc_fds) { 
-      select_fd = config.bgp_sock;
       max_peers_idx = -1; /* .. since valid indexes include 0 */
 
       for (peers_idx = 0; peers_idx < config.bgp_daemon_max_peers; peers_idx++) {
-        if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
-
-        if (config.bgp_xconnect_map) {
-	  if (select_fd < peers[peers_idx].xconnect_fd)
-	    select_fd = peers[peers_idx].xconnect_fd; 
-	}
-
 	if (peers[peers_idx].fd) max_peers_idx = peers_idx;
       }
-      select_fd++;
       max_peers_idx++;
 
-      bkp_select_fd = select_fd;
       recalc_fds = FALSE;
     }
-    else select_fd = bkp_select_fd;
+    memset(peer_ready, 0, (config.bgp_daemon_max_peers * sizeof(u_char)));
+    memset(xconnect_ready, 0, (config.bgp_daemon_max_peers * sizeof(u_char)));
+    server_ready = FALSE;
+    poll_fds_num = 0;
 
-    memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+    poll_fds[poll_fds_num].fd = config.bgp_sock;
+    poll_fds[poll_fds_num].events = POLLIN;
+    poll_fds[poll_fds_num].revents = 0;
+    poll_peer_idx[poll_fds_num] = -1;
+    poll_is_xconnect[poll_fds_num] = FALSE;
+    poll_fds_num++;
+
+    for (peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
+      if (peers[peers_idx].fd > 0) {
+        poll_fds[poll_fds_num].fd = peers[peers_idx].fd;
+        poll_fds[poll_fds_num].events = POLLIN;
+        poll_fds[poll_fds_num].revents = 0;
+        poll_peer_idx[poll_fds_num] = peers_idx;
+        poll_is_xconnect[poll_fds_num] = FALSE;
+        poll_fds_num++;
+      }
+
+      if (config.bgp_xconnect_map && peers[peers_idx].xconnect_fd > 0) {
+        poll_fds[poll_fds_num].fd = peers[peers_idx].xconnect_fd;
+        poll_fds[poll_fds_num].events = POLLIN;
+        poll_fds[poll_fds_num].revents = 0;
+        poll_peer_idx[poll_fds_num] = peers_idx;
+        poll_is_xconnect[poll_fds_num] = TRUE;
+        poll_fds_num++;
+      }
+    }
 
     if (bgp_misc_db->dump_backend_methods) {
       int delta;
@@ -691,12 +721,27 @@ void skinny_bgp_daemon_online()
       calc_refresh_timeout_sec(dump_refresh_deadline, bgp_misc_db->log_tstamp.tv_sec, &delta);
       dump_refresh_timeout.tv_sec = delta;
       dump_refresh_timeout.tv_usec = 0;
-      drt_ptr = &dump_refresh_timeout;
+      poll_timeout = (dump_refresh_timeout.tv_sec * 1000);
     }
-    else drt_ptr = NULL;
+    else {
+      poll_timeout = -1;
+    }
 
-    select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
-    if (select_num < 0) goto select_again;
+    poll_num = poll(poll_fds, poll_fds_num, poll_timeout);
+    if (poll_num < 0) goto select_again;
+    for (poll_idx = 0; poll_idx < poll_fds_num; poll_idx++) {
+      if (!(poll_fds[poll_idx].revents & (POLLIN|POLLERR|POLLHUP))) continue;
+
+      if (poll_peer_idx[poll_idx] < 0) {
+        server_ready = TRUE;
+      }
+      else if (!poll_is_xconnect[poll_idx]) {
+        peer_ready[poll_peer_idx[poll_idx]] = TRUE;
+      }
+      else {
+        xconnect_ready[poll_peer_idx[poll_idx]] = TRUE;
+      }
+    }
     now = time(NULL);
 
     /* signals handling */
@@ -804,14 +849,14 @@ void skinny_bgp_daemon_online()
     }
 
     /* 
-       If select_num == 0 then we got out of select() due to a timeout rather
+       If poll_num == 0 then we got out of poll() due to a timeout rather
        than because we had a message from a peer to handle. By now we did all
-       routine checks and can happily return to select() again.
+       routine checks and can happily return to poll() again.
     */ 
-    if (!select_num) goto select_again;
+    if (!poll_num) goto select_again;
 
     /* New connection is coming in */ 
-    if (FD_ISSET(config.bgp_sock, &read_descs)) {
+    if (server_ready) {
       int peers_check_idx, peers_num;
 
       fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
@@ -883,7 +928,6 @@ void skinny_bgp_daemon_online()
 
       peer->fd = fd;
       peer->idx = peers_idx; 
-      FD_SET(peer->fd, &bkp_read_descs);
       sa_to_addr((struct sockaddr *) &client, &peer->addr, &peer->tcp_port);
 
       if (peers_cache && peers_port_cache) {
@@ -929,14 +973,12 @@ void skinny_bgp_daemon_online()
 		bgp_peer_print(&peers[peers_check_idx], bgp_peer_str, INET6_ADDRSTRLEN);
               	Log(LOG_INFO, "INFO ( %s/%s ): [%s] Replenishing stale connection by peer.\n",
 			config.name, bgp_misc_db->log_str, bgp_peer_str);
-		FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
 		bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
 	      }
 	      else {
 		Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Refusing new connection from existing peer (residual holdtime: %ld).\n",
 			config.name, bgp_misc_db->log_str, bgp_peer_str,
 			(peers[peers_check_idx].ht - ((long)now - peers[peers_check_idx].last_keepalive)));
-		FD_CLR(peer->fd, &bkp_read_descs);
 		bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
 		goto read_data;
 	      }
@@ -947,7 +989,6 @@ void skinny_bgp_daemon_online()
 	  else {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Refusing new incoming connection for existing BGP xconnect.\n",
 			config.name, bgp_misc_db->log_str, bgp_peer_str);
-	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
 	    goto read_data;
 	  }
@@ -958,9 +999,10 @@ void skinny_bgp_daemon_online()
       if (config.bgp_xconnect_map) {
         bgp_peer_xconnect_init(peer, FUNC_TYPE_BGP);
 
-        if (peer->xconnect_fd) FD_SET(peer->xconnect_fd, &bkp_read_descs);
+        if (peer->xconnect_fd) {
+          /* no-op: now monitored dynamically via poll() */
+        }
         else {
-          FD_CLR(peer->fd, &bkp_read_descs);
           bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
           goto read_data;
         }
@@ -991,7 +1033,7 @@ void skinny_bgp_daemon_online()
       int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
       recv_fd = 0; send_fd = 0;
 
-      if (peers[loc_idx].fd && FD_ISSET(peers[loc_idx].fd, &read_descs)) {
+      if (peers[loc_idx].fd && peer_ready[loc_idx]) {
         peer = &peers[loc_idx];
 	peer_buf = &peer->buf;
 	recv_fd = peer->fd;
@@ -1003,7 +1045,7 @@ void skinny_bgp_daemon_online()
       if (config.bgp_xconnect_map) {
         loc_idx = (peers_idx + peers_xconnect_idx_rr) % max_peers_idx;
 
-	if (peers[loc_idx].xconnect_fd && FD_ISSET(peers[loc_idx].xconnect_fd, &read_descs)) {
+	if (peers[loc_idx].xconnect_fd && xconnect_ready[loc_idx]) {
 	  peer = &peers[loc_idx];
 	  peer_buf = &peer->xbuf;
 	  recv_fd = peer->xconnect_fd;
@@ -1074,7 +1116,6 @@ void skinny_bgp_daemon_online()
       if (!config.bgp_xconnect_map) {
 	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP connection reset by peer (%d).\n", config.name, bgp_misc_db->log_str, bgp_peer_str, errno);
-	FD_CLR(peer->fd, &bkp_read_descs);
       }
       else {
 	bgp_peer_xconnect_print(peer, bgp_xconnect_peer_str, BGP_XCONNECT_STRLEN);
@@ -1086,8 +1127,6 @@ void skinny_bgp_daemon_online()
 	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] recv(): BGP xconnect reset by dst peer (%d).\n",
 		config.name, bgp_misc_db->log_str, bgp_xconnect_peer_str, errno);
 
-	FD_CLR(peer->fd, &bkp_read_descs);
-	FD_CLR(peer->xconnect_fd, &bkp_read_descs);
       }
 
       bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
@@ -1117,8 +1156,6 @@ void skinny_bgp_daemon_online()
 
 	ret = bgp_parse_msg(peer, now, TRUE);
 	if (ret) {
-	  FD_CLR(recv_fd, &bkp_read_descs);
-
 	  if (ret < 0) bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
 	  else bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, TRUE, ret, BGP_NOTIFY_SUBCODE_UNSPECIFIC, NULL);
 
@@ -1137,9 +1174,6 @@ void skinny_bgp_daemon_online()
 	  else if (send_fd == peer->xconnect_fd)
 	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] send(): BGP xconnect reset by dst peer (%d).\n",
 		config.name, bgp_misc_db->log_str, bgp_xconnect_peer_str, errno);
-
-	  FD_CLR(peer->fd, &bkp_read_descs);
-	  FD_CLR(peer->xconnect_fd, &bkp_read_descs);
 
 	  bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
 

@@ -1014,6 +1014,7 @@ AC_CHECK_HEADERS([netinet/udp.h pthread.h pwd.h signal.h string.h sys/ansi.h sys
 AC_CHECK_HEADERS([sys/ioctl.h syslog.h sys/mbuf.h sys/mman.h sys/param.h sys/poll.h sys/resource.h])
 AC_CHECK_HEADERS([sys/select.h sys/socket.h sys/stat.h sys/time.h sys/types.h sys/un.h sys/utsname.h])
 AC_CHECK_HEADERS([sys/wait.h time.h unistd.h])
+AC_CHECK_FUNCS([poll], [], [AC_MSG_ERROR([ERROR: missing poll().])])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_TYPE(u_int64_t, [AC_DEFINE(HAVE_U_INT64_T, 1)])
