@@ -37,6 +37,8 @@
 #define TEE_BALANCE_HASH_AGENT	2
 #define TEE_BALANCE_HASH_TAG	3
 
+#define DEFAULT_TEE_COUNTERS_REFRESH_TIME 60
+
 typedef struct tee_receiver *(*tee_balance_algorithm) (void *, struct pkt_msg *);
 
 /* structures */
@@ -44,6 +46,7 @@ struct tee_receiver {
   struct sockaddr_storage dest;
   socklen_t dest_len;
   int fd;
+  u_int64_t tee_sent;
 };
 
 struct tee_balance {
@@ -91,6 +94,7 @@ extern struct tee_receiver *Tee_hash_agent_balance(void *, struct pkt_msg *);
 extern struct tee_receiver *Tee_hash_agent_crc32(void *, struct pkt_msg *);
 extern struct tee_receiver *Tee_hash_tag_balance(void *, struct pkt_msg *);
 extern void Tee_select_templates(unsigned char *, int, int, unsigned char *, int *);
+extern void Tee_report_counters();
 
 #ifdef WITH_KAFKA
 extern void Tee_kafka_send(struct pkt_msg *, struct tee_receivers_pool *);
