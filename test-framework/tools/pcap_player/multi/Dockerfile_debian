@@ -16,7 +16,7 @@ RUN mkdir /pcap
 RUN chmod +x /app/run_traffic_reproducer.sh
 
 # Install the Python dependencies
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
 # Set the entry point command
 CMD ./run_traffic_reproducer.sh
