@@ -139,6 +139,13 @@
 #define LOCK_EX 2
 #endif
 
+/* Big-endian defines ntoh*()/hton*() as identity (above), so the "simple"
+   Assign16()/Assign32() (a = b) would truncate multi-byte values written
+   into u_char packet fields; force the byte-per-byte copy variants there. */
+#if defined IM_BIG_ENDIAN && !defined NEED_ALIGN
+#define NEED_ALIGN 1
+#endif
+
 /* Let work the unaligned copy macros the hard way: byte-per byte copy via
    u_char pointers. We discard the packed attribute way because it fits just
    to GNU compiler */
