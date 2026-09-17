@@ -96,6 +96,7 @@
 #define BGP_LS_ATTR_PFX_METRIC		1155
 #define BGP_LS_ATTR_OSPF_FWD_ADDR	1156
 #define BGP_LS_ATTR_PFX_OPAQUE		1157
+#define BGP_LS_ATTR_PREFIX_SID		1158
 #define BGP_LS_ATTR_EXT_ADMIN_GROUPS	1173
 
 #define BGP_LS_PRINT_HEX		0x01
@@ -244,6 +245,7 @@ extern int bgp_ls_attr_tlv_igp_metric_print(u_char *, u_int16_t, char *, u_int8_
 extern int bgp_ls_attr_tlv_mt_id_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_sr_capabilities_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_srv6_capabilities_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_attr_tlv_prefix_sid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 
 extern int bgp_lookup_node_match_cmp_bgp_ls(struct bgp_info *, struct node_match_cmp_term2 *);
 extern void bgp_ls_srcdst_lookup(struct packet_ptrs *, int);
