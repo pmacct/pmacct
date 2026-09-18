@@ -1076,6 +1076,44 @@ void bgp_ls_isis_areaid_print(char *to, char *from, int len)
   }
 }
 
+int bgp_ls_attr_tlv_adj_sid_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *voidobj)
+{
+  if (!pnt || !key || !voidobj || (len != 7 && len != 8)) {
+    return ERR;
+  }
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = voidobj;
+    u_int8_t adj_flags = pnt[0];
+    u_int8_t weight = pnt[1];
+    u_int32_t sid_value;
+
+    /* Flags */
+    char flags_hex[8];
+    snprintf(flags_hex, sizeof(flags_hex), "0x%02x", adj_flags);
+    json_object_set_new_nocheck(obj, "adj_sid_flags", json_string(flags_hex));
+
+    /* Weight */
+    json_object_set_new_nocheck(obj, "adj_sid_weight", json_integer(weight));
+
+    /* SID/Label - distinguish by length */
+    if (len == 7) {
+      /* 3-octet label (20-bit value) */
+      sid_value = ((u_int32_t)pnt[4] << 16) | ((u_int32_t)pnt[5] << 8) | pnt[6];
+      json_object_set_new_nocheck(obj, "adj_sid_label", json_integer(sid_value));
+    }
+    else if (len == 8) {
+      /* 4-octet index */
+     sid_value = ((u_int32_t)pnt[4] << 24) | ((u_int32_t)pnt[5] << 16) | ((u_int32_t)pnt[6] << 8) | pnt[7];
+     json_object_set_new_nocheck(obj, "adj_sid_index", json_integer(sid_value));
+    }
+#endif
+  }
+
+  return SUCCESS;
+}
+
 int bgp_ls_attr_tlv_prefix_sid_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *voidobj)
 {
   if (!pnt || !key || !voidobj || (len != 7 && len != 8)) {
