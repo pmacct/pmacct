@@ -91,6 +91,7 @@
 #define BGP_LS_ATTR_LINK_OPAQUE		1097
 #define BGP_LS_ATTR_LINK_NAME		1098
 #define BGP_LS_ATTR_ADJ_SID		1099
+#define BGP_LS_ATTR_ENDX_SID		1106
 #define BGP_LS_ATTR_IGP_FLAGS		1152
 #define BGP_LS_ATTR_IGP_ROUTE_TAG	1153
 #define BGP_LS_ATTR_IGP_EXT_ROUTE_TAG	1154
@@ -248,6 +249,7 @@ extern int bgp_ls_attr_tlv_sr_capabilities_print(u_char *, u_int16_t, char *, u_
 extern int bgp_ls_attr_tlv_srv6_capabilities_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_adj_sid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_prefix_sid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_attr_tlv_endx_sid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 
 extern int bgp_lookup_node_match_cmp_bgp_ls(struct bgp_info *, struct node_match_cmp_term2 *);
 extern void bgp_ls_srcdst_lookup(struct packet_ptrs *, int);

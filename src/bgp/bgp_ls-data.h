@@ -46,7 +46,8 @@ const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
   {BGP_LS_ATTR_NODE_FLAG_BITS, "attr_node_flags", BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int8_print},
   {BGP_LS_ATTR_NODE_NAME, "attr_node_name", 0, bgp_ls_attr_tlv_string_print},
   {BGP_LS_ATTR_LINK_NAME, "attr_link_name", 0, bgp_ls_attr_tlv_string_print},
-  {BGP_LS_ATTR_ADJ_SID, "attr_adjacency_sid", 0, bgp_ls_attr_tlv_adj_sid_print},
+  {BGP_LS_ATTR_ADJ_SID, "attr_adj_sid", 0, bgp_ls_attr_tlv_adj_sid_print},
+  {BGP_LS_ATTR_ENDX_SID, "attr_endx_sid", 0, bgp_ls_attr_tlv_endx_sid_print},
   {BGP_LS_ATTR_ISIS_AREA_ID, "attr_isis_area_id", 0, bgp_ls_attr_tlv_isis_areaid_print}, 
   {BGP_LS_MULTI_TOPO_ID, "attr_multi_topology_id", 0, bgp_ls_attr_tlv_mt_id_print},
   {BGP_LS_ATTR_SR_CAPABILITIES, "attr_sr_capabilities", 0, bgp_ls_attr_tlv_sr_capabilities_print},
@@ -63,7 +64,7 @@ const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
   {BGP_LS_ATTR_SR_LINK_GROUP, "attr_srlg", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_IGP_METRIC, "attr_igp_metric", 0, bgp_ls_attr_tlv_igp_metric_print},
   {BGP_LS_ATTR_PFX_METRIC, "attr_prefix_metric", 0, bgp_ls_attr_tlv_int32_print},
-  {BGP_LS_ATTR_PREFIX_SID, "attr_prefix_sid", 0, bgp_ls_attr_tlv_prefix_sid_print},
+  {BGP_LS_ATTR_PREFIX_SID, "attr_pfx_sid", 0, bgp_ls_attr_tlv_prefix_sid_print},
   {BGP_LS_ATTR_EXT_ADMIN_GROUPS, "attr_ext_admin_groups", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int32_print},
   {0, NULL}
 };

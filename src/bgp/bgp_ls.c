@@ -1153,6 +1153,55 @@ int bgp_ls_attr_tlv_prefix_sid_print(u_char *pnt, u_int16_t len, char *key, u_in
   return SUCCESS;
 }
 
+int bgp_ls_attr_tlv_endx_sid_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *voidobj)
+{
+  if (!pnt || !key || !voidobj || len < 22) {
+    return ERR;
+  }
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = voidobj;
+    u_int16_t endpoint_behavior = ntohs(*(u_int16_t *)pnt);
+    u_int8_t endx_flags = pnt[2];
+    u_int8_t algorithm = pnt[3];
+    u_int8_t weight = pnt[4];
+    char sid_str[INET6_ADDRSTRLEN];
+    struct in6_addr sid6;
+  
+    /* Endpoint Behavior */
+    json_object_set_new_nocheck(obj, "endx_sid_behavior", json_integer(endpoint_behavior));
+  
+    /* Flags */
+    char flags_hex[8];
+    snprintf(flags_hex, sizeof(flags_hex), "0x%02x", endx_flags);
+    json_object_set_new_nocheck(obj, "endx_sid_flags", json_string(flags_hex));
+  
+    /* Algorithm */
+    json_object_set_new_nocheck(obj, "endx_sid_alg", json_integer(algorithm));
+  
+    /* Weight */
+    json_object_set_new_nocheck(obj, "endx_sid_weight", json_integer(weight));
+  
+    /* SRv6 SID (16 octets at offset 6) */
+    memcpy(&sid6, pnt + 6, 16);
+    inet_ntop(AF_INET6, &sid6, sid_str, INET6_ADDRSTRLEN);
+    json_object_set_new_nocheck(obj, "endx_sid", json_string(sid_str));
+  
+    /* Optional sub-TLVs would start at offset 22 */
+    if (len > 22) {
+      char sub_tlv_hex[256];
+      int hex_len = len - 22;
+      if (hex_len > 128) hex_len = 128; /* Limit output */
+      serialize_hex(pnt + 22, (u_char *)sub_tlv_hex, hex_len);
+      json_object_set_new_nocheck(obj, "end_sid_tlvs", json_string(sub_tlv_hex));
+    }
+#endif
+  }
+  
+  return SUCCESS;
+}
+
 int bgp_ls_attr_tlv_string_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {
