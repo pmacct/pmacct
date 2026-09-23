@@ -66,5 +66,6 @@ const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
   {BGP_LS_ATTR_PFX_METRIC, "attr_prefix_metric", 0, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_PREFIX_SID, "attr_pfx_sid", 0, bgp_ls_attr_tlv_prefix_sid_print},
   {BGP_LS_ATTR_EXT_ADMIN_GROUPS, "attr_ext_admin_groups", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int32_print},
+  {BGP_LS_ATTR_SRV6_ENDP_BEHAVIOR, "attr_srv6_endp_behavior", 0, bgp_ls_attr_tlv_srv6_endpoint_behavior_print},
   {0, NULL}
 };

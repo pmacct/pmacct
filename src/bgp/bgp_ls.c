@@ -1202,6 +1202,67 @@ int bgp_ls_attr_tlv_endx_sid_print(u_char *pnt, u_int16_t len, char *key, u_int8
   return SUCCESS;
 }
 
+int bgp_ls_attr_tlv_srv6_endpoint_behavior_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *voidobj)
+{
+  if (!pnt || !key || !voidobj || len != 4) {
+    return ERR;
+  }
+  
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = voidobj;
+    u_int16_t endpoint_behavior = ntohs(*(u_int16_t *)pnt);
+
+    json_object_set_new_nocheck(obj, "srv6_endp_behavior", json_integer(endpoint_behavior));
+  
+    /* Common behavior code points from RFC 8986 */
+    switch (endpoint_behavior) {
+    case 0:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End (Endpoint)"));
+      break;
+    case 1:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.X (Endpoint with Layer-3 cross-connect)"));
+      break;
+    case 2:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.T (Endpoint with specific IPv6 table lookup)"));
+      break;
+    case 3:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DX2 (Endpoint with Layer-2 cross-connect)"));
+      break;
+    case 4:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DX2S (Endpoint with specific Layer-2 service)"));
+      break;
+    case 5:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DT2U (Endpoint with decapsulation and specific IPv6 table lookup)"));
+      break;
+    case 6:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DT2M (Endpoint with decapsulation and specific multicast table lookup)"));
+      break;
+    case 10:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DX6 (Endpoint with IPv6 cross-connect)"));
+      break;
+    case 11:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DX4 (Endpoint with IPv4 cross-connect)"));
+      break;
+    case 12:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DT6 (Endpoint with decapsulation and specific IPv6 table lookup)"));
+      break;
+    case 13:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DT4 (Endpoint with decapsulation and specific IPv4 table lookup)"));
+      break;
+    case 14:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("End.DT46 (Endpoint with decapsulation and specific IPv4/IPv6 table lookup)"));
+      break;
+    default:
+      json_object_set_new_nocheck(obj, "srv6_endp_behavior_name", json_string("Reserved/Unknown"));
+      break;
+    }
+#endif
+  }
+  
+  return SUCCESS;
+}
+
 int bgp_ls_attr_tlv_string_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {
