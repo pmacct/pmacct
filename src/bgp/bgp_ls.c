@@ -1263,6 +1263,41 @@ int bgp_ls_attr_tlv_srv6_endpoint_behavior_print(u_char *pnt, u_int16_t len, cha
   return SUCCESS;
 }
 
+int bgp_ls_attr_tlv_srv6_sid_structure_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *voidobj)
+{
+  if (!pnt || !key || !voidobj || len != 4) {
+    return ERR;
+  }
+  
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = voidobj;
+    u_int8_t lb_len = pnt[0];
+    u_int8_t ln_len = pnt[1];
+    u_int8_t func_len = pnt[2];
+    u_int8_t arg_len = pnt[3];
+    u_int8_t total_len = lb_len + ln_len + func_len + arg_len;
+  
+    json_object_set_new_nocheck(obj, "srv6_sid_locator_block_len", json_integer(lb_len));
+    json_object_set_new_nocheck(obj, "srv6_sid_locator_node_len", json_integer(ln_len));
+    json_object_set_new_nocheck(obj, "srv6_sid_function_len", json_integer(func_len));
+    json_object_set_new_nocheck(obj, "srv6_sid_argument_len", json_integer(arg_len));
+    json_object_set_new_nocheck(obj, "srv6_sid_total_len", json_integer(total_len));
+  
+    /* Validate structure */
+    if (total_len > 128) {
+      json_object_set_new_nocheck(obj, "srv6_sid_valid", json_false());
+      json_object_set_new_nocheck(obj, "srv6_sid_error", json_string("Total length exceeds 128 bits"));
+    }
+    else {
+      json_object_set_new_nocheck(obj, "srv6_sid_valid", json_true());
+    }
+#endif
+  }
+  
+  return SUCCESS;
+}
+
 int bgp_ls_attr_tlv_string_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {

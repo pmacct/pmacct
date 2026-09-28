@@ -101,6 +101,7 @@
 #define BGP_LS_ATTR_PREFIX_SID		1158
 #define BGP_LS_ATTR_EXT_ADMIN_GROUPS	1173
 #define BGP_LS_ATTR_SRV6_ENDP_BEHAVIOR	1250
+#define BGP_LS_ATTR_SRV6_SID_STRUCTURE	1252
 
 #define BGP_LS_PRINT_HEX		0x01
 #define BGP_LS_PRINT_ARRAY		0x02
@@ -252,6 +253,7 @@ extern int bgp_ls_attr_tlv_adj_sid_print(u_char *, u_int16_t, char *, u_int8_t, 
 extern int bgp_ls_attr_tlv_prefix_sid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_endx_sid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 extern int bgp_ls_attr_tlv_srv6_endpoint_behavior_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_attr_tlv_srv6_sid_structure_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 
 extern int bgp_lookup_node_match_cmp_bgp_ls(struct bgp_info *, struct node_match_cmp_term2 *);
 extern void bgp_ls_srcdst_lookup(struct packet_ptrs *, int);
