@@ -72,6 +72,26 @@ AC_ARG_ENABLE(so,
 )
 dnl finish: shared object handling
 
+dnl Export daemon symbols for custom packet processors by default.
+AC_MSG_CHECKING([whether to export daemon symbols])
+AC_ARG_ENABLE(export-dynamic,
+        [  --disable-export-dynamic         Do not export daemon symbols (default: no)],
+        [
+        if test x$enableval = x"yes" ; then
+          AC_MSG_RESULT(yes)
+          PMACCT_EXPORT_DYNAMIC_LDFLAGS="-Wl,--export-dynamic"
+        else
+          AC_MSG_RESULT(no)
+          PMACCT_EXPORT_DYNAMIC_LDFLAGS=""
+        fi
+        ],
+        [
+        AC_MSG_RESULT(yes)
+        PMACCT_EXPORT_DYNAMIC_LDFLAGS="-Wl,--export-dynamic"
+        ]
+)
+AC_SUBST([PMACCT_EXPORT_DYNAMIC_LDFLAGS])
+
 dnl os specific flags
 case "$host_os" in
   Sun*)
@@ -203,6 +223,7 @@ AC_ARG_ENABLE(l2,
         [
                 if test x$enableval = x"yes" ; then
                         AC_MSG_RESULT(yes)
+                        USING_L2="yes"
                         AC_DEFINE(HAVE_L2, 1)
                 else
                         AC_MSG_RESULT(no)
@@ -210,6 +231,7 @@ AC_ARG_ENABLE(l2,
         ],
         [
                 AC_MSG_RESULT(yes)
+                USING_L2="yes"
                 AC_DEFINE(HAVE_L2, 1)
                 COMPILE_ARGS="${COMPILE_ARGS} '--enable-l2'"
         ]
@@ -1276,6 +1298,65 @@ AM_CONDITIONAL([USING_BGP_BINS], [test x"$USING_BGP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
 
+PMACCT_BUILD_DEFINES=""
+AS_IF([test x"$USING_MYSQL" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_MYSQL 1"])
+AS_IF([test x"$USING_PGSQL" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_PGSQL 1"])
+AS_IF([test x"$USING_SQLITE3" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_SQLITE3 1"])
+AS_IF([test x"$USING_RABBITMQ" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_RABBITMQ 1"])
+AS_IF([test x"$USING_RABBITMQ_9" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_RABBITMQ_9 1"])
+AS_IF([test x"$USING_RABBITMQ_13" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_RABBITMQ_13 1"])
+AS_IF([test x"$USING_ZMQ" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_ZMQ 1"])
+AS_IF([test x"$USING_KAFKA" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_KAFKA 1"])
+AS_IF([test x"$USING_REDIS" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_REDIS 1"])
+AS_IF([test x"$USING_GNUTLS" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_GNUTLS 1"])
+AS_IF([test x"$USING_JANSSON" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_JANSSON 1"])
+AS_IF([test x"$USING_AVRO" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_AVRO 1"])
+AS_IF([test x"$USING_SERDES" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_SERDES 1"])
+AS_IF([test x"$USING_NDPI" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_NDPI 1"])
+AS_IF([test x"$USING_MMGEOIPV2" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_GEOIPV2 1"])
+AS_IF([test x"$USING_UNYTE_UDP_NOTIF" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_UNYTE_UDP_NOTIF 1"])
+AS_IF([test x"$USING_GRPC_COLLECTOR" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_GRPC_COLLECTOR 1"])
+AS_IF([test x"$USING_EBPF" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_EBPF 1"])
+AS_IF([test x"$USING_NFLOG" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define WITH_NFLOG 1"])
+AS_IF([test x"$USING_DLOPEN" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define HAVE_DLOPEN 1"])
+AS_IF([test x"$USING_TRAFFIC_BINS" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define HAVE_TRAFFIC_BINS 1"])
+AS_IF([test x"$USING_BGP_BINS" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define HAVE_BGP_BINS 1"])
+AS_IF([test x"$USING_BMP_BINS" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define HAVE_BMP_BINS 1"])
+AS_IF([test x"$USING_ST_BINS" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define HAVE_ST_BINS 1"])
+AS_IF([test x"$USING_L2" = x"yes"], [PMACCT_BUILD_DEFINES="$PMACCT_BUILD_DEFINES
+#define HAVE_L2 1"])
+AC_SUBST([PMACCT_BUILD_DEFINES])
+
+PMACCT_PC_CFLAGS="-I${includedir} -I${includedir}/pmacct/src"
+PMACCT_PC_LIBS=""
+
+AC_SUBST([PMACCT_PC_CFLAGS])
+AC_SUBST([PMACCT_PC_LIBS])
+
 AC_CONFIG_FILES([
             src/pmacct-version.h Makefile \
             src/Makefile src/external_libs/Makefile \
@@ -1285,6 +1366,8 @@ AC_CONFIG_FILES([
 	    src/rpki/Makefile src/telemetry/Makefile \
 	    src/ndpi/Makefile src/filters/Makefile \
 	    examples/lg/Makefile src/ebpf/Makefile \
-	    examples/custom/Makefile ])
+	    examples/custom/Makefile \
+	    pmacct.pc \
+	    src/build_config.h ])
 
 AC_OUTPUT
