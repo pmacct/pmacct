@@ -132,7 +132,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   blsn.peer = peer;
 
   /* parse NLRIs, make sure can read Type and Length */
-  for (idx = 0; rem_len > 4; rem_len -= nlri_len, idx++) {
+  for (idx = 0; rem_len >= 4; rem_len -= nlri_len, idx++) {
     memcpy(&tmp16, pnt, 2);
     blsn.type = ntohs(tmp16);
     pnt += 2; rem_len -= 2;
@@ -140,6 +140,15 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
     memcpy(&tmp16, pnt, 2);
     nlri_len = rem_nlri_len = ntohs(tmp16);
     pnt += 2; rem_len -= 2;
+
+    if (nlri_len > rem_len || nlri_len < 9) {
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed NLRI type %u: length %u, available %d (minimum 9)\n",
+          config.name, config.type, bgp_peer_str, blsn.type, nlri_len, rem_len);
+      goto exit_fail_lane;
+    }
+
+    tlv_type = 0;
 
     if (nlri_len >= 9) {
       blsn.proto = (*pnt); pnt++; rem_nlri_len--;
@@ -159,6 +168,13 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
       tlv_len = ntohs(tmp16);
       pnt += 2; rem_nlri_len -= 2;
 
+      if (tlv_len > rem_nlri_len) {
+        bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+        Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed NLRI type %u TLV %u: length %u exceeds available %d\n",
+            config.name, config.type, bgp_peer_str, blsn.type, tlv_type, tlv_len, rem_nlri_len);
+        goto exit_fail_lane;
+      }
+
       ret = cdada_map_find(bgp_ls_nlri_tlv_map, &tlv_type, (void **) &tlv_hdlr);
       if (ret == CDADA_SUCCESS && tlv_hdlr) {
 	ret = (*tlv_hdlr)(pnt, tlv_len, &blsn);
@@ -174,12 +190,19 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
       }
     }
 
+    if (rem_nlri_len) {
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed NLRI type %u: %d trailing bytes\n",
+          config.name, config.type, bgp_peer_str, blsn.type, rem_nlri_len);
+      goto exit_fail_lane;
+    }
+
     if (tlv_type == BGP_LS_IP_REACH) {
       if (!bms->skip_rib) {
         pfx.family = blsn.nlri.topo_pfx.p.pdesc.addr.family;
         pfx.prefixlen = blsn.nlri.topo_pfx.p.pdesc.mask.len;
         pfx_size = ((blsn.nlri.topo_pfx.p.pdesc.mask.len + 7) / 8);
-        memcpy(&pfx.u.prefix, pnt, pfx_size);
+	memcpy(&pfx.u.prefix, &blsn.nlri.topo_pfx.p.pdesc.addr.address, pfx_size);
         afi = family2afi(pfx.family);
         safi = SAFI_UNICAST;
 
@@ -280,6 +303,13 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
 
       bgp_ls_log_msg(&blsn, &attr_extra->ls, AFI_BGP_LS, blsn.safi, bms->tag, event_type, bms->msglog_output, NULL, log_type);
     }
+  }
+
+  if (rem_len) {
+    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed NLRI header: %d trailing bytes\n",
+        config.name, config.type, bgp_peer_str, rem_len);
+    goto exit_fail_lane;
   }
 
   return SUCCESS;
@@ -421,6 +451,13 @@ int bgp_ls_nlri_tlv_local_nd_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
     tlv_len = ntohs(tmp16);
     pnt += 2; len -= 2;
 
+    if (tlv_len > len) {
+      bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed ND Sub-TLV %u: length %u exceeds available %d\n",
+          config.name, config.type, bgp_peer_str, tlv_type, tlv_len, len);
+      return ERR;
+    }
+
     ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) &tlv_hdlr);
     if (ret == CDADA_SUCCESS && tlv_hdlr) {
       ret = (*tlv_hdlr)(pnt, tlv_len, blnd);
@@ -434,6 +471,13 @@ int bgp_ls_nlri_tlv_local_nd_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
       Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): [%s] BGP-LS Unknown ND Sub-TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
       ret = SUCCESS;
     }
+  }
+
+  if (len) {
+    bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed ND Sub-TLV: %d trailing bytes\n",
+        config.name, config.type, bgp_peer_str, len);
+    return ERR;
   }
 
   return ret;
@@ -463,6 +507,13 @@ int bgp_ls_nlri_tlv_remote_nd_handler(u_char *pnt, int len, struct bgp_ls_nlri *
     tlv_len = ntohs(tmp16);
     pnt += 2; len -= 2;
 
+    if (tlv_len > len) {
+      bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed Remote ND Sub-TLV %u: length %u exceeds available %d\n",
+          config.name, config.type, bgp_peer_str, tlv_type, tlv_len, len);
+      return ERR;
+    }
+
     ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) &tlv_hdlr);
     if (ret == CDADA_SUCCESS && tlv_hdlr) {
       ret = (*tlv_hdlr)(pnt, tlv_len, blnd);
@@ -477,6 +528,13 @@ int bgp_ls_nlri_tlv_remote_nd_handler(u_char *pnt, int len, struct bgp_ls_nlri *
 
       ret = SUCCESS;
     }
+  }
+
+  if (len) {
+    bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed Remote ND Sub-TLV: %d trailing bytes\n",
+        config.name, config.type, bgp_peer_str, len);
+    return ERR;
   }
 
   return ret;
@@ -798,6 +856,39 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
   if (!blsn->peer->log && !output_data) return ERR; /* missing any output method */
 
   peer = blsn->peer;
+
+  /* Validate */
+  if (blsa && blsa->ptr && blsa->len) {
+    u_char *attr_pnt = blsa->ptr;
+    int attr_rem = blsa->len;
+    u_int16_t attr_type, attr_len, tmp16;
+    char bgp_peer_str[INET6_ADDRSTRLEN];
+
+    while (attr_rem >= 4) {
+      memcpy(&tmp16, attr_pnt, 2);
+      attr_type = ntohs(tmp16);
+      memcpy(&tmp16, attr_pnt + 2, 2);
+      attr_len = ntohs(tmp16);
+      attr_pnt += 4;
+      attr_rem -= 4;
+
+      if (attr_len > attr_rem) {
+        bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+        Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed Attribute TLV %u: length %u exceeds available %d\n",
+            config.name, config.type, bgp_peer_str, attr_type, attr_len, attr_rem);
+        return ERR;
+      }
+      attr_pnt += attr_len;
+      attr_rem -= attr_len;
+    }
+
+    if (attr_rem) {
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS malformed Attribute TLV header: %d trailing bytes\n",
+          config.name, config.type, bgp_peer_str, attr_rem);
+      return ERR;
+    }
+  }
 
   bms = bgp_select_misc_db(peer->type);
   if (!bms) return ERR;
