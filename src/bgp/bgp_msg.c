@@ -956,6 +956,7 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
       break;
     case BGP_ATTR_BGP_LS:
       ret = bgp_attr_parse_ls(peer, attr_len, attr_extra, (u_char *)ptr, flag);
+      break;
     default:
       ret = 0;
       break;
