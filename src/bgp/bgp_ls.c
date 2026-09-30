@@ -387,8 +387,6 @@ void bgp_ls_info_delete(struct bgp_peer *peer)
 	  cdada_map_erase(bgp_ls_nlri_map, blsn); 
 	  free(blsa->ptr);
 	  free(blsa);
-
-	  cdada_list_pop_front(blsnmtd.list_del);
         }
 	else {
 	  char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -396,6 +394,8 @@ void bgp_ls_info_delete(struct bgp_peer *peer)
 	  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
 	  Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI delete\n", config.name, config.type, bgp_peer_str);
 	}
+
+	cdada_list_pop_front(blsnmtd.list_del);
       }
 
       cdada_list_destroy(blsnmtd.list_del);
