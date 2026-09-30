@@ -1712,7 +1712,13 @@ int bgp_ls_attr_tlv_isis_areaid_print(u_char *pnt, u_int16_t len, char *key, u_i
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
     json_t *l1 = NULL;
-    char area_id[3 * len];
+    char *area_id;
+
+    /* Two hex digits per octet, plus the terminating NUL. */
+    area_id = malloc(2 * (size_t)len + 1);
+    if (!area_id) {
+      return ERR;
+    }
 
     l1 = json_object_get(obj, key);
     if (!l1) {
@@ -1722,6 +1728,8 @@ int bgp_ls_attr_tlv_isis_areaid_print(u_char *pnt, u_int16_t len, char *key, u_i
 
     bgp_ls_isis_areaid_print(area_id, (char *)pnt, len);
     json_array_append_new(l1, json_string(area_id));
+
+    free(area_id);
 #endif
   }
 
