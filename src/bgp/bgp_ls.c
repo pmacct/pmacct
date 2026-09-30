@@ -1858,7 +1858,7 @@ void bgp_ls_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
     if (!pptrs->igp_src) {
       memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
-      bgp_node_match_ipv6(bgp_ls_routing_db->rib[AFI_IP][safi],
+      bgp_node_match_ipv6(bgp_ls_routing_db->rib[AFI_IP6][safi],
 			  &pref6, (struct bgp_peer *) pptrs->bgp_peer,
 			  bms->route_info_modulo,
 			  bgp_lookup_node_match_cmp_bgp_ls, NULL, bms->bnv,
@@ -1876,7 +1876,7 @@ void bgp_ls_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 
     if (!pptrs->igp_dst) {
       memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-      bgp_node_match_ipv6(bgp_ls_routing_db->rib[AFI_IP][safi],
+      bgp_node_match_ipv6(bgp_ls_routing_db->rib[AFI_IP6][safi],
 			  &pref6, (struct bgp_peer *) pptrs->bgp_peer,
 			  bms->route_info_modulo,
 			  bgp_lookup_node_match_cmp_bgp_ls, NULL, bms->bnv,
