@@ -1757,10 +1757,10 @@ int bgp_ls_attr_tlv_igp_metric_print(u_char *pnt, u_int16_t len, char *key, u_in
       tmp32 = (u_int8_t) pnt[0] & 0x3F;
       break;
     case 2:
-      tmp32 = (u_int8_t) (pnt[0] << 8) | (u_int8_t) pnt[1];
+      tmp32 = ((u_int32_t) pnt[0] << 8) | (u_int32_t) pnt[1];
       break;
     case 3:
-      tmp32 = ((u_int8_t) pnt[0] << 16) | ((u_int8_t) pnt[1] << 8) | (u_int8_t) pnt[2];
+      tmp32 = ((u_int32_t) pnt[0] << 16) | ((u_int32_t) pnt[1] << 8) | (u_int32_t) pnt[2];
       break;
     default:
       return ERR;
