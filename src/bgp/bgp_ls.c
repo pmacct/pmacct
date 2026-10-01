@@ -1103,6 +1103,11 @@ void bgp_ls_log_node_desc(void *void_obj, struct bgp_ls_node_desc *blsnd, u_int8
       prefix = in_prefix;
     }
 
+    /* Leave room for the longest suffix, "_confed_asn", and NUL. */
+    if (strlen(prefix) > sizeof(key_str) - sizeof("_confed_asn")) {
+      return;
+    }
+
     strcpy(key_str, prefix); strcat(key_str, "_asn");
     json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->asn));
 
@@ -1120,7 +1125,7 @@ void bgp_ls_log_node_desc(void *void_obj, struct bgp_ls_node_desc *blsnd, u_int8
       memset(sys_id, 0, sizeof(sys_id));
       bgp_ls_isis_sysid_print(sys_id, blsnd->igp_rtr_id.id);
       if (blsnd->igp_rtr_id.len == 7) {
-	sprintf(&sys_id[strlen(sys_id)], "-%02x", blsnd->igp_rtr_id.id[6]);
+        sprintf(&sys_id[strlen(sys_id)], "-%02x", (unsigned char)blsnd->igp_rtr_id.id[6]);
         json_object_set_new_nocheck(obj, "pseudonode", json_string("true"));
       }
  
@@ -1139,11 +1144,11 @@ void bgp_ls_isis_sysid_print(char *to, char *from)
 
   while (i < BGP_LS_ISIS_SYS_ID_LEN - 1) {
     if (i & 1) {
-      sprintf (to, "%02x.", *(from + i));
+      sprintf (to, "%02x.", (unsigned char)*(from + i));
       to += 3;
     }
     else {
-      sprintf (to, "%02x", *(from + i));
+      sprintf (to, "%02x", (unsigned char)*(from + i));
       to += 2;
     }
 
