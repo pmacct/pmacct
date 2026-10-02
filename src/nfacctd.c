@@ -2273,8 +2273,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             tpl->fld[NF9_MPLS_VPN_RD].len[0] == 8) {
           /* Handling the global option scoping case */
           if (config.nfacctd_disable_opt_scope_check ||
-              tpl->fld[NF9_OPT_SCOPE_SYSTEM].count)
+              tpl->fld[NF9_OPT_SCOPE_SYSTEM].count) {
             entry = (struct xflow_status_entry *) pptrs->f_status_g;
+	  }
 
 	  if (entry) {
 	    u_int32_t ingress_vrfid, egress_vrfid;
@@ -2297,11 +2298,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    }
 
             memcpy(&ingress_vrfid, pkt+tpl->fld[NF9_INGRESS_VRFID].off[0],
-                   tpl->fld[NF9_INGRESS_VRFID].len[0]);
+                   MIN(tpl->fld[NF9_INGRESS_VRFID].len[0], sizeof(ingress_vrfid)));
 	    ingress_vrfid = ntohl(ingress_vrfid);
 
             memcpy(&egress_vrfid, pkt+tpl->fld[NF9_EGRESS_VRFID].off[0],
-                   tpl->fld[NF9_EGRESS_VRFID].len[0]);
+                   MIN(tpl->fld[NF9_EGRESS_VRFID].len[0], sizeof(egress_vrfid)));
 	    egress_vrfid = ntohl(egress_vrfid);
 
 	    if (ingress_vrfid || egress_vrfid) {
