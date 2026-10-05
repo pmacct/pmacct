@@ -4,9 +4,12 @@ FROM rockylinux:9
 
 ARG DISTRIBUTION=rockylinux:9
 
-RUN yum install -y dnf-plugins-core && \
-    yum config-manager --set-enabled crb && \
-    yum install -y \
+RUN dnf install -y dnf-plugins-core && \
+    dnf config-manager --set-enabled crb && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf && \
+    dnf --refresh -y upgrade && \
+    dnf --refresh -y install \
     autoconf \
     automake \
     bash \
@@ -37,7 +40,9 @@ RUN yum install -y dnf-plugins-core && \
     sudo \
     wget \
     which \
-    zlib-devel
+    zlib-devel && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf
 
 COPY ./ci/deps.sh .
 RUN ./deps.sh
