@@ -1520,7 +1520,7 @@ void igp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_pt
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
 
   if (pptrs->igp_dst_info) {
-    nh_info = (struct bgp_info *) pptrs->bgp_dst_info;
+    nh_info = (struct bgp_info *) pptrs->igp_dst_info;
   }
         
   if (nh_info && nh_info->attr) {
