@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -44,6 +44,24 @@ static const char fake_host[] = "0.0.0.0";
 static const char fake_as[] = "0";
 static const char fake_comm[] = "";
 static const char fake_as_path[] = "";
+
+/* Escape a string literal for SQL engines supported by the SQL plugins. */
+static void sql_escaped_string(char *dst, size_t dst_len, const char *fmt, const char *src)
+{
+  char escaped[SRVBUFLEN * 2 + 1];
+  size_t i, j = 0;
+
+  for (i = 0; src[i] && j < sizeof(escaped) - 1; i++) {
+    if (src[i] == '\'') {
+      if (j >= sizeof(escaped) - 2) break;
+      escaped[j++] = '\'';
+    }
+    escaped[j++] = src[i];
+  }
+  escaped[j] = '\0';
+
+  snprintf(dst, dst_len, fmt, escaped);
+}
 
 /* Functions */
 #if defined (HAVE_L2)
@@ -930,8 +948,9 @@ void count_vrf_name_handler(const struct db_cache *cache_elem, struct insert_dat
   vlen_prims_get(cache_elem->pvlen, COUNT_INT_VRF_NAME, &vrf_name_ptr);
   if (!vrf_name_ptr) vrf_name_ptr = empty_string;
 
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
+  sql_escaped_string(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  sql_escaped_string(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
@@ -943,8 +962,9 @@ void count_ingress_vrf_name_handler(const struct db_cache *cache_elem, struct in
   vlen_prims_get(cache_elem->pvlen, COUNT_INT_INGRESS_VRF_NAME, &vrf_name_ptr);
   if (!vrf_name_ptr) vrf_name_ptr = empty_string;
 
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
+  sql_escaped_string(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  sql_escaped_string(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
@@ -956,8 +976,9 @@ void count_egress_vrf_name_handler(const struct db_cache *cache_elem, struct ins
   vlen_prims_get(cache_elem->pvlen, COUNT_INT_EGRESS_VRF_NAME, &vrf_name_ptr);
   if (!vrf_name_ptr) vrf_name_ptr = empty_string;
 
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
+  sql_escaped_string(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  sql_escaped_string(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
@@ -969,8 +990,9 @@ void count_in_iface_name_handler(const struct db_cache *cache_elem, struct inser
   vlen_prims_get(cache_elem->pvlen, COUNT_INT_IN_IFACE_NAME, &iface_name_ptr);
   if (!iface_name_ptr) iface_name_ptr = empty_string;
 
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, iface_name_ptr);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, iface_name_ptr);
+  sql_escaped_string(*ptr_where, SPACELEFT(where_clause), where[num].string, iface_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  sql_escaped_string(*ptr_values, SPACELEFT(values_clause), values[num].string, iface_name_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
@@ -982,8 +1004,9 @@ void count_out_iface_name_handler(const struct db_cache *cache_elem, struct inse
   vlen_prims_get(cache_elem->pvlen, COUNT_INT_OUT_IFACE_NAME, &iface_name_ptr);
   if (!iface_name_ptr) iface_name_ptr = empty_string;
 
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, iface_name_ptr);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, iface_name_ptr);
+  sql_escaped_string(*ptr_where, SPACELEFT(where_clause), where[num].string, iface_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  sql_escaped_string(*ptr_values, SPACELEFT(values_clause), values[num].string, iface_name_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
