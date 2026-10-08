@@ -1066,27 +1066,29 @@ int sql_trigger_exec(char *filename)
       }
       _exit(0);
     default:
-      int status;
-      pid_t wpid;
-
-      do {
-	wpid = waitpid(pid, &status, 0);
-      } while (wpid < 0 && errno == EINTR);
-
-      if (wpid < 0) {
-	Log(LOG_WARNING,
-	    "WARN ( %s/%s ): sql_trigger_exec(): waitpid failed - '%s' (errno: %d)\n",
-	    config.name, config.type, filename, errno);
-      }
-      else if (WIFEXITED(status) && WEXITSTATUS(status) == 127) {
-	Log(LOG_WARNING,
-	    "WARN ( %s/%s ): sql_trigger_exec(): can't execute - '%s'\n",
-	    config.name, config.type, filename);
-      }
-      else if (WIFSIGNALED(status)) {
-	Log(LOG_WARNING,
-	    "WARN ( %s/%s ): sql_trigger_exec(): child terminated by signal %d - '%s'\n",
-	    config.name, config.type, WTERMSIG(status), filename);
+      { 
+        int status;
+        pid_t wpid;
+  
+        do {
+  	  wpid = waitpid(pid, &status, 0);
+        } while (wpid < 0 && errno == EINTR);
+  
+        if (wpid < 0) {
+  	  Log(LOG_WARNING,
+  	      "WARN ( %s/%s ): sql_trigger_exec(): waitpid failed - '%s' (errno: %d)\n",
+  	      config.name, config.type, filename, errno);
+        }
+        else if (WIFEXITED(status) && WEXITSTATUS(status) == 127) {
+  	  Log(LOG_WARNING,
+  	      "WARN ( %s/%s ): sql_trigger_exec(): can't execute - '%s'\n",
+  	      config.name, config.type, filename);
+        }
+        else if (WIFSIGNALED(status)) {
+  	  Log(LOG_WARNING,
+  	      "WARN ( %s/%s ): sql_trigger_exec(): child terminated by signal %d - '%s'\n",
+  	      config.name, config.type, WTERMSIG(status), filename);
+        }
       }
 
       return 0;
