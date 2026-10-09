@@ -99,7 +99,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("seq"));
       json_object_set_new_nocheck(netop_label, "number-value", json_integer((json_int_t)log_seq));
-      json_array_append(netop_labels, netop_label);
+      json_array_append_new(netop_labels, netop_label);
 
       json_object_set_new_nocheck(tmesg_meta_obj, "collection-timestamp", json_string(tms->log_tstamp_str));
     }
@@ -107,7 +107,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("seq"));
       json_object_set_new_nocheck(netop_label, "number-value", json_integer((json_int_t) telemetry_log_seq_get(&tms->log_seq)));
-      json_array_append(netop_labels, netop_label);
+      json_array_append_new(netop_labels, netop_label);
 
       json_object_set_new_nocheck(tmesg_meta_obj, "collection-timestamp", json_string(tms->dump.tstamp_str));
     }
@@ -161,7 +161,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
 	json_t *netop_label = json_object();
 	json_object_set_new_nocheck(netop_label, "name", json_string("serialization"));
         json_object_set_new_nocheck(netop_label, "string-value", json_string("json"));
-        json_array_append(netop_labels, netop_label);
+        json_array_append_new(netop_labels, netop_label);
       }
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
@@ -180,7 +180,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
         json_t *netop_label = json_object();
         json_object_set_new_nocheck(netop_label, "name", json_string("serialization"));
         json_object_set_new_nocheck(netop_label, "string-value", json_string("gpb"));
-        json_array_append(netop_labels, netop_label);
+        json_array_append_new(netop_labels, netop_label);
       }
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_JSON_STRING) {
@@ -189,13 +189,13 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("serialization"));
       json_object_set_new_nocheck(netop_label, "string-value", json_string("json-string"));
-      json_array_append(netop_labels, netop_label);
+      json_array_append_new(netop_labels, netop_label);
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_UNKNOWN) {
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("serialization"));
       json_object_set_new_nocheck(netop_label, "string-value", json_string("unknown"));
-      json_array_append(netop_labels, netop_label);
+      json_array_append_new(netop_labels, netop_label);
     }
 
     json_object_set_new_nocheck(dcm_obj, "vendor", json_string("pmacct"));
@@ -778,7 +778,7 @@ void telemetry_tag_print_json(json_t *netop_labels, telemetry_tag_t *tag)
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("tag"));
       json_object_set_new_nocheck(netop_label, "number-value", json_integer(json_integer_value(ret)));
-      json_array_append(netop_labels, netop_label);
+      json_array_append_new(netop_labels, netop_label);
     }
 
     goto exit_lane;
@@ -799,7 +799,7 @@ void telemetry_tag_print_json(json_t *netop_labels, telemetry_tag_t *tag)
       json_t *netop_label = json_object();
       json_object_set_new_nocheck(netop_label, "name", json_string("label"));
       json_object_set_new_nocheck(netop_label, "string-value", json_string(json_string_value(ret)));
-      json_array_append(netop_labels, netop_label);
+      json_array_append_new(netop_labels, netop_label);
     }
 
     goto exit_lane;
