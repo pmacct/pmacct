@@ -491,12 +491,13 @@ int yp_post_process_subscription(struct telemetry_data *t_data, int data_decoder
 {   
   int ret = SUCCESS;
 
-  if (data_decoder || !t_data || !yp_msg) return ERR;
+  if (!data_decoder || !t_data || !yp_msg) return ERR;
           
 #ifdef WITH_JANSSON
   if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
     if (yp_msg->sub_obj) {
       free(yp_msg->sub_obj);
+      yp_msg->sub_obj = NULL;
     }
   }
 #else
