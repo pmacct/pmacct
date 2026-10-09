@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -454,6 +454,10 @@ int yp_pre_process_subscription(struct telemetry_data *t_data, void *payload, u_
     if (subscription) {
       yp_msg-> type = YP_SUB_TERM;
       goto next_step;
+    }
+    else {
+      ret = ERR;
+      goto exit_lane;
     }
 
     next_step:
