@@ -83,13 +83,17 @@ int skinny_bmp_daemon()
 
   sigset_t signal_set;
 
-  /* select() stuff */
-  fd_set read_descs, bkp_read_descs;
-  int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
+  /* poll() stuff */
+  struct pollfd *poll_fds = NULL;
+  int *poll_peer_idx = NULL;
+  u_char *peer_ready = NULL;
+  nfds_t poll_fds_num = 0, poll_idx = 0, poll_capacity = 0;
+  int fd, recalc_fds, poll_num, poll_timeout;
+  u_char server_ready = FALSE;
 
   /* logdump time management */
   time_t dump_refresh_deadline = {0};
-  struct timeval dump_refresh_timeout, *drt_ptr;
+  struct timeval dump_refresh_timeout;
 
   /* pcap_savefile stuff */
   struct packet_ptrs recv_pptrs;
@@ -374,9 +378,14 @@ int skinny_bmp_daemon()
   }
 
   /* Preparing for syncronous I/O multiplexing */
-  select_fd = 0;
-  FD_ZERO(&bkp_read_descs);
-  FD_SET(config.bmp_sock, &bkp_read_descs);
+  poll_capacity = (1 + config.bmp_daemon_max_peers);
+  poll_fds = malloc(sizeof(struct pollfd) * poll_capacity);
+  poll_peer_idx = malloc(sizeof(int) * poll_capacity);
+  peer_ready = malloc(config.bmp_daemon_max_peers * sizeof(u_char));
+  if (!poll_fds || !poll_peer_idx || !peer_ready) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() poll support structures. Terminating thread.\n", config.name, bmp_misc_db->log_str);
+    exit_gracefully(1);
+  }
 
   /* Let's initialize clean shared RIB */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
@@ -593,7 +602,6 @@ int skinny_bmp_daemon()
 
   dynname_tokens_prepare(config.writer_id_string, &bmp_misc_db->writer_id_tokens, DYN_STR_WRITER_ID);
 
-  select_fd = bkp_select_fd = (config.bmp_sock + 1);
   recalc_fds = FALSE;
 
   bmp_link_misc_structs(bmp_misc_db);
@@ -653,22 +661,34 @@ int skinny_bmp_daemon()
     }
 
     if (recalc_fds) {
-      select_fd = config.bmp_sock;
       max_peers_idx = -1; /* .. since valid indexes include 0 */
 
       for (peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
-        if (select_fd < bmp_peers[peers_idx].self.fd) select_fd = bmp_peers[peers_idx].self.fd;
         if (bmp_peers[peers_idx].self.fd) max_peers_idx = peers_idx;
       }
-      select_fd++;
       max_peers_idx++;
 
-      bkp_select_fd = select_fd;
       recalc_fds = FALSE;
     }
-    else select_fd = bkp_select_fd;
+    memset(peer_ready, 0, (config.bmp_daemon_max_peers * sizeof(u_char)));
+    server_ready = FALSE;
+    poll_fds_num = 0;
 
-    memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+    poll_fds[poll_fds_num].fd = config.bmp_sock;
+    poll_fds[poll_fds_num].events = POLLIN;
+    poll_fds[poll_fds_num].revents = 0;
+    poll_peer_idx[poll_fds_num] = -1;
+    poll_fds_num++;
+
+    for (peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
+      if (bmp_peers[peers_idx].self.fd > 0) {
+        poll_fds[poll_fds_num].fd = bmp_peers[peers_idx].self.fd;
+        poll_fds[poll_fds_num].events = POLLIN;
+        poll_fds[poll_fds_num].revents = 0;
+        poll_peer_idx[poll_fds_num] = peers_idx;
+        poll_fds_num++;
+      }
+    }
 
     if (bmp_misc_db->dump_backend_methods) {
       int delta;
@@ -676,12 +696,20 @@ int skinny_bmp_daemon()
       calc_refresh_timeout_sec(dump_refresh_deadline, bmp_misc_db->log_tstamp.tv_sec, &delta);
       dump_refresh_timeout.tv_sec = delta;
       dump_refresh_timeout.tv_usec = 0;
-      drt_ptr = &dump_refresh_timeout;
+      poll_timeout = (dump_refresh_timeout.tv_sec * 1000);
     }
-    else drt_ptr = NULL;
+    else {
+      poll_timeout = -1;
+    }
 
-    select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
-    if (select_num < 0) goto select_again;
+    poll_num = poll(poll_fds, poll_fds_num, poll_timeout);
+    if (poll_num < 0) goto select_again;
+    for (poll_idx = 0; poll_idx < poll_fds_num; poll_idx++) {
+      if (!(poll_fds[poll_idx].revents & (POLLIN|POLLERR|POLLHUP))) continue;
+
+      if (poll_peer_idx[poll_idx] < 0) server_ready = TRUE;
+      else peer_ready[poll_peer_idx[poll_idx]] = TRUE;
+    }
 
     if (reload_map_bmp_thread) {
       if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);
@@ -768,11 +796,11 @@ int skinny_bmp_daemon()
     }
 
     /* 
-       If select_num == 0 then we got out of select() due to a timeout rather
+       If poll_num == 0 then we got out of poll() due to a timeout rather
        than because we had a message from a peer to handle. By now we did all
-       routine checks and can happily return to select() again.
+       routine checks and can happily return to poll() again.
     */
-    if (!select_num) goto select_again;
+    if (!poll_num) goto select_again;
 
     if (config.pcap_savefile) {
       struct bmp_peer pcap_savefile_peer;
@@ -793,7 +821,7 @@ int skinny_bmp_daemon()
 		!sa_port_cmp((struct sockaddr *) &client, bmp_peers[peers_idx].self.tcp_port)) {
 	      peer = &bmp_peers[peers_idx].self;
 	      bmpp = &bmp_peers[peers_idx];
-	      FD_CLR(config.bmp_sock, &read_descs);
+	      server_ready = FALSE;
 	      break;
 	    }
 	  }
@@ -808,7 +836,7 @@ int skinny_bmp_daemon()
     }
 
     /* New connection is coming in */
-    if (FD_ISSET(config.bmp_sock, &read_descs)) {
+    if (server_ready) {
       int peers_check_idx, peers_num;
 
       if (!config.pcap_savefile) {
@@ -887,7 +915,6 @@ int skinny_bmp_daemon()
       }
 
       peer->fd = fd;
-      FD_SET(peer->fd, &bkp_read_descs);
       sa_to_addr((struct sockaddr *) &client, &peer->addr, &peer->tcp_port);
       addr_to_str(peer->addr_str, &peer->addr);
       memcpy(&peer->id, &peer->addr, sizeof(struct host_addr)); /* XXX: some inet_ntoa()'s could be around against peer->id */
@@ -934,7 +961,7 @@ int skinny_bmp_daemon()
       for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
 	int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
 
-	if (bmp_peers[loc_idx].self.fd && FD_ISSET(bmp_peers[loc_idx].self.fd, &read_descs)) {
+	if (bmp_peers[loc_idx].self.fd && peer_ready[loc_idx]) {
 	  peer = &bmp_peers[loc_idx].self;
 	  bmpp = &bmp_peers[loc_idx];
 	  peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
@@ -1040,7 +1067,6 @@ int skinny_bmp_daemon()
 
       if (ret <= 0) {
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP connection reset by peer (%d).\n", config.name, bmp_misc_db->log_str, peer->addr_str, errno);
-        FD_CLR(peer->fd, &bkp_read_descs);
         bmp_peer_close(bmpp, FUNC_TYPE_BMP);
         recalc_fds = TRUE;
         goto select_again;
@@ -1064,7 +1090,6 @@ int skinny_bmp_daemon()
 
     if (do_term) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP Term message received. Closing up.\n", config.name, bmp_misc_db->log_str, peer->addr_str);
-      FD_CLR(peer->fd, &bkp_read_descs);
       bmp_peer_close(bmpp, FUNC_TYPE_BMP);
       recalc_fds = TRUE;
       goto select_again;

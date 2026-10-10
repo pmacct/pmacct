@@ -62,10 +62,10 @@ int rpki_daemon()
   afi_t afi;
   safi_t safi;
 
-  /* select() stuff */
-  struct timeval select_timeout;
-  int select_fd, select_num;
-  fd_set read_desc;
+  /* poll() stuff */
+  int poll_num;
+  struct pollfd pfd;
+  int poll_timeout;
 
   /* rpki_rtr_cache stuff */
   struct rpki_rtr_handle rpki_cache;
@@ -129,25 +129,24 @@ int rpki_daemon()
   for (;;) {
     select_again:
 
-    /* select inits */
-    FD_ZERO(&read_desc);
-    select_fd = 0;
-    select_timeout.tv_sec = 1;
-    select_timeout.tv_usec = 0;
+    /* poll inits */
+    memset(&pfd, 0, sizeof(pfd));
+    pfd.fd = -1;
+    pfd.events = POLLIN;
+    poll_timeout = 1000;
 
     if (config.rpki_rtr_cache) {
       if (rpki_cache.fd > 0) {
-	select_fd = (rpki_cache.fd + 1);
-	FD_SET(rpki_cache.fd, &read_desc);
+	pfd.fd = rpki_cache.fd;
       }
 
-      select_timeout.tv_sec = rpki_rtr_eval_timeout(&rpki_cache);
+      poll_timeout = (rpki_rtr_eval_timeout(&rpki_cache) * 1000);
     }
 
-    select_num = select(select_fd, &read_desc, NULL, NULL, &select_timeout);
+    poll_num = poll(&pfd, (pfd.fd >= 0 ? 1 : 0), poll_timeout);
 
     if (config.rpki_rtr_cache) rpki_cache.now = time(NULL);
-    if (select_num < 0) goto select_again;
+    if (poll_num < 0) goto select_again;
 
     /* signals handling */
     if (reload_map_rpki_thread) {
@@ -157,7 +156,7 @@ int rpki_daemon()
 
     if (config.rpki_rtr_cache) {
       /* timeout */
-      if (!select_num) {
+      if (!poll_num) {
 	if (rpki_cache.fd < 0) rpki_rtr_connect(&rpki_cache);
 	if (!rpki_cache.session_id) rpki_rtr_send_reset_query(&rpki_cache);
 	if (rpki_cache.serial) rpki_rtr_send_serial_query(&rpki_cache);

@@ -91,13 +91,17 @@ int telemetry_daemon(void *t_data_void)
 
   sigset_t signal_set;
 
-  /* select() stuff */
-  fd_set read_descs, bkp_read_descs;
-  int fd, select_fd, bkp_select_fd, recalc_fds, select_num = 0;
+  /* poll() stuff */
+  struct pollfd *poll_fds = NULL;
+  int *poll_peer_idx = NULL;
+  u_char *peer_ready = NULL;
+  nfds_t poll_fds_num = 0, poll_idx = 0, poll_capacity = 0;
+  int fd, recalc_fds, select_num = 0, poll_timeout;
+  u_char server_ready = FALSE;
 
   /* logdump time management */
   time_t dump_refresh_deadline = {0};
-  struct timeval dump_refresh_timeout, *drt_ptr;
+  struct timeval dump_refresh_timeout;
 
   /* ZeroMQ and Kafka stuff */
   char *saved_peer_buf = NULL;
@@ -508,9 +512,14 @@ int telemetry_daemon(void *t_data_void)
 #endif
 
   /* Preparing for syncronous I/O multiplexing */
-  select_fd = 0;
-  FD_ZERO(&bkp_read_descs);
-  FD_SET(config.telemetry_sock, &bkp_read_descs);
+  poll_capacity = (1 + config.telemetry_max_peers);
+  poll_fds = malloc(sizeof(struct pollfd) * poll_capacity);
+  poll_peer_idx = malloc(sizeof(int) * poll_capacity);
+  peer_ready = malloc(config.telemetry_max_peers * sizeof(u_char));
+  if (!poll_fds || !poll_peer_idx || !peer_ready) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() poll support structures. Terminating.\n", config.name, t_data->log_str);
+    exit_gracefully(1);
+  }
 
   /* Preparing ACL, if any */
   if (config.telemetry_allow_file) load_allow_file(config.telemetry_allow_file, &allow);
@@ -572,7 +581,6 @@ int telemetry_daemon(void *t_data_void)
 
   dynname_tokens_prepare(config.writer_id_string, &telemetry_misc_db->writer_id_tokens, DYN_STR_WRITER_ID);
 
-  select_fd = bkp_select_fd = (config.telemetry_sock + 1);
   recalc_fds = FALSE;
 
   telemetry_link_misc_structs(telemetry_misc_db);
@@ -620,25 +628,35 @@ int telemetry_daemon(void *t_data_void)
     }
 
     if (recalc_fds) {
-      select_fd = config.telemetry_sock;
       max_peers_idx = -1; /* .. since valid indexes include 0 */
 
       for (peers_idx = 0, peers_num = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
-        if (select_fd < telemetry_peers[peers_idx].fd) select_fd = telemetry_peers[peers_idx].fd;
         if (telemetry_peers[peers_idx].fd > 0) {
           max_peers_idx = peers_idx;
           peers_num++;
         }
       }
-      select_fd++;
       max_peers_idx++;
 
-      bkp_select_fd = select_fd;
       recalc_fds = FALSE;
     }
-    else select_fd = bkp_select_fd;
-
-    memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+    memset(peer_ready, 0, (config.telemetry_max_peers * sizeof(u_char)));
+    server_ready = FALSE;
+    poll_fds_num = 0;
+    poll_fds[poll_fds_num].fd = config.telemetry_sock;
+    poll_fds[poll_fds_num].events = POLLIN;
+    poll_fds[poll_fds_num].revents = 0;
+    poll_peer_idx[poll_fds_num] = -1;
+    poll_fds_num++;
+    for (peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
+      if (telemetry_peers[peers_idx].fd > 0) {
+        poll_fds[poll_fds_num].fd = telemetry_peers[peers_idx].fd;
+        poll_fds[poll_fds_num].events = POLLIN;
+        poll_fds[poll_fds_num].revents = 0;
+        poll_peer_idx[poll_fds_num] = peers_idx;
+        poll_fds_num++;
+      }
+    }
 
     if (telemetry_misc_db->dump_backend_methods) {
       int delta;
@@ -646,13 +664,21 @@ int telemetry_daemon(void *t_data_void)
       calc_refresh_timeout_sec(dump_refresh_deadline, telemetry_misc_db->log_tstamp.tv_sec, &delta);
       dump_refresh_timeout.tv_sec = delta;
       dump_refresh_timeout.tv_usec = 0;
-      drt_ptr = &dump_refresh_timeout;
+      poll_timeout = (dump_refresh_timeout.tv_sec * 1000);
     }
-    else drt_ptr = NULL;
+    else {
+      poll_timeout = -1;
+    }
 
     if (!yp_udp_notif_input && !grpc_collector_input) {
-      select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
+      select_num = poll(poll_fds, poll_fds_num, poll_timeout);
       if (select_num < 0) goto select_again;
+      for (poll_idx = 0; poll_idx < poll_fds_num; poll_idx++) {
+        if (!(poll_fds[poll_idx].revents & (POLLIN|POLLERR|POLLHUP))) continue;
+
+        if (poll_peer_idx[poll_idx] < 0) server_ready = TRUE;
+        else peer_ready[poll_peer_idx[poll_idx]] = TRUE;
+      }
     }
 #if defined WITH_UNYTE_UDP_NOTIF
     else if (yp_udp_notif_input) {
@@ -793,7 +819,7 @@ int telemetry_daemon(void *t_data_void)
     if (!select_num) goto select_again;
 
     /* New connection is coming in */
-    if (FD_ISSET(config.telemetry_sock, &read_descs) || yp_udp_notif_input || grpc_collector_input) {
+    if (server_ready || yp_udp_notif_input || grpc_collector_input) {
       if (config.telemetry_port_tcp) {
         fd = accept(config.telemetry_sock, (struct sockaddr *) &client, &clen);
         if (fd == ERR) goto read_data;
@@ -925,7 +951,6 @@ int telemetry_daemon(void *t_data_void)
       }
 
       peer->fd = fd;
-      if (config.telemetry_port_tcp) FD_SET(peer->fd, &bkp_read_descs);
       peer->addr.family = ((struct sockaddr *)&client)->sa_family;
       if (peer->addr.family == AF_INET) {
         peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
@@ -964,7 +989,7 @@ int telemetry_daemon(void *t_data_void)
       for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
         int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
 
-        if (telemetry_peers[loc_idx].fd && FD_ISSET(telemetry_peers[loc_idx].fd, &read_descs)) {
+        if (telemetry_peers[loc_idx].fd && peer_ready[loc_idx]) {
           peer = &telemetry_peers[loc_idx];
           peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
           break;
@@ -1017,7 +1042,6 @@ int telemetry_daemon(void *t_data_void)
 
     if (ret <= 0) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] connection reset by peer (%d).\n", config.name, t_data->log_str, peer->addr_str, errno);
-      FD_CLR(peer->fd, &bkp_read_descs);
       telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
       peers_num--;
       recalc_fds = TRUE;
