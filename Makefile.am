@@ -8,6 +8,19 @@ if USING_SQL
 EXTRA_DIST += src/sql_common_m.c
 endif
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = pmacct.pc
+
+pmacctincludedir = $(includedir)/pmacct
+pmacctinclude_HEADERS = src/build_config.h src/packet_processor/packet_processor.h
+
+pmacctdynlibincludedir = $(includedir)/pmacct/dynlib
+pmacctdynlibinclude_HEADERS = src/dynlib/dynamic_loading.h
+
+pmacctcompatincludedir = $(includedir)/pmacct/include
+pmacctcompatinclude_HEADERS = include/ah.h include/extract.h \
+	include/ieee802_11.h include/ip6.h include/llc.h include/sll.h
+
 pmacct_data_dir = $(datarootdir)/pmacct
 pmacct_libs_dir = $(libdir)/pmacct
 pmacct_docs_dir = $(pmacct_data_dir)/docs
