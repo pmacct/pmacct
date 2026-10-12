@@ -698,6 +698,11 @@ int SF_vxlan_tunnel_func(register struct packet_ptrs *pp) {
   cursor += sizeof(struct pm_udphdr);
   cursor += sizeof(struct vxlan_hdr);
 
+  if (cursor >= sample->endp) {
+    Log(LOG_INFO, "INFO ( %s/core ): VXLAN tunnel sample discarded: truncated UDP/VXLAN header\n", config.name);
+    return ERR;
+  }
+
   // remove outside encap from packet counters
   const uint16_t encap_size = cursor - sample->header;
   sample->sampledPacketSize -= encap_size;
