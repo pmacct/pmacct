@@ -572,7 +572,16 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
     if (!tlvs) return;
 
     bmp_peer_down_hdr_get_reason(bpdh, &blpd.reason);
-    if (blpd.reason == BMP_PEER_DOWN_LOC_CODE) bmp_peer_down_hdr_get_loc_code(bmp_packet, len, &blpd.loc_code);
+    if (blpd.reason == BMP_PEER_DOWN_LOC_CODE) {
+      if ((*len) < sizeof(blpd.loc_code)) {
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: truncated local FSM code\n",
+            config.name, bms->log_str, peer->addr_str);
+        bmp_tlv_list_destroy_v2(tlvs);
+        return;
+      }
+
+      bmp_peer_down_hdr_get_loc_code(bmp_packet, len, &blpd.loc_code);
+    }
 
     /* draft-ietf-grow-bmp-tlv */
     if (peer->version == BMP_V4) {
@@ -589,15 +598,6 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
         }
 
         bmp_jump_offset(bmp_packet, len, bgp_notification_len);
-      }
-      else if (blpd.reason == BMP_PEER_DOWN_LOC_CODE) {
-        ret2 = bmp_jump_offset(bmp_packet, len, 2);
-        if (ret2 == ERR) {
-          Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: failed bmp_jump_offset() reason=%u\n",
-              config.name, bms->log_str, peer->addr_str, blpd.reason);
-          bmp_tlv_list_destroy_v2(tlvs);
-          return;
-        }
       }
 
       while ((*len)) {
@@ -1301,8 +1301,10 @@ void bmp_peer_down_hdr_get_loc_code(char **bmp_packet, u_int32_t *pkt_size, u_in
   char *ptr;
  
   if (bmp_packet && (*bmp_packet) && pkt_size && code) {
-    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 2); 
-    memcpy(code, ptr, 2);
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, sizeof(*code));
+    if (!ptr) return;
+
+    memcpy(code, ptr, sizeof(*code));
     (*code) = ntohs((*code));
   }
 }
