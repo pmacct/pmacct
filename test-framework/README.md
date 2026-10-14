@@ -153,6 +153,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 303: BGP-high-availability
 - 304: BGP-IPv6-multiple-sources-dump-spreading
 - 305: BGP-mem-leak-test
+- 306: BGP-add_path-mpls_vpn
 ```
 
 ### 4XX - IPFIX/NFv9 + BMP
