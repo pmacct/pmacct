@@ -1228,6 +1228,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
         (info->safi == SAFI_UNICAST || info->safi == SAFI_MULTICAST ||
          info->safi == SAFI_MPLS_LABEL || info->safi == SAFI_MPLS_VPN)) {
       if (peer->cap_add_paths.cap[info->afi][info->safi]) {
+        /* need 4 bytes for the path identifier plus at least 1 more for
+           the mandatory prefix-length byte read right below */
+        if (end < 5) goto exit_fail_lane;
+
         memcpy(&attr_extra->path_id, pnt, 4);
         attr_extra->path_id = ntohl(attr_extra->path_id);
         pnt += 4;
@@ -1238,6 +1242,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
     memset(&p, 0, sizeof(struct prefix));
 
     /* Fetch prefix length and cross-check */
+    if (end < 1) goto exit_fail_lane;
     p.prefixlen = *pnt++; end--;
     p.family = bgp_afi2family (info->afi);
 
