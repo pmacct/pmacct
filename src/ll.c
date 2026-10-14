@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -395,7 +395,7 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
   u_char *p;
   u_int16_t caplen = h->caplen;
   u_int16_t e8021Q, nl;
-  int cursor;
+  int cursor = 0;
 
   if (caplen < SLL_HDR_LEN) {
     pptrs->iph_ptr = NULL;
@@ -412,6 +412,7 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
   sllp = (const struct sll_header *) pptrs->packet_ptr;
   etype = ntohs(sllp->sll_protocol);
   nl = SLL_HDR_LEN;
+  caplen -= SLL_HDR_LEN;
 
   if (EXTRACT_16BITS(&sllp->sll_halen) == ETH_ADDR_LEN) {
     memcpy(sll_mac[1], sllp->sll_addr, ETH_ADDR_LEN);
@@ -436,7 +437,6 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
   if (etype == LINUX_SLL_P_802_2) {
     /* going up to LLC/SNAP layer header */
     p += SLL_HDR_LEN;
-    caplen -= SLL_HDR_LEN;
     if ((p = llc_handler(h, caplen, p, pptrs)) != NULL) {
       pptrs->iph_ptr = p;
       return;
@@ -487,7 +487,7 @@ void sll2_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptr
   u_char *p;
   u_int16_t caplen = h->caplen;
   u_int16_t e8021Q, nl;
-  int cursor;
+  int cursor = 0;
 
   if (caplen < SLL2_HDR_LEN) {
     pptrs->iph_ptr = NULL;
@@ -504,6 +504,7 @@ void sll2_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptr
   sllp = (const struct sll2_header *) pptrs->packet_ptr;
   etype = ntohs(sllp->sll2_protocol);
   nl = SLL2_HDR_LEN;
+  caplen -= SLL2_HDR_LEN;
 
   /* XXX: probably we should make use of hatype instead */
   if (EXTRACT_16BITS(&sllp->sll2_halen) == ETH_ADDR_LEN) {
@@ -529,7 +530,6 @@ void sll2_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptr
   if (etype == LINUX_SLL_P_802_2) {
     /* going up to LLC/SNAP layer header */
     p += SLL2_HDR_LEN;
-    caplen -= SLL2_HDR_LEN;
     if ((p = llc_handler(h, caplen, p, pptrs)) != NULL) {
       pptrs->iph_ptr = p;
       return;
