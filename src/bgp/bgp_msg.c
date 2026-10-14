@@ -1222,7 +1222,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
   lim = pnt + info->length;
   end = info->length;
 
-  for (idx = 0; pnt < lim; pnt += psize, idx++) {
+  for (idx = 0; pnt < lim; pnt += psize, end -= psize, idx++) {
     /* handle path identifier */
     if ((info->afi == AFI_IP || info->afi == AFI_IP6) &&
         (info->safi == SAFI_UNICAST || info->safi == SAFI_MULTICAST ||
