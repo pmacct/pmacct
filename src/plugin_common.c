@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -903,15 +903,11 @@ int P_trigger_exec(char *filename)
     args[arg_count] = NULL; // NULL-terminate the array
     
     /* Synchronous mode: use vfork/fork as before */
-#ifdef HAVE_VFORK
-    switch (pid = vfork()) {
-#else
     switch (pid = fork()) {
-#endif
     case ERR:
       free(args);
       Log(LOG_ERR,
-          "ERROR ( %s/%s ): P_trigger_exec(): failed to fork/vfork - '%s'\n",
+          "ERROR ( %s/%s ): P_trigger_exec(): failed to fork() - '%s'\n",
           config.name, config.type, filename);
       return ERR;
     case FALSE:
@@ -923,6 +919,31 @@ int P_trigger_exec(char *filename)
         _exit(1); // use _exit in child to avoid flushing buffers
       }
       _exit(0);
+    default:
+      { 
+        int status;
+        pid_t wpid;
+  
+        do {
+	  wpid = waitpid(pid, &status, 0);
+        } while (wpid < 0 && errno == EINTR);
+  
+        if (wpid < 0) {
+  	  Log(LOG_WARNING,
+  	      "WARN ( %s/%s ): P_trigger_exec(): waitpid failed - '%s' (errno: %d)\n",
+  	      config.name, config.type, filename, errno);
+        }
+        else if (WIFEXITED(status) && WEXITSTATUS(status) == 127) {
+	  Log(LOG_WARNING,
+  	      "WARN ( %s/%s ): P_trigger_exec(): can't execute - '%s'\n",
+  	      config.name, config.type, filename);
+        }
+        else if (WIFSIGNALED(status)) {
+  	  Log(LOG_WARNING,
+  	      "WARN ( %s/%s ): P_trigger_exec(): child terminated by signal %d - '%s'\n",
+  	      config.name, config.type, WTERMSIG(status), filename);
+        }
+      }
     }
 
     free(args);
