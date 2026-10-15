@@ -1329,8 +1329,10 @@ void bmp_stats_cnt_get_data32(char **bmp_packet, u_int32_t *pkt_size, u_int32_t 
   char *ptr;
 
   if (bmp_packet && (*bmp_packet) && pkt_size && data) {
-    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 4);
-    memcpy(data, ptr, 4);
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, sizeof(*data));
+    if (!ptr) return;
+
+    memcpy(data, ptr, sizeof(*data));
     (*data) = ntohl((*data));
   }
 }
@@ -1340,8 +1342,10 @@ void bmp_stats_cnt_get_data64(char **bmp_packet, u_int32_t *pkt_size, u_int64_t 
   char *ptr;
 
   if (bmp_packet && (*bmp_packet) && pkt_size && data) {
-    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 8);
-    memcpy(data, ptr, 8);
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, sizeof(*data));
+    if (!ptr) return;
+
+    memcpy(data, ptr, sizeof(*data));
     (*data) = pm_ntohll((*data));
   }
 }
@@ -1351,15 +1355,21 @@ void bmp_stats_cnt_get_afi_safi_data64(char **bmp_packet, u_int32_t *pkt_size, a
   char *ptr;
 
   if (bmp_packet && (*bmp_packet) && pkt_size && afi && safi && data) {
-    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 2);
-    memcpy(afi, ptr, 2);
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, sizeof(*afi));
+    if (!ptr) return;
+
+    memcpy(afi, ptr, sizeof(*afi));
     (*afi) = ntohs((*afi));
 
-    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 1);
-    memcpy(safi, ptr, 1);
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, sizeof(*safi));
+    if (!ptr) return;
 
-    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 8);
-    memcpy(data, ptr, 8);
+    memcpy(safi, ptr, sizeof(*safi));
+
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, sizeof(*data));
+    if (!ptr) return;
+
+    memcpy(data, ptr, sizeof(*data));
     (*data) = pm_ntohll((*data));
   }
 }
