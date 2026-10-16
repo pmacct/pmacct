@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -44,6 +44,37 @@
 #endif
 
 /* Functions */
+#if defined (HAVE_L2)
+/* NFULA_HWHEADER may contain stale tunnel bytes, even with HWTYPE Ethernet.
+ * Validate framing, not tunnel protocols or transport ports. */
+static int uacctd_nflog_hwhdr_valid(const unsigned char *hw, ssize_t len,
+                                    unsigned int family)
+{
+  ssize_t off = ETHER_HDRLEN;
+  unsigned int type, expected;
+
+  if (!hw || len < ETHER_HDRLEN) return 0;
+
+  switch (family) {
+  case AF_INET: expected = ETHERTYPE_IP; break;
+  case AF_INET6: expected = ETHERTYPE_IPV6; break;
+  default: return 0;
+  }
+
+  /* Byte reads also work for unaligned netlink attribute data. */
+  type = ((unsigned int) hw[12] << 8) | hw[13];
+  while (type == 0x8100 || type == 0x88a8 || type == 0x9100 ||
+         type == 0x9200 || type == 0x9300) {
+    if (len - off < 4) return 0;
+    type = ((unsigned int) hw[off + 2] << 8) | hw[off + 3];
+    off += 4;
+  }
+
+  /* HWHEADER must end where the separately supplied IP payload starts. */
+  return off == len && type == expected;
+}
+#endif
+
 static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
                           struct nflog_data *nfa, void *p)
 {
@@ -82,7 +113,16 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
     cb_data->ifindex_out = nflog_get_outdev(nfa);
 
 #if defined (HAVE_L2)
-  ssize_t req_len = hdr.caplen + (mac_len ? mac_len : ETHER_HDRLEN);
+  const unsigned char *mac = NULL;
+  ssize_t req_len;
+
+  if (mac_len) {
+    mac = (const unsigned char *) nflog_get_msg_packet_hwhdr(nfa);
+    if (!uacctd_nflog_hwhdr_valid(mac, mac_len, nfmsg->nfgen_family))
+      mac_len = 0;
+  }
+
+  req_len = hdr.caplen + (mac_len ? mac_len : ETHER_HDRLEN);
   if (req_len > jumbo_container_sz) {
     if (jumbo_container)
       free(jumbo_container);
@@ -96,7 +136,7 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
   }
 
   if (mac_len) {
-    memcpy(jumbo_container, nflog_get_msg_packet_hwhdr(nfa), mac_len);
+    memcpy(jumbo_container, mac, mac_len);
     memcpy(jumbo_container + mac_len, pkt, hdr.caplen);
     hdr.caplen += mac_len;
     hdr.len += mac_len;
