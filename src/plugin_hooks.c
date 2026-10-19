@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -407,8 +407,9 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 	   - a dissected flow hits a complex pre_tag_map or
 	   - a non-dissected (full) packet hits a simple pre_tag_map
 	*/
-	if ((req->ptm_c.exec_ptm_res && !p->cfg.ptm_complex) || (!req->ptm_c.exec_ptm_res && p->cfg.ptm_complex))
+	if (req && ((req->ptm_c.exec_ptm_res && !p->cfg.ptm_complex) || (!req->ptm_c.exec_ptm_res && p->cfg.ptm_complex))) {
 	  continue;
+	}
       }
 
       if (p->cfg.ptm_global && got_tags) {
@@ -421,7 +422,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
         pptrs->have_label = saved_have_label;
       }
       else {
-	if (p->cfg.type_id == PLUGIN_ID_TEE && req->ptm_c.exec_ptm_res && pptrs->tee_dissect_bcast) /* noop */;
+	if (p->cfg.type_id == PLUGIN_ID_TEE && req && req->ptm_c.exec_ptm_res && pptrs->tee_dissect_bcast) /* noop */;
         else {
 	  find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
 
@@ -442,7 +443,9 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
     else {
       if (p->cfg.type_id == PLUGIN_ID_TEE) {
         /* stop dissected flows from being replicated in case of no pre_tag_map */
-        if (req->ptm_c.exec_ptm_res) continue;
+        if (req && req->ptm_c.exec_ptm_res) {
+	  continue;
+	}
       }
     }
 
@@ -566,7 +569,7 @@ reprocess:
   /* check if we have to reload the map: new loop is to
      ensure we reload it for all plugins and prevent any
      timing issues with pointers to labels */
-  if (reload_map_exec_plugins) {
+  if (reload_map_exec_plugins && req) {
     memset(&req->ptm_c, 0, sizeof(struct ptm_complex)); 
 
     for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2 || channels_list[index].aggregation_3; index++) {
@@ -587,10 +590,11 @@ reprocess:
         }
       }
     }
+
+    reload_map_exec_plugins = FALSE;
   }
 
   /* cleanups */
-  reload_map_exec_plugins = FALSE;
   pretag_free_label(saved_label);
   if (saved_label) free(saved_label);
 }
