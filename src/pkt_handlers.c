@@ -56,6 +56,24 @@
 /* get length of last instance of an otpl field */
 #define OTPL_LAST_LEN(tpl_fld) tpl->fld[tpl_fld].len[tpl->fld[tpl_fld].count-1]
 
+/* get pointer to last instance of an otpl field */
+#define OTPL_LAST_PTR(tpl_fld) ((char *) (pptrs->f_data+OTPL_LAST_OFS(tpl_fld)))
+
+#define OTPL_LAST_VLEN_PTR(tpl_fld) \
+  (OTPL_LAST_LEN(tpl_fld) != IPFIX_VARIABLE_LENGTH \
+   ? OTPL_LAST_PTR(tpl_fld) \
+   : ((uint8_t) pptrs->f_data[OTPL_LAST_OFS(tpl_fld)] < 255 \
+      ? (char *) (pptrs->f_data + OTPL_LAST_OFS(tpl_fld) + 1) \
+      : (char *) (pptrs->f_data + OTPL_LAST_OFS(tpl_fld) + 3)))
+
+#define OTPL_LAST_VLEN_LEN(tpl_fld) \
+  (OTPL_LAST_LEN(tpl_fld) != IPFIX_VARIABLE_LENGTH \
+   ? (int) OTPL_LAST_LEN(tpl_fld) \
+   : ((uint8_t) pptrs->f_data[OTPL_LAST_OFS(tpl_fld)] < 255 \
+      ? (int) pptrs->f_data[OTPL_LAST_OFS(tpl_fld)] \
+      : (int) ntohs(*(u_int16_t *) (pptrs->f_data + \
+                                   OTPL_LAST_OFS(tpl_fld) + 1))))
+
 /* copy last instance of an otpl field */
 #define OTPL_CP_LAST(target, tpl_fld) \
   memcpy(target, pptrs->f_data+tpl->fld[tpl_fld].off[tpl->fld[tpl_fld].count-1], \
