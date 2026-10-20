@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -1541,19 +1541,33 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
         for (index = 0; index < (tmpt->num6-1); index++) {
           u_int32_t net[4];
           int x, chunk;
+          int is_candidate;
 
           for (x = index+1; x < tmpt->num6; x++) {
             memcpy(&net, &tmpt->table6[x].net, IP6AddrSz);
-            for (chunk = 0; chunk < 4; chunk++) net[chunk] &= tmpt->table6[index].mask[chunk];
             for (chunk = 0; chunk < 4; chunk++) {
-	      if (net[chunk] == tmpt->table6[index].net[chunk]) {
-                if (chunk == 3) {
-		  mdt[x].level++;
-		  mdt[index].childs++;
-	        }
+	      net[chunk] &= tmpt->table6[index].mask[chunk];
+	    }
+
+            is_candidate = TRUE;
+
+            for (chunk = 0; chunk < 4; chunk++) {
+              if (net[chunk] != tmpt->table6[index].net[chunk]) {
+                is_candidate = FALSE;
+                break;
               }
-              else break;
             }
+
+            /*
+             * More-specifics of the current prefix are contiguous in the
+             * sorted table: stop scanning at the first uncovered prefix.
+             */
+            if (!is_candidate) {
+	      break;
+	    }
+
+            mdt[x].level++;
+            mdt[index].childs++;
           }
         }
       }
