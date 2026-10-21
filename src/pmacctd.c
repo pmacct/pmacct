@@ -1272,6 +1272,7 @@ int main(int argc,char **argv, char **envp)
 	  devices.num = 1;
 	  load_plugin_filters(devices.list[0].link_type);
 	}
+	else continue;
       }
 
       read_packet:
