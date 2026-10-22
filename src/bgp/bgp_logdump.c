@@ -172,7 +172,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     }
 
     if ((afi == AFI_IP || afi == AFI_IP6) &&
-	(safi == SAFI_UNICAST || safi == SAFI_MULTICAST)) {
+	(safi == SAFI_UNICAST || safi == SAFI_MULTICAST ||
+	 safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN)) {
       if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
         json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
       }
@@ -627,7 +628,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     }
 
     if ((afi == AFI_IP || afi == AFI_IP6) &&
-	(safi == SAFI_UNICAST || safi == SAFI_MULTICAST)) {
+	(safi == SAFI_UNICAST || safi == SAFI_MULTICAST ||
+	 safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN)) {
       if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
         pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
         pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));

@@ -143,6 +143,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 206: BMP-high-availability
 - 207: BMP-CISCO-HUAWEI-multiple-sources-dump-spreading
 - 208: BMP-mem-leak-test
+- 209: BMP-add_path-mpls_vpn
 ```
 
 ### 3XX - BGP
@@ -153,6 +154,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 303: BGP-high-availability
 - 304: BGP-IPv6-multiple-sources-dump-spreading
 - 305: BGP-mem-leak-test
+- 306: BGP-add_path-mpls_vpn
 ```
 
 ### 4XX - IPFIX/NFv9 + BMP

@@ -1222,20 +1222,27 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
   lim = pnt + info->length;
   end = info->length;
 
-  for (idx = 0; pnt < lim; pnt += psize, idx++) {
+  for (idx = 0; pnt < lim; pnt += psize, end -= psize, idx++) {
     /* handle path identifier */
     if ((info->afi == AFI_IP || info->afi == AFI_IP6) &&
-        (info->safi == SAFI_UNICAST || info->safi == SAFI_MULTICAST)) {
+        (info->safi == SAFI_UNICAST || info->safi == SAFI_MULTICAST ||
+         info->safi == SAFI_MPLS_LABEL || info->safi == SAFI_MPLS_VPN)) {
       if (peer->cap_add_paths.cap[info->afi][info->safi]) {
+        /* need 4 bytes for the path identifier plus at least 1 more for
+           the mandatory prefix-length byte read right below */
+        if (end < 5) goto exit_fail_lane;
+
         memcpy(&attr_extra->path_id, pnt, 4);
         attr_extra->path_id = ntohl(attr_extra->path_id);
         pnt += 4;
+        end -= 4;
       }
     }
 
     memset(&p, 0, sizeof(struct prefix));
 
     /* Fetch prefix length and cross-check */
+    if (end < 1) goto exit_fail_lane;
     p.prefixlen = *pnt++; end--;
     p.family = bgp_afi2family (info->afi);
 
@@ -1277,6 +1284,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       } 
 	
       memcpy(&p.u.prefix, (pnt + labels_size), (psize - labels_size));
+
+      /* the advertised prefix length must cover the label stack we are
+         about to subtract, else the u_char prefixlen underflows */
+      if (p.prefixlen < 8 * labels_size) goto exit_fail_lane;
       p.prefixlen -= (8 * labels_size);
     }
     else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
@@ -1339,6 +1350,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       bgp_rd_origin_set(&attr_extra->rd, RD_ORIGIN_BGP);
     
       memcpy(&p.u.prefix, (pnt + labels_size + 8 /* RD */), (psize - (labels_size + 8 /* RD */)));
+
+      /* the advertised prefix length must cover the label stack and the RD
+         we are about to subtract, else the u_char prefixlen underflows */
+      if (p.prefixlen < 8 * (labels_size + 8 /* RD */)) goto exit_fail_lane;
       p.prefixlen -= (8 * (labels_size + 8 /* RD */));
     }
     else {
