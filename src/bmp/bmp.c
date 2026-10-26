@@ -325,7 +325,7 @@ int skinny_bmp_daemon()
       exit_gracefully(1);
     }
 
-    rc = listen(config.bmp_sock, 1);
+    rc = listen(config.bmp_sock, SOCKET_LISTEN_BACKLOG);
     if (rc < 0) {
       Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
       exit_gracefully(1);
