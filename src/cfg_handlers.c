@@ -22,6 +22,7 @@
 /* includes */
 #include "pmacct.h"
 #include "nfacctd.h"
+#include "packet_processor/packet_processor.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "cfg_handlers.h"
@@ -9239,4 +9240,16 @@ int cfg_key_bgp_blackhole_dump_kafka_topic(char *filename, char *name, char *val
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_blackhole_dump_kafka_topic'. Globalized.\n", filename);
 
   return changes;
+}
+
+int cfg_packet_processor_library(char *filename, char *name, char *value_ptr)
+{
+  if (packet_processor_dynload(value_ptr) != DL_Success) {
+    Log(LOG_ERR, "ERR: [%s] Failed to load packet processor library '%s'.\n", filename, value_ptr);
+    return ERR;
+  }
+
+  Log(LOG_INFO, "INFO: [%s] Successfully loaded packet processor library '%s'.\n", filename, value_ptr);
+
+  return 1;
 }
