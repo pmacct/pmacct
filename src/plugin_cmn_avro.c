@@ -1750,6 +1750,11 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
     }
   }
 
+  if (p_avro_schema_name)
+    free(p_avro_schema_name);
+  if (p_avro_schema_str)
+    free(p_avro_schema_str);
+
   return loc_schema;
 }
 #endif
