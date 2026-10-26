@@ -471,7 +471,7 @@ DESC:		Interface on which 'pmacctd' listens. If such directive isn't supplied, a
 		function is used to select a valid device. [ns]facctd can catch similar behaviour by
 		employing the [ns]facctd_ip directives; also, note that this directive is mutually
 		exclusive with 'pcap_savefile' (-I). 
-DEFAULT:	Interface is selected by by the Operating System
+DEFAULT:	Interface is selected by the Operating System
 
 KEY:		pcap_interface_wait (-w) [GLOBAL, PMACCTD_ONLY]
 VALUES:		[ true | false ]
