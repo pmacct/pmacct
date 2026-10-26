@@ -79,8 +79,7 @@ char *spt_newstr(const char *s)
 static char	**Argv = NULL;		/* pointer to argument vector */
 static char	*LastArgv = NULL;	/* end of argv */
 
-void
-initsetproctitle(int argc, char **argv, char **envp)
+void initsetproctitle(int argc, char **argv, char **envp)
 {
 	register int i;
 	extern char **environ;
@@ -135,15 +134,7 @@ initsetproctitle(int argc, char **argv, char **envp)
 
 #if SPT_TYPE != SPT_BUILTIN
 
-/*VARARGS1*/
-static void
-# ifdef __STDC__
-setproctitle(const char *fmt, ...)
-# else /* __STDC__ */
-setproctitle(fmt, va_alist)
-	const char *fmt;
-	va_dcl
-# endif /* __STDC__ */
+static void setproctitle(const char *fmt, ...)
 {
 # if SPT_TYPE != SPT_NONE
 	register int i;
@@ -190,15 +181,7 @@ setproctitle(fmt, va_alist)
  *  PM_SETPROCTITLE -- set process task and set process title for ps
  */
 
-/*VARARGS2*/
-void
-#ifdef __STDC__
-pm_setproctitle(const char *fmt, ...)
-#else /* __STDC__ */
-pm_setproctitle(fmt, va_alist)
-  const char *fmt;
-  va_dcl
-#endif /* __STDC__ */
+void pm_setproctitle(const char *fmt, ...)
 {
   char buf[SPT_BUFSIZE];
   char prefix[16];

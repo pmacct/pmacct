@@ -438,16 +438,12 @@ extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct
 size_t strlcpy(char *, const char *, size_t);
 #endif
 
-void
-#ifdef __STDC__
-pm_setproctitle(const char *fmt, ...);
-#else /* __STDC__ */
-#error
-pm_setproctitle(fmt, va_alist);
-#endif /* __STDC__ */
+#ifndef __STDC__
+#error "pmacct requires an ANSI C (__STDC__) compiler"
+#endif
 
-void
-initsetproctitle(int, char**, char**);
+void pm_setproctitle(const char *fmt, ...);
+void initsetproctitle(int, char**, char**);
 
 /* global variables */
 extern char sll_mac[2][ETH_ADDR_LEN];
