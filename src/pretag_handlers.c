@@ -4942,7 +4942,6 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
   SFSample *sample = (SFSample *) pptrs->f_data;
   SFLAddress *sf_addr = &sample->ipsrc;
   u_int8_t netmask;
-  int ret;
 
   if (config.acct_type == ACCT_NF) {
     switch(hdr->version) {
@@ -4988,6 +4987,7 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
   else return TRUE;
 
   if (idx_netmask >= 0 && idx->netmask.hdlr_no == (idx_hdlr + 1)) {
+    int ret = CDADA_E_UNKNOWN;
     if (e->key.src_net.a.family == AF_INET) {
       ret = cdada_list_get(idx->netmask.v4.list, idx_netmask, &netmask);
     }
@@ -5016,7 +5016,6 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
   SFSample *sample = (SFSample *) pptrs->f_data;
   SFLAddress *sf_addr = &sample->ipdst;
   u_int8_t netmask;
-  int ret;
 
   if (config.acct_type == ACCT_NF) {
     switch(hdr->version) {
@@ -5062,6 +5061,7 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
   else return TRUE;
 
   if (idx_netmask >= 0 && idx->netmask.hdlr_no == (idx_hdlr + 1)) {
+    int ret = CDADA_E_UNKNOWN;
     if (e->key.dst_net.a.family == AF_INET) {
       ret = cdada_list_get(idx->netmask.v4.list, idx_netmask, &netmask);
     }
