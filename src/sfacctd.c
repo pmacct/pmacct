@@ -1515,6 +1515,10 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   if (sfacctd_counter_backend_methods) sfv245_check_counter_log_init(&pptrsv->v4); 
 
   for (idx = 0; idx < samplesInPacket; idx++) {
+    if ((u_char *)spp->datap >= spp->endp) {
+      break;
+    }
+
     InterSampleCleanup(spp);
     spp->sequenceNo = sequenceNo;
     spp->sysUpTime = sysUpTime;
@@ -1561,6 +1565,10 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   if (sfacctd_counter_backend_methods) sfv245_check_counter_log_init(&pptrsv->v4); 
 
   for (idx = 0; idx < samplesInPacket; idx++) {
+    if ((u_char *)spp->datap >= spp->endp) {
+      break;
+    }
+
     InterSampleCleanup(spp);
     spp->agentSubId = agentSubId;
     spp->sequenceNo = sequenceNo;
@@ -2918,6 +2926,11 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
     for (el = 0; el < num_elements; el++) {
       u_int32_t tag, length;
       u_char *start;
+
+      if ((u_char *)sample->datap + 8 > sample->endp) {
+	break;
+      }
+
       tag = getData32(sample);
       length = getData32(sample);
       start = (u_char *)sample->datap;
@@ -2998,6 +3011,10 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
     u_int32_t tag, length;
     u_char *start;
     char buf[51];
+
+    if ((u_char *)sample->datap + 8 > sample->endp) {
+      break;
+    }
 
     tag = getData32(sample);
     length = getData32(sample);
