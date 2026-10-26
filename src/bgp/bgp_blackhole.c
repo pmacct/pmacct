@@ -96,12 +96,12 @@ void bgp_blackhole_init_dummy_peer(struct bgp_peer *peer)
 
 void bgp_blackhole_prepare_filter(void)
 {
-  char *stdcomms, *token;
+  char *buffer, *stdcomms, *token;
 
   bgp_blackhole_filter = malloc(sizeof(struct bloom));
   bloom_init(bgp_blackhole_filter, BGP_BLACKHOLE_DEFAULT_BF_ENTRIES, 0.01);
 
-  stdcomms = strdup(config.bgp_blackhole_stdcomm_list);
+  stdcomms = buffer = strdup(config.bgp_blackhole_stdcomm_list);
   bgp_blackhole_comms = community_new(&bgp_blackhole_peer);
  
   while ((token = extract_token(&stdcomms, ','))) {
@@ -111,12 +111,15 @@ void bgp_blackhole_prepare_filter(void)
     ret = community_str2com_simple(token, &stdcomm);
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Invalid community '%s' in 'bgp_blackhole_stdcomm_list'.\n", config.name, bgp_blackhole_misc_db->log_str, token);
+      free(buffer);
       exit_gracefully(1);
     }
     
     bloom_add(bgp_blackhole_filter, &stdcomm, sizeof(stdcomm));
     community_add_val(&bgp_blackhole_peer, bgp_blackhole_comms, stdcomm); 
   }
+
+  free(buffer);
 }
 
 int bgp_blackhole_daemon(void)
