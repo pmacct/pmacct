@@ -3534,7 +3534,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   exec_plugins(pptrs, req);
 }
 
-void NF_compute_once()
+void NF_compute_once(void)
 {
   struct pkt_data dummy;
 

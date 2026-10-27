@@ -114,7 +114,7 @@ int bgp_xcs_map_src_handler(char *filename, struct id_entry *e, char *value, str
   return FALSE;
 }
 
-void bgp_xcs_map_destroy()
+void bgp_xcs_map_destroy(void)
 {
   int idx;
 

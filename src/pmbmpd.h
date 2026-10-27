@@ -24,6 +24,6 @@
 
 /* prototypes */
 extern void usage_daemon(char *);
-extern void compute_once();
+extern void compute_once(void);
 
 #endif //PMBMPD_H

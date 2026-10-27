@@ -148,9 +148,9 @@ typedef struct {
 #include "sql_common.h"
 
 /* prototypes */
-extern void P_set_signals();
-extern void P_init_default_values();
-extern void P_config_checks();
+extern void P_set_signals(void);
+extern void P_init_default_values(void);
+extern void P_config_checks(void);
 extern struct chained_cache *P_cache_attach_new_node(struct chained_cache *);
 extern unsigned int P_cache_modulo(struct primitives_ptrs *);
 extern void P_sum_host_insert(struct primitives_ptrs *, struct insert_data *);
@@ -180,7 +180,7 @@ extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct in
 
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern cdada_list_t *tcpflags_to_linked_list(size_t);
-extern cdada_list_t *fwd_status_to_linked_list();
+extern cdada_list_t *fwd_status_to_linked_list(void);
 extern cdada_list_t *generic_delim_str_to_linked_list(const char *, const char *);
 
 extern void mpls_label_stack_to_str(char *, int, u_int32_t *, int);

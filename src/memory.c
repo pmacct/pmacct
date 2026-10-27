@@ -27,7 +27,7 @@
    first pool descriptor id is 1 */
 
 /* functions */
-void init_memory_pool_table()
+void init_memory_pool_table(void)
 {
   if (config.num_memory_pools) {
     mpd = (unsigned char *) map_shared(0, (config.num_memory_pools+1)*sizeof(struct memory_pool_desc),
@@ -44,7 +44,7 @@ void init_memory_pool_table()
 }
 
 
-void clear_memory_pool_table()
+void clear_memory_pool_table(void)
 {
   struct memory_pool_desc *pool_ptr;
 

@@ -428,12 +428,12 @@ extern int gtp_tunnel_func(register struct packet_ptrs *);
 extern int gtp_tunnel_configurator(struct tunnel_handler *, char *);
 extern int SF_vxlan_tunnel_func(register struct packet_ptrs *);
 extern int vxlan_tunnel_configurator(struct tunnel_handler *, char *);
-extern void tunnel_registry_init();
+extern void tunnel_registry_init(void);
 extern tun_reg_find_result tunnel_registry_find(uint8_t tun_stack, uint8_t tun_layer, uint16_t l4_proto, uint16_t dst_port);
 extern void pm_pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
 extern int PM_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 extern void PM_print_stats(time_t);
-extern void compute_once();
+extern void compute_once(void);
 extern void reset_index_pkt_ptrs(struct packet_ptrs *);
 extern void set_index_pkt_ptrs(struct packet_ptrs *);
 extern void PM_evaluate_flow_type(struct packet_ptrs *);
@@ -444,16 +444,12 @@ extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct
 size_t strlcpy(char *, const char *, size_t);
 #endif
 
-void
-#ifdef __STDC__
-pm_setproctitle(const char *fmt, ...);
-#else /* __STDC__ */
-#error
-pm_setproctitle(fmt, va_alist);
-#endif /* __STDC__ */
+#ifndef __STDC__
+#error "pmacct requires an ANSI C (__STDC__) compiler"
+#endif
 
-void
-initsetproctitle(int, char**, char**);
+void pm_setproctitle(const char *fmt, ...);
+void initsetproctitle(int, char**, char**);
 
 /* global variables */
 extern char sll_mac[2][ETH_ADDR_LEN];

@@ -65,7 +65,7 @@ cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;
 cdada_map_t *bgp_ls_attr_tlv_print_map;
 
 /* Functions */
-void bgp_daemon_wrapper()
+void bgp_daemon_wrapper(void)
 {
   /* initialize variables */
   if (!config.bgp_daemon_port) config.bgp_daemon_port = BGP_TCP_PORT;
@@ -89,14 +89,14 @@ void bgp_daemon_wrapper()
   send_to_pool(bgp_pool, skinny_bgp_daemon, NULL);
 }
 
-int skinny_bgp_daemon()
+int skinny_bgp_daemon(void)
 {
   skinny_bgp_daemon_online();
 
   return SUCCESS;
 }
 
-void skinny_bgp_daemon_online()
+void skinny_bgp_daemon_online(void)
 {
   int ret, rc, peers_idx, allowed, yes=1;
   int peers_idx_rr = 0, peers_xconnect_idx_rr = 0, max_peers_idx = 0;
@@ -1151,7 +1151,7 @@ void skinny_bgp_daemon_online()
   }
 }
 
-void bgp_prepare_thread()
+void bgp_prepare_thread(void)
 {
   bgp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BGP];
   memset(bgp_misc_db, 0, sizeof(struct bgp_misc_structs));
@@ -1170,7 +1170,7 @@ void bgp_prepare_thread()
   strcpy(bgp_misc_db->log_str, "core/BGP");
 }
 
-void bgp_prepare_daemon()
+void bgp_prepare_daemon(void)
 {
   bgp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BGP];
   memset(bgp_misc_db, 0, sizeof(struct bgp_misc_structs));
@@ -1189,7 +1189,7 @@ void bgp_prepare_daemon()
   strcpy(bgp_misc_db->log_str, "core");
 }
 
-void bgp_daemon_msglog_prepare_sd_schemas()
+void bgp_daemon_msglog_prepare_sd_schemas(void)
 {
 #ifdef WITH_SERDES
   time_t last_fail = P_broker_timers_get_last_fail(&bgp_daemon_msglog_kafka_host.sd_schema_timers);

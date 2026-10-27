@@ -174,7 +174,7 @@ typedef struct _telemetry_yp_sub_key telemetry_yp_sub_key;
 #include "telemetry_util.h"
 
 /* prototypes */
-extern void telemetry_wrapper();
+extern void telemetry_wrapper(void);
 extern int telemetry_daemon(void *);
 extern void telemetry_prepare_thread(struct telemetry_data *);
 extern void telemetry_prepare_daemon(struct telemetry_data *);

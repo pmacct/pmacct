@@ -23,7 +23,7 @@
 #define NDPI_UTIL_H
 
 /* prototypes */
-extern struct pm_ndpi_workflow *pm_ndpi_workflow_init();
+extern struct pm_ndpi_workflow *pm_ndpi_workflow_init(void);
 extern void pm_ndpi_export_proto_to_class(struct pm_ndpi_workflow *);
 
 #endif //NDPI_UTIL_H

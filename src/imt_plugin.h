@@ -130,8 +130,8 @@ extern void insert_accounting_structure(struct primitives_ptrs *);
 extern struct acc *search_accounting_structure(struct primitives_ptrs *);
 extern int compare_accounting_structure(struct acc *, struct primitives_ptrs *);
 
-extern void init_memory_pool_table();
-extern void clear_memory_pool_table();
+extern void init_memory_pool_table(void);
+extern void clear_memory_pool_table(void);
 extern struct memory_pool_desc *request_memory_pool(int);
 
 extern void set_reset_flag(struct acc *);
@@ -152,7 +152,7 @@ extern void sum_as_insert(struct primitives_ptrs *);
 extern void sum_mac_insert(struct primitives_ptrs *);
 #endif
 extern void exit_now(int);
-extern void free_extra_allocs();
+extern void free_extra_allocs(void);
 
 /* global vars */
 extern void (*imt_insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */

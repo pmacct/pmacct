@@ -37,7 +37,7 @@ int plugin_init(const char *configFile) {
     return 0;
 }
 
-int plugin_destroy() { return 0; }
+int plugin_destroy(void) { return 0; }
 
 int output_init(const char *date, int append) {
     global_file = fopen("/tmp/outputfile.txt", "wt");
@@ -64,14 +64,14 @@ int print(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
     return -1;
 }
 
-int output_flush() { return 0; }
+int output_flush(void) { return 0; }
 
-int output_close() {
+int output_close(void) {
     fclose(global_file);
     return 0;
 }
 
-char *get_error_text() { return global_error_buffer; }
+char *get_error_text(void) { return global_error_buffer; }
 
 #ifdef __cplusplus
 }

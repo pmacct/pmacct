@@ -100,7 +100,7 @@ u_long Name_to_IP(char *domainName)
   -----------------___________________________------------------
 */
 
-u_long getMyIPAddress()
+u_long getMyIPAddress(void)
 {
   struct utsname uts;
 

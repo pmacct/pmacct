@@ -45,9 +45,9 @@ extern void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data 
 extern void telemetry_handle_dump_event(struct telemetry_data *, int);
 extern int telemetry_dump_event_runner(struct pm_dump_runner *);
 
-extern void telemetry_daemon_msglog_init_amqp_host();
+extern void telemetry_daemon_msglog_init_amqp_host(void);
 extern void telemetry_dump_init_amqp_host(void *);
-extern int telemetry_daemon_msglog_init_kafka_host();
+extern int telemetry_daemon_msglog_init_kafka_host(void);
 extern int telemetry_dump_init_kafka_host(void *);
 
 #if defined WITH_JANSSON

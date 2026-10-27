@@ -36,12 +36,12 @@
 
 /* prototypes */
 extern void usage_daemon(char *);
-extern void compute_once();
+extern void compute_once(void);
 
 /* Looking Glass */
 #if defined WITH_ZMQ
-extern void bgp_lg_wrapper();
-extern int bgp_lg_daemon();
+extern void bgp_lg_wrapper(void);
+extern int bgp_lg_daemon(void);
 
 #if defined WITH_JANSSON
 extern void bgp_lg_daemon_worker_json(void *, void *);

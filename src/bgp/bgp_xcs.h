@@ -34,7 +34,7 @@ extern int bgp_xcs_map_dst_handler(char *, struct id_entry *, char *, struct plu
 
 extern void bgp_xcs_map_validate(char *, struct plugin_requests *);
 extern int bgp_xcs_parse_hostport(const char *, struct sockaddr *, socklen_t *);
-extern void bgp_xcs_map_destroy();
+extern void bgp_xcs_map_destroy(void);
 
 /* global variables */
 

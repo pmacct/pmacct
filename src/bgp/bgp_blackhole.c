@@ -43,7 +43,7 @@ struct bloom *bgp_blackhole_filter;
 struct community *bgp_blackhole_comms;
 
 /* Functions */
-void bgp_blackhole_daemon_wrapper()
+void bgp_blackhole_daemon_wrapper(void)
 {
 #if defined WITH_ZMQ
   struct p_zmq_host *bgp_blackhole_zmq_host = NULL;
@@ -78,7 +78,7 @@ void bgp_blackhole_daemon_wrapper()
 }
 
 #if defined WITH_ZMQ
-void bgp_blackhole_prepare_thread()
+void bgp_blackhole_prepare_thread(void)
 {
   bgp_blackhole_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BGP_BLACKHOLE];
   memset(bgp_blackhole_misc_db, 0, sizeof(struct bgp_misc_structs));
@@ -94,7 +94,7 @@ void bgp_blackhole_init_dummy_peer(struct bgp_peer *peer)
   peer->type = FUNC_TYPE_BGP_BLACKHOLE;
 }
 
-void bgp_blackhole_prepare_filter()
+void bgp_blackhole_prepare_filter(void)
 {
   char *stdcomms, *token;
 
@@ -119,7 +119,7 @@ void bgp_blackhole_prepare_filter()
   }
 }
 
-int bgp_blackhole_daemon()
+int bgp_blackhole_daemon(void)
 {
   struct bgp_misc_structs *m_data = bgp_blackhole_misc_db;
   struct bgp_blackhole_itc bbitc;

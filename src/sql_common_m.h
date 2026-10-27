@@ -35,7 +35,7 @@ extern void ReBuildChain(struct db_cache *Cursor, struct db_cache *newElem);
 
 extern void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem);
 
-extern void SQL_SetENV();
+extern void SQL_SetENV(void);
 
 extern void SQL_SetENV_child(const struct insert_data *idata);
 

@@ -49,7 +49,7 @@ struct sockaddr_storage telemetry_logdump_tag_peer;
 struct cdada_map_t *yp_subs;
 
 /* Functions */
-void telemetry_wrapper()
+void telemetry_wrapper(void)
 {
   struct telemetry_data *t_data;
 

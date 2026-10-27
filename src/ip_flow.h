@@ -93,8 +93,8 @@ struct flow_lru_l6 {
 };
 
 /* prototypes */
-extern void init_ip_flow_handler(); /* wrapper */ 
-extern void init_ip4_flow_handler(); 
+extern void init_ip_flow_handler(void); /* wrapper */
+extern void init_ip4_flow_handler(void);
 extern void ip_flow_handler(struct packet_ptrs *); 
 extern void find_flow(struct timeval *, struct packet_ptrs *); 
 extern void create_flow(struct timeval *, struct ip_flow *, u_int8_t, unsigned int, struct packet_ptrs *, struct pm_iphdr *, struct pm_tlhdr *, unsigned int); 
@@ -107,7 +107,7 @@ extern unsigned int is_expired_uni(struct timeval *, struct ip_flow_common *, un
 extern void evaluate_tcp_flags(struct timeval *, struct packet_ptrs *, struct ip_flow_common *, unsigned int);
 extern void clear_tcp_flow_cmn(struct ip_flow_common *, unsigned int);
 
-extern void init_ip6_flow_handler();
+extern void init_ip6_flow_handler(void);
 extern void ip_flow6_handler(struct packet_ptrs *);
 extern unsigned int hash_flow6(u_int32_t, struct in6_addr *, struct in6_addr *);
 extern unsigned int normalize_flow6(struct in6_addr *, struct in6_addr *, u_int16_t *, u_int16_t *);

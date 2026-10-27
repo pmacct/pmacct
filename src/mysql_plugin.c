@@ -597,7 +597,7 @@ int MY_evaluate_history(int primitive)
   return primitive;
 }
 
-int MY_compose_static_queries()
+int MY_compose_static_queries(void)
 {
   int primitives=0, set_primitives=0, set_event_primitives=0, have_flows=0;
 
@@ -828,7 +828,7 @@ void MY_init_default_values(struct insert_data *idata)
   if (config.sql_locking_style) idata->locks = sql_select_locking_style(config.sql_locking_style);
 }
 
-void MY_mysql_get_version()
+void MY_mysql_get_version(void)
 {
 #ifdef MARIADB_CLIENT_VERSION_STR
   printf("MariaDB %s\n", MARIADB_CLIENT_VERSION_STR);

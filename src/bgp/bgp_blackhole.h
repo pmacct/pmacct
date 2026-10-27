@@ -39,13 +39,13 @@ struct bgp_blackhole_itc {
 };
 
 /* prototypes */
-extern void bgp_blackhole_daemon_wrapper();
+extern void bgp_blackhole_daemon_wrapper(void);
 #if defined WITH_ZMQ
-extern void bgp_blackhole_prepare_thread();
+extern void bgp_blackhole_prepare_thread(void);
 
 extern void bgp_blackhole_init_dummy_peer(struct bgp_peer *);
-extern void bgp_blackhole_prepare_filter();
-extern int bgp_blackhole_daemon();
+extern void bgp_blackhole_prepare_filter(void);
+extern int bgp_blackhole_daemon(void);
 
 extern int bgp_blackhole_evaluate_comms(void *);
 extern int bgp_blackhole_instrument(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t);

@@ -574,7 +574,7 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
 }
 #endif
 
-void Tee_destroy_recvs()
+void Tee_destroy_recvs(void)
 {
   struct tee_receiver *target = NULL;
   int pool_idx, recv_idx;
@@ -610,7 +610,7 @@ void Tee_destroy_recvs()
   receivers.num = 0;
 }
 
-void Tee_init_socks()
+void Tee_init_socks(void)
 {
   struct tee_receiver *target = NULL;
   struct sockaddr *sa;

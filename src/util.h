@@ -59,7 +59,7 @@ struct dynname_tokens {
 /* prototypes */
 extern void setnonblocking(int);
 extern void setblocking(int);
-extern int daemonize();
+extern int daemonize(void);
 extern char *copy_argv(register char **);
 extern char *extract_token(char **, int);
 extern char *extract_plugin_name(char **);
@@ -82,7 +82,7 @@ extern int Setsocksize(int, int, int, void *, socklen_t);
 extern void *map_shared(void *, size_t, int, int, int, off_t);
 extern void lower_string(char *);
 extern void evaluate_sums(u_int64_t *, u_int64_t *, u_int64_t *, char *, char *);
-extern void stop_all_childs();
+extern void stop_all_childs(void);
 extern int file_lock(int);
 extern int file_unlock(int);
 extern void pm_strftime(char *, int, char *, const time_t *, int);
@@ -198,11 +198,11 @@ extern u_int16_t hash_key_get_len(pm_hash_key_t *);
 extern u_char *hash_key_get_val(pm_hash_key_t *);
 extern int hash_key_cmp(pm_hash_key_t *, pm_hash_key_t *);
 
-extern void dump_writers_init();
-extern void dump_writers_count();
-extern u_int32_t dump_writers_get_flags();
-extern u_int16_t dump_writers_get_active();
-extern u_int16_t dump_writers_get_max();
+extern void dump_writers_init(void);
+extern void dump_writers_count(void);
+extern u_int32_t dump_writers_get_flags(void);
+extern u_int16_t dump_writers_get_active(void);
+extern u_int16_t dump_writers_get_max(void);
 extern int dump_writers_add(pid_t);
 
 extern int pm_scandir(const char *, struct dirent ***, int (*select)(const struct dirent *), int (*compar)(const void *, const void *));

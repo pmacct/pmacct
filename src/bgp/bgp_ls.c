@@ -37,7 +37,7 @@
 
 struct bgp_rt_structs *bgp_ls_routing_db = NULL;
 
-void bgp_ls_init()
+void bgp_ls_init(void)
 {
   int ret, idx;
   afi_t afi;

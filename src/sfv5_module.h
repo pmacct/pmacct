@@ -41,7 +41,7 @@ struct sfv5_modules_desc {
 };
 
 /* functions */
-extern void sfv5_modules_db_init();
+extern void sfv5_modules_db_init(void);
 extern struct sfv5_modules_db_field *sfv5_modules_db_get_ie(u_int32_t);
 extern struct sfv5_modules_db_field *sfv5_modules_get_next_ie(u_int32_t);
 extern struct sfv5_modules_db_field *sfv5_modules_db_get_next_ie(u_int32_t);

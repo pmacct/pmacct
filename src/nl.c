@@ -621,7 +621,7 @@ void PM_print_stats(time_t now)
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);
 }
 
-void compute_once()
+void compute_once(void)
 {
   struct pkt_data dummy;
 
@@ -655,7 +655,7 @@ void compute_once()
 // Looks through tunnel_handlers_list
 // Finds entries with name identical to the config line processed
 // Keeps the first handler compatible with the current daemon and calls its configurator
-void tunnel_registry_init()
+void tunnel_registry_init(void)
 {
   if (!config.tunnel0)
     return;

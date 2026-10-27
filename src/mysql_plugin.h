@@ -33,7 +33,7 @@ void mysql_plugin(int, struct configuration *, void *);
 int MY_cache_dbop(struct DBdesc *, struct db_cache *, struct insert_data *);
 void MY_cache_purge(struct db_cache *[], int, struct insert_data *);
 int MY_evaluate_history(int);
-int MY_compose_static_queries();
+int MY_compose_static_queries(void);
 void MY_Lock(struct DBdesc *);
 void MY_Unlock(struct BE_descs *);
 void MY_Set_Timezone(struct DBdesc *);
@@ -44,7 +44,7 @@ void MY_get_errmsg(struct DBdesc *);
 void MY_create_backend(struct DBdesc *);
 void MY_set_callbacks(struct sqlfunc_cb_registry *);
 void MY_init_default_values(struct insert_data *);
-void MY_mysql_get_version();
+void MY_mysql_get_version(void);
 
 /* variables */
 extern char mysql_user[];

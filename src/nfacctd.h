@@ -122,7 +122,7 @@ extern void reset_ip4(struct packet_ptrs *);
 extern void reset_ip6(struct packet_ptrs *);
 extern void reset_dummy_v4(struct packet_ptrs *, u_char *);
 extern int NF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
-extern void NF_compute_once();
+extern void NF_compute_once(void);
 
 extern struct xflow_status_entry *nfv5_check_status(struct packet_ptrs *);
 extern struct xflow_status_entry *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_t, u_int8_t);

@@ -80,8 +80,8 @@ struct tee_receivers {
 
 /* prototypes */
 extern void Tee_exit_now(int);
-extern void Tee_init_socks();
-extern void Tee_destroy_recvs();
+extern void Tee_init_socks(void);
+extern void Tee_destroy_recvs(void);
 extern size_t Tee_craft_transparent_msg(struct pkt_msg *, struct sockaddr *);
 extern void Tee_send(struct pkt_msg *, struct sockaddr *, int, int);
 extern int Tee_prepare_sock(struct sockaddr *, socklen_t, char *, u_int16_t, int, int);

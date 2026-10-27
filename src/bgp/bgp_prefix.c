@@ -177,7 +177,7 @@ prefix_family_str (const struct prefix *p)
 
 /* Allocate new prefix_ipv4 structure. */
 struct prefix_ipv4 *
-prefix_ipv4_new ()
+prefix_ipv4_new (void)
 {
   struct prefix_ipv4 *p;
 
@@ -539,7 +539,7 @@ prefix2str (const struct prefix *p, char *str, int size)
 }
 
 struct prefix *
-prefix_new ()
+prefix_new (void)
 {
   struct prefix *p;
 

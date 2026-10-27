@@ -67,7 +67,7 @@ extern void reset_ip4(struct packet_ptrs *);
 extern void reset_ip6(struct packet_ptrs *);
 extern void SF_notify_malf_packet(short int, char *, char *, struct sockaddr *);
 extern int SF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
-extern void SF_compute_once();
+extern void SF_compute_once(void);
 
 extern void process_SFv2v4_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);
 extern void process_SFv5_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);
@@ -77,8 +77,8 @@ extern int sf_cnt_log_msg(struct bgp_peer *, SFSample *, int, u_int32_t, char *,
 extern int readCounters_generic(struct bgp_peer *, SFSample *, char *, int, void *);
 extern int readCounters_ethernet(struct bgp_peer *, SFSample *, char *, int, void *);
 extern int readCounters_vlan(struct bgp_peer *, SFSample *, char *, int, void *);
-extern void sfacctd_counter_init_amqp_host();
-extern int sfacctd_counter_init_kafka_host();
+extern void sfacctd_counter_init_amqp_host(void);
+extern int sfacctd_counter_init_kafka_host(void);
 extern void sf_cnt_link_misc_structs(struct bgp_misc_structs *);
 extern void sf_flow_sample_hdr_decode(SFSample *);
 
@@ -86,7 +86,7 @@ extern struct xflow_status_entry *sfv245_check_status(SFSample *spp, struct pack
 extern void sfv245_check_counter_log_init(struct packet_ptrs *);
 
 extern void usage_daemon(char *);
-extern void compute_once();
+extern void compute_once(void);
 
 #ifdef WITH_KAFKA
 extern void SF_init_kafka_host(void *);

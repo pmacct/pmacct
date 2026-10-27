@@ -141,7 +141,7 @@ void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem)
   }
 }
 
-void SQL_SetENV()
+void SQL_SetENV(void)
 {
   char *ptrs[16];
   int count = 0, i;

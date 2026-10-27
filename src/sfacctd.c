@@ -1740,7 +1740,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   exec_plugins(pptrs, req);
 }
 
-void SF_compute_once()
+void SF_compute_once(void)
 {
   struct pkt_data dummy;
 
@@ -2664,7 +2664,7 @@ int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type,
 }
 
 #if defined WITH_RABBITMQ
-void sfacctd_counter_init_amqp_host()
+void sfacctd_counter_init_amqp_host(void)
 {
   p_amqp_init_host(&sfacctd_counter_amqp_host);
 
@@ -2691,13 +2691,13 @@ void sfacctd_counter_init_amqp_host()
   P_broker_timers_set_retry_interval(&sfacctd_counter_amqp_host.btimers, config.sfacctd_counter_amqp_retry);
 }
 #else
-void sfacctd_counter_init_amqp_host()
+void sfacctd_counter_init_amqp_host(void)
 {
 }
 #endif
 
 #if defined WITH_KAFKA
-int sfacctd_counter_init_kafka_host()
+int sfacctd_counter_init_kafka_host(void)
 {
   int ret;
 
@@ -2718,7 +2718,7 @@ int sfacctd_counter_init_kafka_host()
   return ret;
 }
 #else
-int sfacctd_counter_init_kafka_host()
+int sfacctd_counter_init_kafka_host(void)
 {
   return ERR;
 }

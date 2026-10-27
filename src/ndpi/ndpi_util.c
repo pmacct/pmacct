@@ -58,7 +58,7 @@
 #include "../classifier.h"
 #include "ndpi.h"
 
-struct pm_ndpi_workflow *pm_ndpi_workflow_init()
+struct pm_ndpi_workflow *pm_ndpi_workflow_init(void)
 {
     
   NDPI_PROTOCOL_BITMASK all;

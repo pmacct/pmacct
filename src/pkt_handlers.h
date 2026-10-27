@@ -26,7 +26,7 @@ extern struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication
 extern pkt_handler phandler[N_PRIMITIVES];
 
 extern void warn_unsupported_packet_handler(u_int64_t, u_int64_t);
-extern void evaluate_packet_handlers(); 
+extern void evaluate_packet_handlers(void);
 extern void src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -234,8 +234,8 @@ extern void sampling_handler(struct channels_list_entry *, struct packet_ptrs *,
 extern void sfprobe_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 #if defined (WITH_GEOIPV2)
-extern void pm_geoipv2_init();
-extern void pm_geoipv2_close();
+extern void pm_geoipv2_init(void);
+extern void pm_geoipv2_close(void);
 extern void src_host_geoipv2_lookup_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void dst_host_geoipv2_lookup_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void src_host_country_geoipv2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

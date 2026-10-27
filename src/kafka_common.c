@@ -241,7 +241,7 @@ void p_kafka_set_config_file(struct p_kafka_host *kafka_host, char *config_file)
   }
 }
 
-void p_kafka_get_version()
+void p_kafka_get_version(void)
 {
   printf("rdkafka %s\n", rd_kafka_version_str());
 }

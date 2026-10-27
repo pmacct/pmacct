@@ -170,7 +170,7 @@ int p_amqp_get_sockfd(struct p_amqp_host *amqp_host)
   return ERR;
 }
 
-void p_amqp_get_version()
+void p_amqp_get_version(void)
 {
   printf("rabbimq-c %s\n", amqp_version());
 }

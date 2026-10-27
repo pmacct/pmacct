@@ -48,7 +48,7 @@ time_t timeslot;
 int dyn_table, dyn_table_time_only;
 
 /* Functions */
-void P_set_signals()
+void P_set_signals(void)
 {
   signal(SIGINT, P_exit_now);
   /* XXX: SIGHUP? */
@@ -58,7 +58,7 @@ void P_set_signals()
   signal(SIGCHLD, SIG_IGN);
 }
 
-void P_init_default_values()
+void P_init_default_values(void)
 {
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
   if (config.logfile) {
@@ -124,7 +124,7 @@ void P_init_default_values()
   set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_PRINT);
 }
 
-void P_config_checks()
+void P_config_checks(void)
 {
   if (config.nfacctd_pro_rating && config.nfacctd_stitching) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Pro-rating (ie. nfacctd_pro_rating) and stitching (ie. nfacctd_stitching) are mutual exclusive. Exiting.\n", config.name, config.type);
@@ -1222,7 +1222,7 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
   return tcpflag_linked_list;
 }
 
-cdada_list_t *fwd_status_to_linked_list()
+cdada_list_t *fwd_status_to_linked_list(void)
 {
   const int FWD_STATUS_REASON_CODES = 23;
 

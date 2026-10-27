@@ -31,7 +31,7 @@
 /* Global variables */
 struct sfv5_modules_desc sfv5_modules;
 
-void sfv5_modules_db_init()
+void sfv5_modules_db_init(void)
 {
   memset(&sfv5_modules, 0, sizeof(sfv5_modules));
 }

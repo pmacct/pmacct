@@ -210,7 +210,7 @@ struct bgp_ls_nlri_map_trav_print {
 };
 
 /* prototypes */
-extern void bgp_ls_init();
+extern void bgp_ls_init(void);
 extern int bgp_attr_parse_ls(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, u_char *, u_char);
 extern int bgp_ls_nlri_parse(struct bgp_msg_data *, struct bgp_attr *, struct bgp_attr_extra *, struct bgp_nlri *, int);
 extern void bgp_ls_info_print(struct bgp_peer *, u_int64_t *);

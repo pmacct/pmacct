@@ -36,6 +36,7 @@
 #include "sqlite3_plugin.h"
 #endif
 #ifdef WITH_RABBITMQ
+#include "amqp_common.h"
 #include "amqp_plugin.h"
 #endif
 #ifdef WITH_KAFKA
@@ -97,7 +98,7 @@ void setblocking(int sock)
   fcntl(sock, F_SETFL, opts);
 }
 
-int daemonize()
+int daemonize(void)
 {
   int fdd;
   pid_t pid;
@@ -1595,7 +1596,7 @@ void evaluate_sums(u_int64_t *wtc, u_int64_t *wtc_2, u_int64_t *wtc_3, char *nam
   if (flows) *wtc |= COUNT_FLOWS;
 }
 
-void stop_all_childs()
+void stop_all_childs(void)
 {
   PM_sigint_handler(0); /* it does same thing */
 }
@@ -3394,7 +3395,7 @@ int hash_key_cmp(pm_hash_key_t *a, pm_hash_key_t *b)
   return memcmp(a->val, b->val, b->len);
 }
 
-void dump_writers_init()
+void dump_writers_init(void)
 {
   dump_writers.active = 0;
   dump_writers.max = config.dump_max_writers;
@@ -3402,7 +3403,7 @@ void dump_writers_init()
   dump_writers.flags = FALSE;
 }
 
-void dump_writers_count()
+void dump_writers_count(void)
 {
   u_int16_t idx, count;
 
@@ -3418,17 +3419,17 @@ void dump_writers_count()
   else dump_writers.flags = FALSE;
 }
 
-u_int32_t dump_writers_get_flags()
+u_int32_t dump_writers_get_flags(void)
 {
   return dump_writers.flags;
 }
 
-u_int16_t dump_writers_get_active()
+u_int16_t dump_writers_get_active(void)
 {
   return dump_writers.active;
 }
 
-u_int16_t dump_writers_get_max()
+u_int16_t dump_writers_get_max(void)
 {
   return dump_writers.max;
 }

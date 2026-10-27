@@ -714,7 +714,7 @@ void delete_pipe_channel(int pipe)
 }
 
 /* trivial sorting(tm) :-) */
-void sort_pipe_channels()
+void sort_pipe_channels(void)
 {
   struct channels_list_entry ctmp;
   int x = 0, y = 0; 
@@ -744,7 +744,7 @@ void sort_pipe_channels()
   }
 }
 
-void init_pipe_channels()
+void init_pipe_channels(void)
 {
   memset(&channels_list, 0, MAX_N_PLUGINS*sizeof(struct channels_list_entry)); 
 }
@@ -829,7 +829,7 @@ void recollect_pipe_memory(struct channels_list_entry *mychptr)
   }
 }
 
-void init_random_seed()
+void init_random_seed(void)
 {
   struct timeval tv;
 
@@ -837,7 +837,7 @@ void init_random_seed()
   srandom((unsigned int)tv.tv_usec);
 }
 
-void fill_pipe_buffer()
+void fill_pipe_buffer(void)
 {
   struct channels_list_entry *chptr;
   int index;
@@ -978,7 +978,7 @@ int pkt_extras_clean(void *pextras, int len)
   return PdataSz+PextrasSz;
 }
 
-void plugin_pipe_zmq_compile_check()
+void plugin_pipe_zmq_compile_check(void)
 {
 #ifndef WITH_ZMQ
   Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_zmq' requires compiling with --enable-zmq. Exiting ..\n", config.name, config.type);

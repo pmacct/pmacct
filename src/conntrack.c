@@ -40,7 +40,7 @@ struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[4] =
   { "", NULL },
 };
 
-void init_conntrack_table()
+void init_conntrack_table(void)
 {
   if (config.conntrack_bufsz) conntrack_total_nodes_v4 = config.conntrack_bufsz / sizeof(struct conntrack_ipv4);
   else conntrack_total_nodes_v4 = DEFAULT_CONNTRACK_BUFFER_SIZE / sizeof(struct conntrack_ipv4);
