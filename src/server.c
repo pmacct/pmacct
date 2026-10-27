@@ -54,7 +54,7 @@ int build_query_server(char *path_ptr)
                   S_IROTH|S_IWOTH|S_IXOTH);
 
   setnonblocking(sd);
-  listen(sd, 1);
+  listen(sd, SOCKET_LISTEN_BACKLOG);
   Log(LOG_INFO, "OK ( %s/%s ): waiting for data on: '%s'\n", config.name, config.type, path_ptr);
 
   return sd;

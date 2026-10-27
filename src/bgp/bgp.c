@@ -385,7 +385,7 @@ void skinny_bgp_daemon_online()
     exit_gracefully(1);
   }
 
-  rc = listen(config.bgp_sock, 1);
+  rc = listen(config.bgp_sock, SOCKET_LISTEN_BACKLOG);
   if (rc < 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
     exit_gracefully(1);

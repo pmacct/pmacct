@@ -436,7 +436,7 @@ int telemetry_daemon(void *t_data_void)
     }
 
     if (config.telemetry_port_tcp) {
-      rc = listen(config.telemetry_sock, 1);
+      rc = listen(config.telemetry_sock, SOCKET_LISTEN_BACKLOG);
       if (rc < 0) {
         Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, t_data->log_str, errno);
         exit_gracefully(1);

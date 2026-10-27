@@ -95,6 +95,12 @@
 #include <ndpi_main.h>
 #endif
 
+#ifdef SOMAXCONN
+#define SOCKET_LISTEN_BACKLOG   SOMAXCONN
+#else
+#define SOCKET_LISTEN_BACKLOG   128
+#endif
+
 #if !defined ETHER_ADDRSTRLEN
 #define ETHER_ADDRSTRLEN 18
 #endif
