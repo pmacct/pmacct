@@ -227,12 +227,16 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
 	  }
 
           if (!attr_hdr || (attr_extra->ls.len && !attr_aux)) {
-            if (attr_aux)
+            if (attr_aux) {
               free(attr_aux);
-            if (attr_hdr)
+	    }
+            if (attr_hdr) {
               free(attr_hdr);
-            if (tlv_type == BGP_LS_IP_REACH)
+	      attr_hdr = NULL;
+	    }
+            if (tlv_type == BGP_LS_IP_REACH) {
               bgp_unlock_node(peer, route);
+	    }
             goto exit_fail_lane;
           }
 
@@ -247,8 +251,10 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
 	    if (ret != CDADA_SUCCESS) {
 	      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
 	      Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI Insert/Replace\n", config.name, config.type, bgp_peer_str);
-	      if (attr_aux) free(attr_aux);
-          free(attr_hdr);
+	      if (attr_aux) {
+		free(attr_aux);
+	      }
+              free(attr_hdr);
 	    }
 	    else {
 	      if (attr_hdr_prev) {
