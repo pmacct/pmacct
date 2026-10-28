@@ -226,6 +226,16 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
 	    attr_aux = malloc(attr_extra->ls.len);
 	  }
 
+          if (!attr_hdr || (attr_extra->ls.len && !attr_aux)) {
+            if (attr_aux)
+              free(attr_aux);
+            if (attr_hdr)
+              free(attr_hdr);
+            if (tlv_type == BGP_LS_IP_REACH)
+              bgp_unlock_node(peer, route);
+            goto exit_fail_lane;
+          }
+
           if (attr_hdr) {
 	    if (attr_aux) {
 	      memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);

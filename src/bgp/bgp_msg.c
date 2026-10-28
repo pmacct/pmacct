@@ -1572,13 +1572,17 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
 
     /* Make new BGP info. */
     new = bgp_info_new(peer);
-    if (new) {
-      new->peer = peer;
-      new->attr = attr_new;
-      bgp_attr_extra_process(peer, new, afi, safi, attr_extra);
-      if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, new, idx, BGP_NLRI_UPDATE);
+    if (!new) {
+      bgp_unlock_node(peer, route);
+      bgp_attr_unintern(peer, attr_new);
+      return ERR;
     }
-    else return ERR;
+
+    new->peer = peer;
+    new->attr = attr_new;
+    bgp_attr_extra_process(peer, new, afi, safi, attr_extra);
+    if (bms->bgp_extra_data_process)
+      (*bms->bgp_extra_data_process)(&bmd->extra, new, idx, BGP_NLRI_UPDATE);
 
     /* Register new BGP information. */
     bgp_info_add(peer, route, new, modulo);
