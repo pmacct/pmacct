@@ -741,7 +741,7 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
       if (nmct2->peer_dst_ip && info->attr) {
 	if (info->attr->mp_nexthop.family) {
 	  if (!host_addr_cmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip)) {
-	    no_match--;
+	    no_match -= BGP_LOOKUP_MATCH_NH;
 	  }
 	}
 	else if (info->attr->nexthop.s_addr && nmct2->peer_dst_ip->family == AF_INET) {
