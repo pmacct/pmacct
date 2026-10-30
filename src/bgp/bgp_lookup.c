@@ -753,16 +753,16 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
     }
 
     if (nmct2->bpdi_table && nmct2->pptrs) {
+      /* preps for table lookup */
       memset(&nmct2->pptrs->bpdi_peer_dst_ip, 0, sizeof(struct host_addr));
+
+      /* hint of the AF of the peer_dst_ip */
+      nmct2->pptrs->bpdi_hint_af = nmct2->peer_dst_ip->family;
 
       if (no_match == BGP_LOOKUP_MATCH_NH) { 
         nmct2->pptrs->bgp_dst_info = (char *) info;
         if (BPDI_find_id((struct id_table *)nmct2->bpdi_table, nmct2->pptrs, &nmct2->pptrs->bpdi_peer_dst_ip)) {
-	  if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi]) {
-	    if (no_match == BGP_LOOKUP_MATCH_NH) {
-	      no_match -= BGP_LOOKUP_MATCH_NH;
-	    }
-	  }
+	  no_match -= BGP_LOOKUP_MATCH_NH;
         }
         nmct2->pptrs->bgp_dst_info = NULL;
       }

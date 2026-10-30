@@ -367,6 +367,7 @@ struct packet_ptrs {
   pm_id_t bta; /* bgp_to_agent */
   pm_id_t bta2; /* bgp_to_agent (cont.d: 64bits more for IPv6 addresses) */
   struct host_addr bpdi_peer_dst_ip; /* bgp_peer_dst_ip map result */
+  u_int16_t bpdi_hint_af; /* peer_dst_ip AF hint for bgp_peer_dst_ip map */
   pm_id_t bitr; /* flow_to_rd */
   pm_id_t st; /* sampling_map */
   s_uint8_t set_tos; /* pretag map: set_tos feature */

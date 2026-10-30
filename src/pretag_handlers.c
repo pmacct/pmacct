@@ -4419,7 +4419,22 @@ int PT_map_index_fdata_BPDI_nexthop_handler(struct id_table_index *idx, int idx_
     switch(hdr->version) {
     case 10: 
     case 9:
-      if (pptrs->l3_proto == ETHERTYPE_IP) {
+      if (pptrs->bpdi_hint_af == AF_INET) {
+        if (tpl->fld[NF9_BGP_IPV4_NEXT_HOP].count) {
+          OTPL_CP_LAST_M(&e->key.nexthop.a.address.ipv4,
+			 NF9_BGP_IPV4_NEXT_HOP, 4);
+	  e->key.nexthop.a.family = AF_INET;
+        }
+      }
+      else if (pptrs->bpdi_hint_af == AF_INET6) {
+        if (tpl->fld[NF9_BGP_IPV6_NEXT_HOP].count) {
+          OTPL_CP_LAST(&e->key.nexthop.a.address.ipv6,
+                             NF9_BGP_IPV6_NEXT_HOP, 16);
+	  e->key.nexthop.a.family = AF_INET6;
+        }
+      }
+      /* missing hint, let's use L3 proto */
+      else if (pptrs->l3_proto == ETHERTYPE_IP) {
         if (tpl->fld[NF9_BGP_IPV4_NEXT_HOP].count) {
           OTPL_CP_LAST_M(&e->key.nexthop.a.address.ipv4,
 			 NF9_BGP_IPV4_NEXT_HOP, 4);
