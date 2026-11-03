@@ -17,7 +17,123 @@ if WITH_AVRO
 AM_LDFLAGS += @AVRO_LIBS@
 endif
 
+AM_LDFLAGS += @PMACCT_EXPORT_DYNAMIC_LDFLAGS@
+
 AM_CFLAGS = $(PMACCT_CFLAGS)
+
+pmacctinternalincludedir = $(includedir)/pmacct/src
+nobase_pmacctinternalinclude_HEADERS = \
+	addr.h \
+	amqp_common.h \
+	amqp_plugin.h \
+	base64.h \
+	bgp/bgp.h \
+	bgp/bgp_aspath.h \
+	bgp/bgp_blackhole.h \
+	bgp/bgp_community.h \
+	bgp/bgp_ecommunity.h \
+	bgp/bgp_hash.h \
+	bgp/bgp_lcommunity.h \
+	bgp/bgp_lg.h \
+	bgp/bgp_logdump.h \
+	bgp/bgp_lookup.h \
+	bgp/bgp_ls.h \
+	bgp/bgp_ls-data.h \
+	bgp/bgp_msg.h \
+	bgp/bgp_packet.h \
+	bgp/bgp_prefix.h \
+	bgp/bgp_table.h \
+	bgp/bgp_util.h \
+	bgp/bgp_xcs.h \
+	bgp/bgp_xcs-data.h \
+	bmp/bmp.h \
+	bmp/bmp_logdump.h \
+	bmp/bmp_lookup.h \
+	bmp/bmp_msg.h \
+	bmp/bmp_tlv.h \
+	bmp/bmp_util.h \
+	build_config.h \
+	cfg.h \
+	cfg_handlers.h \
+	classifier.h \
+	conntrack.h \
+	crc32.h \
+	dynlib/dynamic_loading.h \
+	ebpf/ebpf_rp_balancer.h \
+	filters/bloom.h \
+	filters/murmur2.h \
+	ha.h \
+	imt_plugin.h \
+	ip_flow.h \
+	ip_frag.h \
+	jhash.h \
+	kafka_common.h \
+	kafka_plugin.h \
+	log.h \
+	mpls.h \
+	mysql_plugin.h \
+	ndpi/ndpi.h \
+	ndpi/ndpi_private.h \
+	ndpi/ndpi_util.h \
+	net_aggr.h \
+	network.h \
+	nfacctd.h \
+	nfprobe_plugin/common.h \
+	nfprobe_plugin/convtime.h \
+	nfprobe_plugin/nfprobe_plugin.h \
+	nfprobe_plugin/sys-tree.h \
+	nfprobe_plugin/treetype.h \
+	nfv9_template.h \
+	once.h \
+	packet_processor/packet_processor.h \
+	pgsql_plugin.h \
+	pkt_handlers.h \
+	plugin_cmn_avro.h \
+	plugin_cmn_custom.h \
+	plugin_cmn_json.h \
+	plugin_common.h \
+	plugin_hooks.h \
+	pmacct.h \
+	pmacct-data.h \
+	pmacct-defines.h \
+	pmacct-version.h \
+	pmbgpd.h \
+	pmbmpd.h \
+	pmsearch.h \
+	pmtelemetryd.h \
+	preprocess.h \
+	preprocess-data.h \
+	preprocess-internal.h \
+	pretag.h \
+	pretag_handlers.h \
+	pretag-data.h \
+	print_plugin.h \
+	redis_common.h \
+	rpki/rpki.h \
+	rpki/rpki_lookup.h \
+	rpki/rpki_msg.h \
+	rpki/rpki_util.h \
+	setproctitle.h \
+	sfacctd.h \
+	sflow.h \
+	sfprobe_plugin/sflow_api.h \
+	sfv5_module.h \
+	sql_common.h \
+	sql_common_m.h \
+	sqlite3_plugin.h \
+	tee_plugin/tee_plugin.h \
+	tee_plugin/tee_recvs.h \
+	tee_plugin/tee_recvs-data.h \
+	telemetry/telemetry.h \
+	telemetry/telemetry_logdump.h \
+	telemetry/telemetry_msg.h \
+	telemetry/telemetry_util.h \
+	thread_pool.h \
+	uacctd.h \
+	util.h \
+	util-data.h \
+	xflow_status.h \
+	zmq_common.h
 
 #Build string autogen
 BUILT_SOURCES = pmacct-build.h_h
@@ -54,7 +170,8 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
 	ll.c nl.c sflow.c					\
 	base64.c pmsearch.c 					\
 	thread_pool.c						\
-	plugin_cmn_custom.c network.c pmacct-globals.c
+	plugin_cmn_custom.c network.c pmacct-globals.c 			\
+	dynlib/dynamic_loading.c packet_processor/packet_processor.c
 
 libcommon_la_LIBADD  =
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
@@ -169,18 +286,18 @@ endif
 if USING_ST_BINS
 sbin_PROGRAMS += pmtelemetryd
 pmtelemetryd_SOURCES = pmtelemetryd.c
-pmtelemetryd_LDFLAGS = $(DEFS)
+pmtelemetryd_LDFLAGS = $(AM_LDFLAGS) $(DEFS)
 pmtelemetryd_LDADD = libdaemons.la
 endif
 if USING_BGP_BINS
 sbin_PROGRAMS += pmbgpd
 pmbgpd_SOURCES = pmbgpd.c
-pmbgpd_LDFLAGS = $(DEFS)
+pmbgpd_LDFLAGS = $(AM_LDFLAGS) $(DEFS)
 pmbgpd_LDADD = libdaemons.la
 endif
 if USING_BMP_BINS
 sbin_PROGRAMS += pmbmpd
 pmbmpd_SOURCES = pmbmpd.c
-pmbmpd_LDFLAGS = $(DEFS)
+pmbmpd_LDFLAGS = $(AM_LDFLAGS) $(DEFS)
 pmbmpd_LDADD = libdaemons.la
 endif

@@ -1,0 +1,9 @@
+/* Generated from build_config.h.in by configure. */
+
+#ifndef PMACCT_BUILD_CONFIG_H
+#define PMACCT_BUILD_CONFIG_H
+
+/* Keep external packet processors ABI-compatible with this pmacct build. */
+@PMACCT_BUILD_DEFINES@
+
+#endif /* PMACCT_BUILD_CONFIG_H */

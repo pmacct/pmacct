@@ -13,6 +13,7 @@ services:
       - ${PMACCT_CONF}:/etc/pmacct/${PMACCT_DAEMON}.conf
       - ${PMACCT_MOUNT}:/var/log/pmacct
       - ${PMACCT_MOUNT}/cores:/tmp/cores
+      - ${PACKET_PROCESSOR}
     ulimits:
       core: -1
     networks:
