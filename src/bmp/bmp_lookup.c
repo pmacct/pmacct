@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -143,21 +143,24 @@ int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_t
   struct bmp_peer *bmpp = info->peer->bmp_se;
   struct bgp_peer *peer_local = &bmpp->self;
   struct bgp_peer *peer_remote = info->peer;
-  int no_match = FALSE, compare_rd = FALSE;
+  int no_match = FALSE, compare_rd = FALSE, compare_nh = FALSE;
 
   /* peer_local: edge router use-case; peer_remote: replicator use-case */
   if (peer_local == nmct2->peer || peer_remote == nmct2->peer) {
     if (nmct2->safi == SAFI_MPLS_VPN || !is_empty_256b(nmct2->rd, sizeof(rd_t))) {
-      no_match++;
+      no_match += BGP_LOOKUP_MATCH_RD;
       compare_rd = TRUE;
     }
 
-    if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi]) no_match++;
+    if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi]) {
+      no_match += BGP_LOOKUP_MATCH_NH;
+      compare_nh = TRUE;
+    }
 
     if (compare_rd) {
       /* RD typical location */
       if (info->attr_extra && !memcmp(&info->attr_extra->rd, nmct2->rd, sizeof(rd_t))) {
-	no_match--;
+	no_match -= BGP_LOOKUP_MATCH_RD;
       }
       /* RD location when decoded from Peer Distinguisher */
       else {
@@ -165,24 +168,40 @@ int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_t
 	  struct bmp_chars *bmed_bmp = (struct bmp_chars *) info->bmed.data;
 
 	  if (bmed_bmp && !memcmp(&bmed_bmp->pd, nmct2->rd, sizeof(rd_t))) {
-	    no_match--;
+	    no_match -= BGP_LOOKUP_MATCH_RD;
 	  }
 	}
       }
     }
 
-    if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi]) {
+    if (compare_nh) {
       if (info->attr && nmct2->peer_dst_ip) {
 	if (info->attr->mp_nexthop.family) {
 	  if (!host_addr_cmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip)) {
-	    no_match--;
+	    no_match -= BGP_LOOKUP_MATCH_NH;
 	  }
 	}
         else if (info->attr->nexthop.s_addr && nmct2->peer_dst_ip->family == AF_INET) {
           if (info->attr->nexthop.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) {
-	    no_match--;
+	    no_match -= BGP_LOOKUP_MATCH_NH;
 	  }
         }
+      }
+    }
+
+    if (nmct2->bpdi_table && nmct2->pptrs) {
+      /* preps for table lookup */
+      memset(&nmct2->pptrs->bpdi_peer_dst_ip, 0, sizeof(struct host_addr));
+
+      /* hint of the AF of the peer_dst_ip */
+      nmct2->pptrs->bpdi_hint_af = nmct2->peer_dst_ip->family;
+
+      if (no_match == BGP_LOOKUP_MATCH_NH) {
+        nmct2->pptrs->bgp_dst_info = (char *) info;
+        if (BPDI_find_id((struct id_table *)nmct2->bpdi_table, nmct2->pptrs, &nmct2->pptrs->bpdi_peer_dst_ip)) {
+          no_match -= BGP_LOOKUP_MATCH_NH;
+        }
+        nmct2->pptrs->bgp_dst_info = NULL;
       }
     }
 
