@@ -144,6 +144,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 207: BMP-CISCO-HUAWEI-multiple-sources-dump-spreading
 - 208: BMP-mem-leak-test
 - 209: BMP-add_path-mpls_vpn
+- 210: BMP-merge_capabilities
 ```
 
 ### 3XX - BGP

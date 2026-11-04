@@ -1404,6 +1404,12 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
   return SUCCESS;
 
 exit_fail_lane:
+  if (peer && bms) {
+    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_nlri_parse() dropped NLRI/message: afi=%u safi=%u type=%d nlri_idx=%d prefixlen=%u psize=%d end=%d remaining=%ld add_path=%u path_id=%u\n",
+        config.name, bms->log_str, bgp_peer_str, info->afi, info->safi, type, idx, p.prefixlen, psize, end,
+        (long)(lim - pnt), peer->cap_add_paths.cap[info->afi][info->safi], attr_extra ? attr_extra->path_id : 0);
+  }
   bmd->nlri_count = ERR;
   return ERR;
 }
