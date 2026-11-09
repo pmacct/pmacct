@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2026 by Paolo Lucente
 */
 
 /*
@@ -424,13 +424,27 @@ char *getPointer(SFSample *sample)
 
 u_int32_t getData32(SFSample *sample) 
 {
-  if ((u_char *)sample->datap > sample->endp) return 0; 
+  if ((u_char *)sample->datap > sample->endp) {
+    return 0;
+  }
+
+  if ((size_t)((u_char *)sample->endp - (u_char *)sample->datap) < sizeof(u_int32_t)) {
+    return 0;
+  }
+
   return ntohl(*(sample->datap)++);
 }
 
 u_int32_t getData32_nobswap(SFSample *sample) 
 {
-  if ((u_char *)sample->datap > sample->endp) return 0;
+  if ((u_char *)sample->datap > sample->endp) {
+    return 0;
+  }
+
+  if ((size_t)((u_char *)sample->endp - (u_char *)sample->datap) < sizeof(u_int32_t)) {
+    return 0;
+  }
+
   return *(sample->datap)++;
 }
 
