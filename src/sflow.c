@@ -458,21 +458,52 @@ u_int64_t getData64(SFSample *sample)
 
 void skipBytes(SFSample *sample, int skip)
 {
-  int quads = (skip + 3) / 4;
+  size_t quads;
+  size_t remaining;
+
+  if (skip < 0) {
+    return;
+  }
+
+  quads = ((size_t)skip + 3) / 4;
+
+  if ((u_char *)sample->datap > sample->endp) {
+    return;
+  }
+
+  remaining = (size_t)(sample->endp - (u_char *)sample->datap);
+
+  if (remaining < (quads * 4)) {
+    return;
+  }
 
   sample->datap += quads;
-  // if((u_char *)sample->datap > sample->endp) return 0; 
 }
 
 int skipBytesAndCheck(SFSample *sample, int skip)
 {
-  int quads = (skip + 3) / 4;
+  size_t quads;
+  size_t remaining;
 
-  if ((u_char *)(sample->datap + quads) <= sample->endp) {
-    sample->datap += quads;
-    return quads;
+  if (skip < 0) {
+    return ERR;
   }
-  else return ERR;
+
+  quads = ((size_t)skip + 3) / 4;
+
+  if ((u_char *)sample->datap > sample->endp) {
+    return ERR;
+  }
+
+  remaining = (size_t)(sample->endp - (u_char *)sample->datap);
+
+  if (remaining < (quads * 4)) {
+    return ERR;
+  }
+
+  sample->datap += quads;
+
+  return quads;
 }
 
 u_int32_t getString(SFSample *sample, char *buf, u_int32_t bufLen)
@@ -915,32 +946,57 @@ void decodePPP(SFSample *sample)
 
 void readFlowSample_header(SFSample *sample)
 {
+  size_t remaining;
+
   sample->headerProtocol = getData32(sample);
   sample->sampledPacketSize = getData32(sample);
-  if(sample->datagramVersion > 4) sample->stripped = getData32(sample);
+
+  if (sample->datagramVersion > 4) {
+    sample->stripped = getData32(sample);
+  }
+
   sample->headerLen = getData32(sample);
-  
+
+  if ((u_char *)sample->datap > sample->endp) {
+    return;
+  }
+
+  if (sample->headerLen < 0) {
+    return;
+  }
+
+  remaining = (size_t)(sample->endp - (u_char *)sample->datap);
+
+  if (remaining < (size_t)sample->headerLen) {
+    return;
+  }
+
   sample->header = (u_char *)sample->datap; /* just point at the header */
-  
-  switch(sample->headerProtocol) {
+
+  switch (sample->headerProtocol) {
     /* the header protocol tells us where to jump into the decode */
   case SFLHEADER_ETHERNET_ISO8023:
     decodeLinkLayer(sample);
     break;
-  case SFLHEADER_IPv4: 
+
+  case SFLHEADER_IPv4:
     sample->gotIPV4 = TRUE;
     sample->offsetToIPV4 = 0;
     break;
+
   case SFLHEADER_IPv6:
     sample->gotIPV6 = TRUE;
     sample->offsetToIPV6 = 0;
     break;
+
   case SFLHEADER_MPLS:
     decodeMpls(sample, NULL);
     break;
+
   case SFLHEADER_PPP:
     decodePPP(sample);
     break;
+
   case SFLHEADER_ISO88024_TOKENBUS:
   case SFLHEADER_ISO88025_TOKENRING:
   case SFLHEADER_FDDI:
@@ -950,12 +1006,16 @@ void readFlowSample_header(SFSample *sample)
   case SFLHEADER_AAL5:
   case SFLHEADER_AAL5_IP:
   default:
-    /* XXX: nofity error */ 
+    /* XXX: notify error */
     break;
   }
-  
-  if (sample->gotIPV4) decodeIPV4(sample);
-  else if (sample->gotIPV6) decodeIPV6(sample);
+
+  if (sample->gotIPV4) { 
+    decodeIPV4(sample);
+  }
+  else if (sample->gotIPV6) {
+    decodeIPV6(sample);
+  }
 
   skipBytes(sample, sample->headerLen);
 }
