@@ -163,8 +163,14 @@ void decodeLinkLayer(SFSample *sample)
   }
 
   if (sample->eth_type == ETHERTYPE_MPLS || sample->eth_type == ETHERTYPE_MPLS_MULTI) {
+    u_int32_t mpls_bytes = sample->lstk.depth * 4;
+
     decodeMpls(sample, &ptr);
-    caplen -= sample->lstk.depth * 4;
+    if (mpls_bytes > caplen) {
+      return;
+    }
+
+    caplen -= mpls_bytes;
   }
 
   if (sample->eth_type == ETHERTYPE_IP) {
@@ -237,7 +243,9 @@ void decodeVXLAN(SFSample *sample, u_char *ptr)
   u_int32_t vni;
   u_char *end = sample->header + sample->headerLen;
 
-  if (ptr > end - sizeof(struct vxlan_hdr)) return;
+  if (ptr > end || (size_t)(end - ptr) < sizeof(struct vxlan_hdr)) {
+    return;
+  }
 
   hdr = (struct vxlan_hdr *) ptr;
 
@@ -304,6 +312,10 @@ void decodeIPV4(SFSample *sample)
       /* advance the pointer to the next protocol layer */
       /* ip headerLen is expressed as a number of quads */
       ptr += (ip.version_and_headerLen & 0x0f) * 4;
+
+      if (ptr > end) {
+	return;
+      }
 
       if (ip.protocol == 4 /* ipencap */ || ip.protocol == 94 /* ipip */) {
 	if (sample->sppi) {
@@ -382,11 +394,28 @@ void decodeIPV6(SFSample *sample)
 	  nextHeader == 51 || // auth
 	  nextHeader == 60) { // destination options
       u_int32_t optionLen, skip;
+      size_t remaining;
+
+      if (ptr > end ||
+	  (size_t)(end - ptr) < 2) {
+	return; /* ran off the end of the header */
+      }
+
+      remaining = (size_t)(end - ptr);
+
       nextHeader = ptr[0];
       optionLen = 8 * (ptr[1] + 1);  // second byte gives option len in 8-byte chunks, not counting first 8
       skip = optionLen - 2;
+
+      if (remaining < skip) {
+	return;
+      }
+
       ptr += skip;
-      if(ptr > end) return; // ran off the end of the header
+
+      if (ptr > end) {
+	return; // ran off the end of the header
+      }
     }
     
     // now that we have eliminated the extension headers, nextHeader should have what we want to
@@ -1053,6 +1082,12 @@ void readFlowSample_IPv4(SFSample *sample)
 {
   sample->headerLen = sizeof(SFLSampled_ipv4);
   sample->header = (u_char *)sample->datap; /* just point at the header */
+
+  if ((u_char *)sample->datap > sample->endp ||
+      (size_t)(sample->endp - (u_char *)sample->datap) < sizeof(SFLSampled_ipv4)) {
+    return;
+  }
+
   skipBytes(sample, sample->headerLen);
   {
     SFLSampled_ipv4 nfKey;
@@ -1079,6 +1114,12 @@ void readFlowSample_IPv6(SFSample *sample)
 {
   sample->header = (u_char *)sample->datap; /* just point at the header */
   sample->headerLen = sizeof(SFLSampled_ipv6);
+
+  if ((u_char *)sample->datap > sample->endp ||
+      (size_t)(sample->endp - (u_char *)sample->datap) < sizeof(SFLSampled_ipv6)) {
+    return;
+  }
+
   skipBytes(sample, sample->headerLen);
 
   {
