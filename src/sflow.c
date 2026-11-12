@@ -638,11 +638,19 @@ void readExtendedGateway(SFSample *sample)
     for (idx = 0, len_tot = 0; idx < sample->dst_as_path_len; idx++) {
       u_int32_t seg_len, i;
 
+      if ((u_char *)sample->datap >= sample->endp) {
+        break;
+      }
+
       getData32(sample); /* seg_type */
       seg_len = getData32(sample);
 
       for (i = 0; i < seg_len; i++) {
 	u_int32_t asNumber;
+
+	if ((u_char *)sample->datap >= sample->endp) {
+	  break;
+	}
 
 	asNumber = getData32(sample);
 	snprintf(asn_str, MAX_BGP_ASPATH-1, "%u", asNumber);
@@ -676,6 +684,10 @@ void readExtendedGateway(SFSample *sample)
   if (sample->communities_len > 0) {
     for (idx = 0, len_tot = 0; idx < sample->communities_len; idx++) {
       u_int32_t comm, as, val;
+
+      if ((u_char *)sample->datap >= sample->endp) {
+	break;
+      }
 
       comm = getData32(sample);
       switch (comm) {
@@ -889,7 +901,13 @@ void readExtendedProcess(SFSample *sample)
   u_int32_t num_processes, i;
 
   num_processes = getData32(sample);
-  for (i = 0; i < num_processes; i++) skipBytes(sample, 4);
+  for (i = 0; i < num_processes; i++) {
+    if ((u_char *)sample->datap >= sample->endp) {
+      break;
+    }
+
+    skipBytes(sample, 4);
+  }
 }
 
 void readExtendedClass2(SFSample *sample)
