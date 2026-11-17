@@ -2854,6 +2854,13 @@ void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, str
     sample->num_extended = getData32(sample);
     for(x = 0; x < sample->num_extended; x++) {
       u_int32_t extended_tag;
+
+      /* getData32() does not advance the cursor on a truncated word. */
+      if ((u_char *)sample->datap > sample->endp ||
+          (size_t)(sample->endp - (u_char *)sample->datap) < sizeof(u_int32_t)) {
+        return;
+      }
+
       extended_tag = getData32(sample);
       switch(extended_tag) {
       case INMEXTENDED_SWITCH: readExtendedSwitch(sample); break;
