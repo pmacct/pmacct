@@ -32,6 +32,7 @@
 void pgsql_plugin(int, struct configuration *, void *);
 int PG_cache_dbop(struct DBdesc *, struct db_cache *, struct insert_data *);
 int PG_cache_dbop_copy(struct DBdesc *, struct db_cache *, struct insert_data *);
+int PG_copy_end(struct DBdesc *);
 void PG_cache_purge(struct db_cache *[], int, struct insert_data *);
 int PG_evaluate_history(int);
 int PG_compose_static_queries(void);

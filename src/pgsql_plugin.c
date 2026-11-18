@@ -435,12 +435,40 @@ int PG_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
   return FALSE;
 }
 
+/* PQputCopyEnd() only sends the end of the data: whether the server took the
+   COPY, or rejected it, e.g. on a duplicate key, is in the COPY's result. The
+   COMMIT that follows would discard that result unread and, ending an aborted
+   transaction, still report success. */
+int PG_copy_end(struct DBdesc *db)
+{
+  PGresult *ret;
+  int failed = FALSE;
+
+  if (PQputCopyEnd(db->desc, NULL) < 0) {
+    db->errmsg = PQerrorMessage(db->desc);
+    sql_db_errmsg(db);
+    return TRUE;
+  }
+
+  while ((ret = PQgetResult(db->desc))) {
+    if (PQresultStatus(ret) != PGRES_COMMAND_OK) {
+      db->errmsg = PQresultErrorMessage(ret);
+      sql_db_errmsg(db);
+      failed = TRUE;
+    }
+    PQclear(ret);
+  }
+
+  return failed;
+}
+
 void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *idata)
 {
   PGresult *ret;
   struct db_cache **reprocess_queries_queue, **bulk_reprocess_queries_queue;
   char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
   char orig_copy_clause[LONGSRVBUFLEN], tmpbuf[LONGLONGSRVBUFLEN], tmptable[SRVBUFLEN];
+  unsigned int saved_qn;
   time_t start;
   int j, r, reprocess = 0, stop, go_to_pending, reprocess_idx, bulk_reprocess_idx, saved_index = index;
   struct primitives_ptrs prim_ptrs;
@@ -519,6 +547,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   if (config.sql_table_schema) sql_create_table(bed.p, &queue[0]->basetime, &prim_ptrs); 
 
   /* beginning DB transaction */
+  saved_qn = idata->qn;
   (*sqlfunc_cbr.lock)(bed.p);
 
   /* for each element of the queue to be processed we execute sql_query(); the function
@@ -575,17 +604,18 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
   /* Finalizing DB transaction */
   if (!p.fail) {
-    if (config.sql_use_copy) {
-      if (PQputCopyEnd(p.desc, NULL) < 0) Log(LOG_ERR, "ERROR ( %s/%s ): COPY failed!\n\n", config.name, config.type); 
-    }
+    int copy_failed = (config.sql_use_copy && PG_copy_end(&p));
 
     ret = PQexec(p.desc, "COMMIT");
-    if (PQresultStatus(ret) != PGRES_COMMAND_OK) {
+    if (copy_failed || PQresultStatus(ret) != PGRES_COMMAND_OK) {
       if (!reprocess) sql_db_fail(&p);
       reprocess = REPROCESS_BULK;
     }
     PQclear(ret);
   }
+
+  /* the transaction did not commit: none of its rows is stored */
+  if (p.fail) idata->qn = saved_qn;
 
   /* don't reprocess free (SQL_CACHE_FREE) and already recovered (SQL_CACHE_ERROR) elements */
   if (p.fail) {
@@ -602,11 +632,10 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   }
 
   if (b.connected) {
-    if (config.sql_use_copy) {
-      if (PQputCopyEnd(b.desc, NULL) < 0) Log(LOG_ERR, "ERROR ( %s/%s ): COPY failed!\n\n", config.name, config.type);
-    }
+    int copy_failed = (config.sql_use_copy && PG_copy_end(&b));
+
     ret = PQexec(b.desc, "COMMIT");
-    if (PQresultStatus(ret) != PGRES_COMMAND_OK) sql_db_fail(&b);
+    if (copy_failed || PQresultStatus(ret) != PGRES_COMMAND_OK) sql_db_fail(&b);
     PQclear(ret);
   }
 
