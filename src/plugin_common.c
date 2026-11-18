@@ -1131,7 +1131,7 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
 cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
-  const int MAX_TOKENS = 256;
+  enum { MAX_TOKENS = 256 };
 
   /* len of the incoming/normalized string */
   size_t PTM_LABELS_LEN = strlen(ptm_labels);
@@ -1187,7 +1187,7 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 
 cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 {
-  const int TCP_FLAGS = 6;
+  enum { TCP_FLAGS = 6 }; 
 
   /* Generate the tcpflag's binary array */
   const char tcpflags_mask[][TCP_FLAG_LEN] = {"URG", "ACK", "PSH", "RST", "SYN", "FIN"};

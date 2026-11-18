@@ -1795,8 +1795,10 @@ json_t *compose_fwd_status_json_data(size_t fwdstatus_decimal, cdada_list_t *ll,
 
 json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
 {
-  const int MAX_IDX_LEN = 4;
-  const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN);
+  enum {
+    MAX_IDX_LEN = 4,
+    MAX_MPLS_LABEL_IDX_LEN = MAX_IDX_LEN + MAX_MPLS_LABEL_LEN
+  };
   int max_mpls_label_idx_len_dec = 0;
   char label_buf[MAX_MPLS_LABEL_LEN];
   char label_idx_buf[MAX_MPLS_LABEL_IDX_LEN];
@@ -1832,8 +1834,10 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
 
 json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, int list_len)
 {
-  const int MAX_IDX_LEN = 2 /* index */ + 1 /* sep */ + 1 /* term */;
-  const int MAX_IDX_SID_LEN = (MAX_IDX_LEN + INET6_ADDRSTRLEN);
+  enum {
+    MAX_IDX_LEN = 2 /* index */ + 1 /* sep */ + 1 /* term */,
+    MAX_IDX_SID_LEN = MAX_IDX_LEN + INET6_ADDRSTRLEN
+  };
 
   char ipv6_str[INET6_ADDRSTRLEN];
   char idx_str[MAX_IDX_LEN];
