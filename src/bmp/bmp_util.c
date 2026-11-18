@@ -502,6 +502,9 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type));
     if (bmp_rib_type) free(bmp_rib_type);
 
+    pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&p_avro_field, bmed_bmp->is_filtered));
+
     if (!inet_ntop(AF_INET, &bmed_bmp->bgp_id, bgp_id_str, INET6_ADDRSTRLEN)) {
       bgp_id_str = "0.0.0.0";
     }
