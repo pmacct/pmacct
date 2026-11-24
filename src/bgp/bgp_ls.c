@@ -1300,13 +1300,64 @@ int bgp_ls_attr_tlv_endx_sid_print(u_char *pnt, u_int16_t len, char *key, u_int8
     inet_ntop(AF_INET6, &sid6, sid_str, INET6_ADDRSTRLEN);
     json_object_set_new_nocheck(obj, "endx_sid", json_string(sid_str));
   
-    /* Optional sub-TLVs would start at offset 22 */
+    /* Optional sub-TLVs start after the fixed 22-byte End.X SID part */
     if (len > 22) {
-      char sub_tlv_hex[256];
-      int hex_len = len - 22;
-      if (hex_len > 128) hex_len = 128; /* Limit output */
-      serialize_hex(pnt + 22, (u_char *)sub_tlv_hex, hex_len);
-      json_object_set_new_nocheck(obj, "end_sid_tlvs", json_string(sub_tlv_hex));
+      u_char *sub_pnt = pnt + 22;
+      u_int16_t sub_rem = len - 22;
+
+      while (sub_rem >= 4) {
+        u_int16_t sub_tlv_type, sub_tlv_len, tmp16;
+
+        memcpy(&tmp16, sub_pnt, 2);
+        sub_tlv_type = ntohs(tmp16);
+
+        memcpy(&tmp16, sub_pnt + 2, 2);
+        sub_tlv_len = ntohs(tmp16);
+
+        sub_pnt += 4;
+        sub_rem -= 4;
+
+        if (sub_tlv_len > sub_rem) {
+          break;
+        }
+
+        if (sub_tlv_type == BGP_LS_ATTR_SRV6_SID_STRUCTURE) {
+          json_t *sid_structure = json_object();
+
+          if (sid_structure) {
+            if (bgp_ls_attr_tlv_srv6_sid_structure_print(sub_pnt,
+                                                          sub_tlv_len,
+                                                          "srv6_sid_structure",
+                                                          0,
+                                                          output,
+                                                          sid_structure) == SUCCESS) {
+              json_object_set_new_nocheck(obj, "end_sid_structure",
+                                          sid_structure);
+            }
+            else {
+              json_decref(sid_structure);
+            }
+          }
+        }
+        else {
+          char sub_key[32];
+          char *sub_value;
+
+          snprintf(sub_key, sizeof(sub_key), "end_sid_tlv_%u",
+                   sub_tlv_type);
+
+          sub_value = malloc((size_t) sub_tlv_len * 3);
+          if (sub_value) {
+            memset(sub_value, 0, (size_t) sub_tlv_len * 3);
+            serialize_hex(sub_pnt, (u_char *) sub_value, sub_tlv_len);
+            json_object_set_new_nocheck(obj, sub_key, json_string(sub_value));
+            free(sub_value);
+          }
+        }
+
+        sub_pnt += sub_tlv_len;
+        sub_rem -= sub_tlv_len;
+      }
     }
 #endif
   }
