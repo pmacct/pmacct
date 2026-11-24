@@ -1497,60 +1497,98 @@ int bgp_ls_attr_tlv_sr_capabilities_print(u_char *pnt, u_int16_t len, char *key,
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     json_t *obj = voidobj;
-    json_t *ranges_array = json_array();
+    json_t *ranges_array;
     u_char *ptr = pnt;
     u_int16_t remlen = len;
-    u_int8_t cap_flags = *ptr++;
+    u_int8_t capflags;
+    char flags_hex[8];
 
-    remlen -= 2;
-
-    /* Parse each SR Capability Range entry */
-    while (remlen >= 7) {
-      json_t *range_obj = json_object();
-      u_int32_t range_size;
-      u_int32_t label_base;
-
-      /* Range Size: 3 octets (20-bit value) */
-      range_size = ((u_int32_t)ptr[0] << 16) | ((u_int32_t)ptr[1] << 8) | ptr[2];
-      ptr += 3;
-
-      /* SID/Label Sub-TLV: first octet indicates type */
-      /* Type 1: SID/Label (3 octets for label, or 4 octets for index) */
-      if (ptr[0] == 1) {
-        u_int16_t sub_tlv_len = ntohs(*(u_int16_t *)(ptr + 1));
-        if (sub_tlv_len == 3) {
-          /* 3-octet label */
-          label_base = ((u_int32_t)ptr[3] << 16) | ((u_int32_t)ptr[4] << 8) | ptr[5];
-          json_object_set_new_nocheck(range_obj, "label_base", json_integer(label_base));
-          json_object_set_new_nocheck(range_obj, "range_size", json_integer(range_size));
-          json_array_append_new(ranges_array, range_obj);
-          ptr += 3 + 3;
-          remlen -= 3 + 3;
-        }
-        else if (sub_tlv_len == 4) {
-          /* 4-octet index */
-          label_base = ((u_int32_t)ptr[3] << 24) | ((u_int32_t)ptr[4] << 16) |
-          ((u_int32_t)ptr[5] << 8) | ptr[6];
-          json_object_set_new_nocheck(range_obj, "index_base", json_integer(label_base));
-          json_object_set_new_nocheck(range_obj, "range_size", json_integer(range_size));
-          json_array_append_new(ranges_array, range_obj);
-          ptr += 3 + 4;
-          remlen -= 3 + 4;
-        }
-        else {
-          break;
-        }
-      }
-      else {
-        break;
-      }
+    ranges_array = json_array();
+    if (!ranges_array) {
+      return ERR;
     }
 
-    /* Output flags and ranges */
-    char flags_hex[8];
-    snprintf(flags_hex, sizeof(flags_hex), "0x%02x", cap_flags);
-    json_object_set_new_nocheck(obj, "sr_cap_flags", json_string(flags_hex));
+    /* Flags (1 octet) + Reserved (1 octet) */
+    capflags = *ptr;
+    ptr += 2;
+    remlen -= 2;
 
+    /*
+     * Each SR Capability range is:
+     *   Range Size (3 octets)
+     *   SID/Label Sub-TLV:
+     *     Type (1 octet), currently 1
+     *     Length (2 octets): 3 for an MPLS label, 4 for an SRv6/SR index
+     *     Value (3 or 4 octets)
+     */
+    while (remlen >= 6) {
+      json_t *range_obj;
+      u_int32_t range_size;
+      u_int32_t sid_base;
+      u_int16_t sub_tlv_len;
+
+      range_size = ((u_int32_t) ptr[0] << 16) |
+                   ((u_int32_t) ptr[1] << 8) |
+                   (u_int32_t) ptr[2];
+
+      ptr += 3;
+      remlen -= 3;
+
+      /* Need at least the Sub-TLV header */
+      if (remlen < 3 || ptr[0] != 1) {
+        break;
+      }
+
+      sub_tlv_len = ntohs(*((u_int16_t *) (ptr + 1)));
+
+      if (sub_tlv_len != 3 && sub_tlv_len != 4) {
+        break;
+      }
+
+      /* Need the Sub-TLV header plus its value */
+      if (remlen < (u_int16_t) (3 + sub_tlv_len)) {
+        break;
+      }
+
+      range_obj = json_object();
+      if (!range_obj) {
+        json_decref(ranges_array);
+        return ERR;
+      }
+
+      if (sub_tlv_len == 3) {
+        sid_base = ((u_int32_t) ptr[3] << 16) |
+                   ((u_int32_t) ptr[4] << 8) |
+                   (u_int32_t) ptr[5];
+
+        json_object_set_new_nocheck(range_obj, "label_base",
+                                    json_integer((json_int_t) sid_base));
+      }
+      else {
+        sid_base = ((u_int32_t) ptr[3] << 24) |
+                   ((u_int32_t) ptr[4] << 16) |
+                   ((u_int32_t) ptr[5] << 8) |
+                   (u_int32_t) ptr[6];
+
+        json_object_set_new_nocheck(range_obj, "index_base",
+                                    json_integer((json_int_t) sid_base));
+      }
+
+      json_object_set_new_nocheck(range_obj, "range_size",
+                                  json_integer((json_int_t) range_size));
+
+      if (json_array_append_new(ranges_array, range_obj) != 0) {
+        json_decref(range_obj);
+        json_decref(ranges_array);
+        return ERR;
+      }
+
+      ptr += 3 + sub_tlv_len;
+      remlen -= 3 + sub_tlv_len;
+    }
+
+    snprintf(flags_hex, sizeof(flags_hex), "0x%02x", capflags);
+    json_object_set_new_nocheck(obj, "sr_cap_flags", json_string(flags_hex));
     json_object_set_new_nocheck(obj, "sr_cap_ranges", ranges_array);
 #endif
   }
