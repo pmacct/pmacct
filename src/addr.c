@@ -48,13 +48,36 @@ unsigned int str_to_addr(const char *str, struct host_addr *a)
 }
 
 /*
+ * ipv4_to_str() gives the same output as inet_ntop(AF_INET), without
+ * going through sprintf(). 'str' length is not checked and assumed to
+ * be at least INET_ADDRSTRLEN
+ */
+static void ipv4_to_str(char *str, const struct in_addr *a)
+{
+  const unsigned char *b = (const unsigned char *) a;
+  char *p = str;
+  int i;
+
+  for (i = 0; i < 4; i++) {
+    unsigned int v = b[i];
+
+    if (v >= 100) { *p++ = '0' + v / 100; v %= 100; *p++ = '0' + v / 10; v %= 10; }
+    else if (v >= 10) { *p++ = '0' + v / 10; v %= 10; }
+    *p++ = '0' + v;
+    *p++ = '.';
+  }
+
+  *(p - 1) = '\0';
+}
+
+/*
  * addr_to_str() converts a supported family address into a string
  * 'str' length is not checked and assumed to be INET6_ADDRSTRLEN 
  */
 unsigned int addr_to_str(char *str, const struct host_addr *a)
 {
   if (a->family == AF_INET) {
-    inet_ntop(AF_INET, &a->address.ipv4, str, INET6_ADDRSTRLEN); 
+    ipv4_to_str(str, &a->address.ipv4);
     return a->family;
   }
 
