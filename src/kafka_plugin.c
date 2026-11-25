@@ -420,6 +420,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 #ifdef WITH_AVRO
   avro_writer_t p_avro_writer = {0};
   char *p_avro_buf = NULL;
+  /* built once per purge rather than once per record */
+  avro_value_iface_t *p_avro_acct_iface = NULL;
   int p_avro_buffer_full = FALSE;
   size_t p_avro_len = 0;
 #endif
@@ -642,7 +644,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
 	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-      avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_schema);
+      if (!p_avro_acct_iface) p_avro_acct_iface = avro_generic_class_from_schema(p_avro_acct_schema);
+      avro_value_iface_t *p_avro_iface = p_avro_acct_iface;
       avro_value_t p_avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
 			   config.what_to_count_3, queue[j]->flow_type, &queue[j]->primitives, pbgp,
 			   pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
@@ -720,7 +723,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       }
 
       avro_value_decref(&p_avro_value);
-      avro_value_iface_decref(p_avro_iface);
 #else
       if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
@@ -932,6 +934,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   if (json_buf) free(json_buf);
 
 #ifdef WITH_AVRO
+  if (p_avro_acct_iface) avro_value_iface_decref(p_avro_acct_iface);
   if (p_avro_buf) free(p_avro_buf);
 #endif
 }
