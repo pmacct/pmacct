@@ -71,6 +71,61 @@ static void ipv4_to_str(char *str, const struct in_addr *a)
 }
 
 /*
+ * ipv6_to_str() gives the same output as glibc inet_ntop(AF_INET6),
+ * without going through sprintf(): longest run of two or more zero
+ * groups compressed as '::' (first one on a tie), lowercase hex and
+ * no leading zeros, dotted quad tail for IPv4-mapped and
+ * IPv4-compatible addresses. 'str' length is not checked and assumed
+ * to be at least INET6_ADDRSTRLEN
+ */
+static void ipv6_to_str(char *str, const struct in6_addr *a)
+{
+  static const char hex[] = "0123456789abcdef";
+  const unsigned char *b = (const unsigned char *) a;
+  unsigned int words[8], v;
+  int best_base = -1, best_len = 0, cur_base = -1, cur_len = 0, i;
+  char *p = str;
+
+  for (i = 0; i < 8; i++) words[i] = (b[2 * i] << 8) | b[2 * i + 1];
+
+  for (i = 0; i < 8; i++) {
+    if (!words[i]) {
+      if (cur_base == -1) { cur_base = i; cur_len = 1; }
+      else cur_len++;
+
+      if (cur_len > best_len) { best_base = cur_base; best_len = cur_len; }
+    }
+    else cur_base = -1;
+  }
+
+  if (best_len < 2) best_base = -1;
+
+  for (i = 0; i < 8; i++) {
+    if (best_base != -1 && i >= best_base && i < (best_base + best_len)) {
+      if (i == best_base) *p++ = ':';
+      continue;
+    }
+
+    if (i) *p++ = ':';
+
+    /* IPv4-compatible (::a.b.c.d) and IPv4-mapped (::ffff:a.b.c.d) */
+    if (i == 6 && best_base == 0 && (best_len == 6 || (best_len == 5 && words[5] == 0xffff))) {
+      ipv4_to_str(p, (const struct in_addr *) (b + 12));
+      return;
+    }
+
+    v = words[i];
+    if (v >= 0x1000) *p++ = hex[v >> 12];
+    if (v >= 0x100) *p++ = hex[(v >> 8) & 0xf];
+    if (v >= 0x10) *p++ = hex[(v >> 4) & 0xf];
+    *p++ = hex[v & 0xf];
+  }
+
+  if (best_base != -1 && (best_base + best_len) == 8) *p++ = ':';
+  *p = '\0';
+}
+
+/*
  * addr_to_str() converts a supported family address into a string
  * 'str' length is not checked and assumed to be INET6_ADDRSTRLEN 
  */
@@ -82,7 +137,7 @@ unsigned int addr_to_str(char *str, const struct host_addr *a)
   }
 
   if (a->family == AF_INET6) {
-    inet_ntop(AF_INET6, &a->address.ipv6, str, INET6_ADDRSTRLEN); 
+    ipv6_to_str(str, &a->address.ipv6);
     return a->family;
   }
 
