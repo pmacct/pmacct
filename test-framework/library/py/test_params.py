@@ -27,7 +27,7 @@ class KPmacctParams:
 
 # Encapsulation of parameters defining a test case
 class KModuleParams:
-    def __init__(self, test_file: str, daemon: str = 'nfacctd', ipv4_subnet: str = '', ipv6_subnet: str = ''):
+    def __init__(self, test_file: str, daemon: str = 'nfacctd', ipv4_subnet: str = '', ipv6_subnet: str = '', packet_processor: Optional[str] = None):
         self.daemon = daemon
         self.test_subnet_ipv4 = ipv4_subnet
         self.test_subnet_ipv6 = ipv6_subnet
@@ -46,6 +46,7 @@ class KModuleParams:
         self.results_folder = self.results_dump_folder = None
         self.test_output_files = self.test_log_files = self.test_conf_files = []
         self.overwrite_json_output = os.getenv('OVERWRITE', 'false').lower() == 'true'
+        self.packet_processor = packet_processor
 
     @property
     def pmacct_log_file(self):
