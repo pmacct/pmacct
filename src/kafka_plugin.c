@@ -495,6 +495,10 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
+#ifdef WITH_AVRO
+  pm_avro_writer_id_cache(TRUE);
+#endif
+
 #if defined(WITH_AVRO) && defined(WITH_SERDES)
   if (config.kafka_avro_schema_registry) {
     if (is_topic_dyn) {
@@ -933,5 +937,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
 #ifdef WITH_AVRO
   if (p_avro_buf) free(p_avro_buf);
+  pm_avro_writer_id_cache(FALSE);
 #endif
 }

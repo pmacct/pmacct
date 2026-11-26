@@ -1522,13 +1522,30 @@ void add_writer_name_and_pid_avro(avro_value_t value, char *name, pid_t writer_p
   pm_avro_check(avro_value_set_string(&field, wid));
 }
 
+/* 0: compose writer_id for every record; 1: cache enabled, empty; 2: cache filled */
+static int pm_avro_wid_cache_state = 0;
+static char pm_avro_wid_cache[SHORTSHORTBUFLEN];
+
+/* TRUE at the start of a purge (the writer id cannot change within it), FALSE at its end */
+void pm_avro_writer_id_cache(int enable)
+{
+  pm_avro_wid_cache_state = enable ? 1 : 0;
+}
+
 void add_writer_name_and_pid_avro_v2(avro_value_t value, struct dynname_tokens *tokens)
 {
-  char wid[SHORTSHORTBUFLEN];
+  char wid_buf[SHORTSHORTBUFLEN], *wid = wid_buf;
   avro_value_t field;
 
-  memset(wid, 0, sizeof(wid));
-  dynname_tokens_compose(wid, sizeof(wid), tokens, NULL);
+  if (pm_avro_wid_cache_state == 2) wid = pm_avro_wid_cache;
+  else {
+    if (pm_avro_wid_cache_state == 1) wid = pm_avro_wid_cache;
+
+    memset(wid, 0, SHORTSHORTBUFLEN);
+    dynname_tokens_compose(wid, SHORTSHORTBUFLEN, tokens, NULL);
+    if (pm_avro_wid_cache_state == 1) pm_avro_wid_cache_state = 2;
+  }
+
   pm_avro_check(avro_value_get_by_name(&value, "writer_id", &field, NULL));
   pm_avro_check(avro_value_set_string(&field, wid));
 }
