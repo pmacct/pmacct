@@ -41,6 +41,19 @@
     } \
 } while (0)
 
+/* avro_value_get_by_name() for a literal field name of the top-level
+   record: the name is looked up once per call site, then the field is
+   fetched by index. Only valid where a call site always sees the same
+   schema, which holds for compose_avro_acct_data() (one schema per
+   plugin process) */
+#define pm_avro_get_field(value_ptr, name, field_ptr) \
+  ({ \
+    static size_t pm_avro_idx = (size_t) -1; \
+    (pm_avro_idx == (size_t) -1) ? \
+      avro_value_get_by_name((value_ptr), (name), (field_ptr), &pm_avro_idx) : \
+      avro_value_get_by_index((value_ptr), pm_avro_idx, (field_ptr), NULL); \
+  })
+
 #define	AVRO_ACCT_DATA_SID	0
 #define	AVRO_ACCT_INIT_SID	1
 #define	AVRO_ACCT_CLOSE_SID	2
